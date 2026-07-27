@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Region {
+  NORTH
+}
+
+enum AttractionType {
+  VIEWPOINT
+  WATERFALL
+  TRAIL
+  CAMPSITE
+  OTHER
+}
+
+enum WarningSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TransportMode {
+  CAR
+  MOTORCYCLE
+  PUBLIC_TRANSPORT
+  OTHER
+}
+
+enum TripStatus {
+  DRAFT
+  EVALUATED
+  CANCELLED
+  COMPLETED
+}
+
+enum EvaluationLevel {
+  EXCELLENT
+  GOOD
+  MODERATE
+  NEEDS_ADJUSTMENT
+}
+
+enum WeatherCondition {
+  CLEAR
+  CLOUDY
+  LIGHT_RAIN
+  HEAVY_RAIN
+  STORM
+}
+
+model User {
+  id          String   @id @default(cuid())
+  lineUserId  String?  @unique
+  displayName String
+  email       String?  @unique
+  phone       String?
+  role        UserRole @default(USER)
+  lineAccount LineAccount?
+  sessions    UserSession[]
+  trips       Trip[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model LineAccount {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lineUserId    String   @unique
+  displayName   String
+  pictureUrl    String?
+  statusMessage String?
+  language      String?
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([userId, revokedAt])
+}
+
+model Park {
+  id            String           @id @default(cuid())
+  slug          String           @unique
+  nameTh        String
+  nameEn        String?
+  province      String
+  region        Region           @default(NORTH)
+  latitude      Decimal?         @db.Decimal(9, 6)
+  longitude     Decimal?         @db.Decimal(9, 6)
+  openTime      String
+  closeTime     String
+  description   String
+  coverImageUrl String?
+  isActive      Boolean          @default(true)
+  attractions   ParkAttraction[]
+  warnings      ParkWarning[]
+  trips         Trip[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([province])
+  @@index([region, isActive])
+  @@index([isActive, createdAt])
+}
+
+model ParkAttraction {
+  id          String         @id @default(cuid())
+  parkId      String
+  park        Park           @relation(fields: [parkId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  type        AttractionType
+  imageUrl    String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([parkId])
+  @@index([parkId, type])
+}
+
+model ParkWarning {
+  id          String          @id @default(cuid())
+  parkId      String
+  park        Park            @relation(fields: [parkId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  severity    WarningSeverity
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([parkId])
+  @@index([parkId, isActive])
+  @@index([parkId, severity])
+}
+
+model Trip {
+  id                     String           @id @default(cuid())
+  userId                 String
+  user                   User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  parkId                 String
+  park                   Park             @relation(fields: [parkId], references: [id], onDelete: Restrict)
+  tripDate               DateTime
+  departAt               String
+  originText             String
+  originLat              Decimal?         @db.Decimal(9, 6)
+  originLng              Decimal?         @db.Decimal(9, 6)
+  transportMode          TransportMode
+  travelerCount          Int
+  weatherCondition       WeatherCondition
+  estimatedTravelMinutes Int
+  mockSunsetTime         String?
+  notes                  String?
+  status                 TripStatus       @default(DRAFT)
+  evaluations            TripEvaluation[]
+  weatherSnapshots       WeatherSnapshot[]
+  sunsetSnapshots        SunsetSnapshot[]
+  routeSnapshots         RouteSnapshot[]
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([parkId])
+  @@index([status])
+  @@index([userId, createdAt])
+  @@index([userId, tripDate])
+}
+
+model TripEvaluation {
+  id               String          @id @default(cuid())
+  tripId           String
+  trip             Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  totalScore       Int
+  level            EvaluationLevel
+  weatherScore     Int
+  durationScore    Int
+  timeScore        Int
+  userProfileScore Int
+  summary          String
+  recommendation   String
+  evaluatedAt      DateTime
+  createdAt        DateTime        @default(now())
+
+  @@index([tripId])
+  @@index([tripId, createdAt])
+  @@index([level])
+}
+
+model WeatherSnapshot {
+  id               String           @id @default(cuid())
+  tripId           String
+  trip             Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  source           String
+  timezone         String
+  latitude         Decimal          @db.Decimal(9, 6)
+  longitude        Decimal          @db.Decimal(9, 6)
+  forecastAt       DateTime
+  weatherCode      Int
+  precipitationMm  Float?
+  weatherCondition WeatherCondition
+  temperatureC     Float?
+  windSpeedKmh     Float?
+  raw              Json
+  createdAt        DateTime         @default(now())
+
+  @@index([tripId])
+  @@index([tripId, createdAt])
+  @@index([weatherCondition])
+}
+
+model SunsetSnapshot {
+  id              String   @id @default(cuid())
+  tripId          String
+  trip            Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  source          String
+  timezone        String
+  latitude        Decimal  @db.Decimal(9, 6)
+  longitude       Decimal  @db.Decimal(9, 6)
+  sunsetAt        DateTime
+  sunsetLocalTime String
+  createdAt       DateTime @default(now())
+
+  @@index([tripId])
+  @@index([tripId, createdAt])
+}
+
+model RouteSnapshot {
+  id                 String   @id @default(cuid())
+  tripId             String
+  trip               Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  source             String
+  originLat          Decimal  @db.Decimal(9, 6)
+  originLng          Decimal  @db.Decimal(9, 6)
+  destinationLat     Decimal  @db.Decimal(9, 6)
+  destinationLng     Decimal  @db.Decimal(9, 6)
+  distanceMeters     Float
+  durationSeconds    Float
+  geometryJson       Json?
+  rawJson            Json?
+  createdAt          DateTime @default(now())
+
+  @@index([tripId])
+  @@index([tripId, createdAt])
+}
+
+model EvaluationRule {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
