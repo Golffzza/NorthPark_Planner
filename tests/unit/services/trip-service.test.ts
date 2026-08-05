@@ -64,4 +64,11 @@ describe("getTripForCurrentUser", () => {
 
     await expect(getTripForCurrentUser("trip_2")).rejects.toBeInstanceOf(AuthorizationError);
   });
+
+  it("propagates database failures instead of falling back to process memory", async () => {
+    const databaseError = new Error("database unavailable");
+    prismaMock.trip.findUnique.mockRejectedValue(databaseError);
+
+    await expect(getTripForCurrentUser("trip_1")).rejects.toBe(databaseError);
+  });
 });

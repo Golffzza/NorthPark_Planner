@@ -185,4 +185,11 @@ describe("evaluateLiveTripForCurrentUser", () => {
     expect(txMock.tripEvaluation.create).toHaveBeenCalledTimes(1);
     expect(txMock.trip.update).toHaveBeenCalledTimes(1);
   });
+
+  it("propagates transaction failures instead of returning an ephemeral evaluation", async () => {
+    const databaseError = new Error("transaction failed");
+    prismaMock.$transaction.mockRejectedValue(databaseError);
+
+    await expect(evaluateLiveTripForCurrentUser("trip_1")).rejects.toBe(databaseError);
+  });
 });

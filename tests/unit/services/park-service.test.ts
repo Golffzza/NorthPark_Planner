@@ -123,4 +123,14 @@ describe("park service", () => {
 
     await expect(getParkDetail("missing")).rejects.toThrow(NotFoundError);
   });
+
+  it("propagates database failures instead of serving seed data as live data", async () => {
+    const databaseError = new Error("database unavailable");
+    prismaMock.park.count.mockRejectedValue(databaseError);
+    prismaMock.park.findMany.mockRejectedValue(databaseError);
+
+    await expect(
+      listParks({ page: 1, perPage: 10 }),
+    ).rejects.toBe(databaseError);
+  });
 });

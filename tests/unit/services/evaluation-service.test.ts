@@ -87,4 +87,11 @@ describe("evaluateTripForCurrentUser", () => {
     expect(result.data.id).toBe("eval_1");
     expect(result.tripId).toBe("trip_1");
   });
+
+  it("propagates transaction failures instead of returning an ephemeral evaluation", async () => {
+    const databaseError = new Error("transaction failed");
+    prismaMock.$transaction.mockRejectedValue(databaseError);
+
+    await expect(evaluateTripForCurrentUser("trip_1")).rejects.toBe(databaseError);
+  });
 });
