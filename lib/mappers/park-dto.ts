@@ -15,6 +15,11 @@ export type ParkListItemDto = {
   coverImageUrl: string | null;
 };
 
+export type ParkOptionDto = Pick<
+  ParkListItemDto,
+  "id" | "slug" | "nameTh" | "nameEn" | "province" | "latitude" | "longitude"
+>;
+
 export type ParkDetailDto = ParkListItemDto & {
   attractions: {
     id: string;

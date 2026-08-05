@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 
 import { FormError } from "@/components/ui/form-error";
 import { QUICK_ORIGIN_PRESETS, TRANSPORT_MODE_OPTIONS, WEATHER_CONDITION_OPTIONS } from "@/lib/constants/trip-form-options";
+import type { ParkOptionDto } from "@/lib/mappers/park-dto";
 import type { TripDetailDto } from "@/lib/mappers/trip-dto";
-import type { ParkOption } from "@/lib/services/park-service";
 import { toDateInputValue } from "@/lib/utils/date";
 
 import { TripFormField } from "./trip-form-fields/trip-form-field";
@@ -18,7 +18,7 @@ type TripFormMode = "create" | "edit";
 
 type TripFormProps = {
   mode: TripFormMode;
-  parks: ParkOption[];
+  parks: ParkOptionDto[];
   initialParkId?: string;
   trip?: TripDetailDto;
 };

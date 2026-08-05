@@ -1,13 +1,7 @@
 import { calculateTripEvaluation } from "@/lib/evaluation/calculate-trip-evaluation";
 import { prisma } from "@/lib/db/prisma";
 import { mapEvaluationToDto } from "@/lib/mappers/evaluation-dto";
-import { getTripForCurrentUser, saveEvaluationInMemory } from "@/lib/services/trip-service";
-import {
-  getLatestRouteSnapshotInMemory,
-  getLatestSunsetSnapshotInMemory,
-  getLatestWeatherSnapshotInMemory,
-} from "@/lib/snapshots/in-memory-snapshots";
-import type { TripEvaluation, WeatherSnapshot, RouteSnapshot, SunsetSnapshot } from "@prisma/client";
+import { getTripForCurrentUser } from "@/lib/services/trip-service";
 
 import { mapLatestSnapshotsToEvaluationInput } from "./live-evaluation-input-mapper";
 
@@ -34,34 +28,20 @@ export async function evaluateLiveTripForCurrentUser(
 ): Promise<EvaluateLiveTripResult> {
   const trip = await getTripForCurrentUser(tripId);
 
-  let weatherSnapshot: WeatherSnapshot | null | undefined = null;
-  let routeSnapshot: RouteSnapshot | null | undefined = null;
-  let sunsetSnapshot: SunsetSnapshot | null | undefined = null;
-
-  if (typeof prisma?.weatherSnapshot?.findFirst === "function") {
-    try {
-      [weatherSnapshot, routeSnapshot, sunsetSnapshot] = await Promise.all([
-        prisma.weatherSnapshot.findFirst({
-          where: { tripId: trip.id },
-          orderBy: { createdAt: "desc" },
-        }),
-        prisma.routeSnapshot.findFirst({
-          where: { tripId: trip.id },
-          orderBy: { createdAt: "desc" },
-        }),
-        prisma.sunsetSnapshot.findFirst({
-          where: { tripId: trip.id },
-          orderBy: { createdAt: "desc" },
-        }),
-      ]);
-    } catch (dbError) {
-      console.warn("[trip-live-evaluation-orchestrator] Database query failed, checking in-memory snapshots fallback:", dbError);
-    }
-  }
-
-  weatherSnapshot = weatherSnapshot ?? getLatestWeatherSnapshotInMemory(trip.id);
-  routeSnapshot = routeSnapshot ?? getLatestRouteSnapshotInMemory(trip.id);
-  sunsetSnapshot = sunsetSnapshot ?? getLatestSunsetSnapshotInMemory(trip.id);
+  const [weatherSnapshot, routeSnapshot, sunsetSnapshot] = await Promise.all([
+    prisma.weatherSnapshot.findFirst({
+      where: { tripId: trip.id },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.routeSnapshot.findFirst({
+      where: { tripId: trip.id },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.sunsetSnapshot.findFirst({
+      where: { tripId: trip.id },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
   if (!weatherSnapshot) {
     throw new MissingLiveSnapshotError(
@@ -92,39 +72,29 @@ export async function evaluateLiveTripForCurrentUser(
   });
   const evaluation = calculateTripEvaluation(evaluationInput);
 
-  let savedEvaluation: TripEvaluation | null = null;
-  try {
-    savedEvaluation = await prisma.$transaction(async (tx) => {
-      const createdEvaluation = await tx.tripEvaluation.create({
-        data: {
-          tripId: trip.id,
-          totalScore: evaluation.totalScore,
-          level: evaluation.level,
-          weatherScore: evaluation.weatherScore,
-          durationScore: evaluation.durationScore,
-          timeScore: evaluation.timeScore,
-          userProfileScore: evaluation.userProfileScore,
-          summary: evaluation.summary,
-          recommendation: evaluation.recommendation,
-          evaluatedAt: new Date(),
-        },
-      });
-
-      await tx.trip.update({
-        where: { id: trip.id },
-        data: { status: "EVALUATED" },
-      });
-
-      return createdEvaluation;
+  const savedEvaluation = await prisma.$transaction(async (tx) => {
+    const createdEvaluation = await tx.tripEvaluation.create({
+      data: {
+        tripId: trip.id,
+        totalScore: evaluation.totalScore,
+        level: evaluation.level,
+        weatherScore: evaluation.weatherScore,
+        durationScore: evaluation.durationScore,
+        timeScore: evaluation.timeScore,
+        userProfileScore: evaluation.userProfileScore,
+        summary: evaluation.summary,
+        recommendation: evaluation.recommendation,
+        evaluatedAt: new Date(),
+      },
     });
-  } catch (error) {
-    console.warn("[trip-live-evaluation-orchestrator] DB transaction failed, saving evaluation in memory fallback:", error);
-    savedEvaluation = saveEvaluationInMemory(trip.id, evaluation);
-  }
 
-  if (!savedEvaluation) {
-    throw new Error("Failed to save evaluation");
-  }
+    await tx.trip.update({
+      where: { id: trip.id },
+      data: { status: "EVALUATED" },
+    });
+
+    return createdEvaluation;
+  });
 
   return {
     tripId: trip.id,

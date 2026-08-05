@@ -1,9 +1,7 @@
-import { getParkTransitInfo } from "@/lib/data/park-transit-info";
 import { calculateTripEvaluation } from "@/lib/evaluation/calculate-trip-evaluation";
 import { prisma } from "@/lib/db/prisma";
 import { mapEvaluationToDto } from "@/lib/mappers/evaluation-dto";
-import { getTripForCurrentUser, saveEvaluationInMemory } from "@/lib/services/trip-service";
-import type { TripEvaluation } from "@prisma/client";
+import { getTripForCurrentUser } from "@/lib/services/trip-service";
 
 export type EvaluateTripResult = {
   tripId: string;
@@ -12,7 +10,6 @@ export type EvaluateTripResult = {
 
 export async function evaluateTripForCurrentUser(tripId: string): Promise<EvaluateTripResult> {
   const trip = await getTripForCurrentUser(tripId);
-  const transitInfo = getParkTransitInfo(trip.park.nameTh);
 
   const evaluation = calculateTripEvaluation({
     weatherCondition: trip.weatherCondition,
@@ -23,51 +20,34 @@ export async function evaluateTripForCurrentUser(tripId: string): Promise<Evalua
     parkCloseTime: trip.park.closeTime,
     travelerCount: trip.travelerCount,
     transportMode: trip.transportMode,
-    hasDirectPublicTransit: transitInfo.hasDirectPublicTransit,
-    parkName: trip.park.nameTh,
   });
 
-  let savedEvaluation: TripEvaluation | null = null;
-  try {
-    savedEvaluation = await prisma.$transaction(async (tx) => {
-      const createdEvaluation = await tx.tripEvaluation.create({
-        data: {
-          tripId: trip.id,
-          totalScore: evaluation.totalScore,
-          level: evaluation.level,
-          weatherScore: evaluation.weatherScore,
-          durationScore: evaluation.durationScore,
-          timeScore: evaluation.timeScore,
-          userProfileScore: evaluation.userProfileScore,
-          summary: evaluation.summary,
-          recommendation: evaluation.recommendation,
-          evaluatedAt: new Date(),
-        },
-      });
-
-      await tx.trip.update({
-        where: { id: trip.id },
-        data: { status: "EVALUATED" },
-      });
-
-      return createdEvaluation;
+  const savedEvaluation = await prisma.$transaction(async (tx) => {
+    const createdEvaluation = await tx.tripEvaluation.create({
+      data: {
+        tripId: trip.id,
+        totalScore: evaluation.totalScore,
+        level: evaluation.level,
+        weatherScore: evaluation.weatherScore,
+        durationScore: evaluation.durationScore,
+        timeScore: evaluation.timeScore,
+        userProfileScore: evaluation.userProfileScore,
+        summary: evaluation.summary,
+        recommendation: evaluation.recommendation,
+        evaluatedAt: new Date(),
+      },
     });
 
-    return {
-      tripId: trip.id,
-      data: mapEvaluationToDto(savedEvaluation),
-    };
-  } catch (error) {
-    console.warn("[evaluation-service] Database transaction failed, saving evaluation in memory fallback:", error);
-  }
+    await tx.trip.update({
+      where: { id: trip.id },
+      data: { status: "EVALUATED" },
+    });
 
-  const memoryEvaluation = saveEvaluationInMemory(trip.id, evaluation);
-  if (!memoryEvaluation) {
-    throw new Error("Failed to save evaluation in memory");
-  }
+    return createdEvaluation;
+  });
 
   return {
     tripId: trip.id,
-    data: mapEvaluationToDto(memoryEvaluation),
+    data: mapEvaluationToDto(savedEvaluation),
   };
 }
