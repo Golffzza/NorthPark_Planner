@@ -37,33 +37,30 @@ export function ParkDetailHero({ park }: ParkDetailHeroProps) {
             <p className="mt-2 text-base text-white/78">{park.nameEn ?? "Northern Thailand National Park"}</p>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-white/82 sm:text-base">{park.description}</p>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[24px] bg-white/16 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/70">เวลาเปิด</p>
-                <p className="mt-2 text-lg font-semibold">{park.openTime}</p>
-              </div>
-              <div className="rounded-[24px] bg-white/16 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/70">เวลาปิด</p>
-                <p className="mt-2 text-lg font-semibold">{park.closeTime}</p>
-              </div>
-              <div className="rounded-[24px] bg-white/16 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/70">Guide Style</p>
-                <p className="mt-2 text-lg font-semibold">Nature Companion</p>
-              </div>
+            <div className="mt-5 flex flex-wrap gap-2.5">
+              <span className="inline-flex items-center gap-2 rounded-full bg-black/40 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md border border-white/20 shadow-xs">
+                <span className="text-emerald-300 font-bold">🕒</span>
+                <span>เปิด-ปิด: {park.openTime} - {park.closeTime} น.</span>
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-black/40 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md border border-white/20 shadow-xs">
+                <span className="text-emerald-300 font-bold">🌲</span>
+                <span>ลักษณะพื้นที่: ธรรมชาติและผืนป่า</span>
+              </span>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/trips/new?parkId=${park.id}`}
-                className="inline-flex items-center justify-center rounded-full border border-white/90 bg-white px-5 py-3 text-sm font-semibold text-[var(--forest-deep)] shadow-[0_12px_24px_rgba(20,49,43,0.16)]"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-extrabold !text-[#04221a] shadow-lg transition-all hover:bg-emerald-50 active:scale-95"
               >
-                วางแผนทริปไปที่นี่
+                <span className="!text-[#04221a] font-extrabold">วางแผนทริปไปที่นี่</span>
+                <span>🧭</span>
               </Link>
               <Link
                 href="/parks"
-                className="inline-flex items-center justify-center rounded-full border border-white/36 bg-white/12 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/60 bg-[#04221a]/85 px-7 py-3.5 text-sm font-bold !text-white shadow-md backdrop-blur-md transition-all hover:bg-[#04221a] active:scale-95"
               >
-                กลับไปหน้าอุทยาน
+                <span className="!text-white font-bold">กลับไปหน้าอุทยาน</span>
               </Link>
             </div>
           </div>

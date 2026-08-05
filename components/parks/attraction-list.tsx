@@ -8,7 +8,7 @@ export function AttractionList({ attractions }: AttractionListProps) {
   return (
     <section className="space-y-4">
       <div>
-        <span className="guide-chip">Park Highlights</span>
+        <span className="guide-chip">จุดเด่นอุทยาน</span>
         <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
           จุดเด่นภายในอุทยาน
         </h2>

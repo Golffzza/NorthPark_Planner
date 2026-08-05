@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { FormError } from "@/components/ui/form-error";
-import { TRANSPORT_MODE_OPTIONS, WEATHER_CONDITION_OPTIONS } from "@/lib/constants/trip-form-options";
+import { QUICK_ORIGIN_PRESETS, TRANSPORT_MODE_OPTIONS, WEATHER_CONDITION_OPTIONS } from "@/lib/constants/trip-form-options";
 import type { TripDetailDto } from "@/lib/mappers/trip-dto";
 import type { ParkOption } from "@/lib/services/park-service";
 import { toDateInputValue } from "@/lib/utils/date";
 
 import { TripFormField } from "./trip-form-fields/trip-form-field";
+import { ParkSearchSelect } from "./park-search-select";
 
 type TripFormMode = "create" | "edit";
 
@@ -117,6 +118,23 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
     setFormState((current) => ({ ...current, [key]: value }));
   }
 
+  function handleSelectOriginPreset(preset: (typeof QUICK_ORIGIN_PRESETS)[number]) {
+    setFormState((current) => ({
+      ...current,
+      originText: preset.text,
+      originLat: String(preset.lat),
+      originLng: String(preset.lng),
+    }));
+    setFieldErrors((current) => {
+      const nextErrors = { ...current };
+      delete nextErrors.originText;
+      delete nextErrors.originLat;
+      delete nextErrors.originLng;
+      return nextErrors;
+    });
+    setLocationMessage(`เลือกจุดเริ่มต้น: ${preset.label}`);
+  }
+
   function handleUseCurrentLocation() {
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
       setLocationMessage("This device does not support location sync.");
@@ -124,7 +142,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
     }
 
     setIsSyncingLocation(true);
-    setLocationMessage(undefined);
+    setLocationMessage("กำลังระบุตำแหน่งปัจจุบัน...");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -163,6 +181,34 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
     event.preventDefault();
     setFieldErrors({});
     setFormError(undefined);
+
+    const missing: string[] = [];
+    const newFieldErrors: Record<string, string> = {};
+
+    if (!formState.parkId || formState.parkId.trim().length === 0) {
+      missing.push("กรุณาเลือกอุทยานแห่งชาติปลายทาง");
+      newFieldErrors.parkId = "กรุณาเลือกอุทยานแห่งชาติปลายทาง";
+    }
+
+    if (!formState.tripDate || formState.tripDate.trim().length === 0) {
+      missing.push("กรุณากำหนดวันที่เดินทาง");
+      newFieldErrors.tripDate = "กรุณากำหนดวันที่เดินทาง";
+    }
+
+    if (!formState.departAt || formState.departAt.trim().length === 0) {
+      missing.push("กรุณาระบุเวลาออกเดินทาง");
+      newFieldErrors.departAt = "กรุณาระบุเวลาออกเดินทาง";
+    }
+
+    if (!formState.originText || formState.originText.trim().length === 0) {
+      missing.push("กรุณาระบุจุดเริ่มต้นเดินทาง");
+      newFieldErrors.originText = "กรุณาระบุจุดเริ่มต้นเดินทาง";
+    }
+
+    if (missing.length > 0) {
+      setFieldErrors(newFieldErrors);
+      return;
+    }
 
     if (isCreateMode && (formState.originLat.trim().length === 0 || formState.originLng.trim().length === 0)) {
       setFormError("กรุณากดใช้ตำแหน่งปัจจุบันก่อนประเมินทริป เพื่อให้ระบบคำนวณเส้นทางได้");
@@ -284,25 +330,27 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
           นี้โดยตรง
         </p>
         <div className="mt-5">
-          <TripFormField label="อุทยานที่ต้องการเดินทาง" htmlFor="parkId" hint="ใช้รายชื่ออุทยานที่พร้อมในระบบ">
-            <select
+          <TripFormField label="อุทยานที่ต้องการเดินทาง" htmlFor="parkId" hint="พิมพ์ค้นหาชื่อหรือจังหวัดเพื่อเลือกอุทยาน">
+            <ParkSearchSelect
               id="parkId"
-              name="parkId"
-              value={formState.parkId}
-              onChange={(event) => updateField("parkId", event.target.value)}
-              className={inputClassName}
-            >
-              <option value="">เลือกอุทยาน</option>
-              {parkOptions.map((park) => (
-                <option key={park.id} value={park.id}>
-                  {park.nameTh} - {park.province}
-                </option>
-              ))}
-            </select>
+              parks={parkOptions}
+              selectedParkId={formState.parkId}
+              onSelectPark={(parkId) => {
+                updateField("parkId", parkId);
+                if (parkId) {
+                  setFieldErrors((current) => {
+                    const next = { ...current };
+                    delete next.parkId;
+                    return next;
+                  });
+                }
+              }}
+              hasError={!!fieldErrors.parkId}
+            />
             <FormError message={fieldErrors.parkId} />
           </TripFormField>
           <p className="mt-3 text-xs leading-6 text-[var(--muted)]">
-            Park details like opening and closing time will follow the destination you choose here.
+            รายละเอียดอุทยาน เช่น เวลาเปิด-ปิด และข้อมูลเตือนความปลอดภัยจะอัปเดตตามอุทยานที่เลือกที่นี่
           </p>
         </div>
       </section>
@@ -357,13 +405,33 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             <FormError message={fieldErrors.originText} />
           </TripFormField>
 
+          <div>
+            <p className="mb-2.5 text-xs font-semibold text-[var(--muted)]">หรือเลือกจุดเริ่มต้นลัด (Quick Location Presets):</p>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_ORIGIN_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => handleSelectOriginPreset(preset)}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                    formState.originText === preset.text
+                      ? "bg-[var(--brand-strong)] text-white shadow-xs"
+                      : "border border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                  }`}
+                >
+                  📍 {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 rounded-[24px] border border-white/60 bg-white/55 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-[var(--foreground)]">Sync current location</p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">Sync current location (GPS)</p>
               <p className="text-xs leading-6 text-[var(--muted)]">
-                Use your phone or browser location to fill the hidden route coordinates automatically.
+                ใช้พิกัดปัจจุบันจากเบอร์/เบราว์เซอร์เพื่อคำนวณเส้นทางและเวลาเดินทางจริงอัตโนมัติ
               </p>
-              {locationMessage ? <p className="text-xs leading-6 text-[var(--brand-strong)]">{locationMessage}</p> : null}
+              {locationMessage ? <p className="text-xs leading-6 font-semibold text-[var(--brand-strong)]">{locationMessage}</p> : null}
             </div>
             <button
               type="button"
@@ -371,23 +439,11 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
               disabled={isSyncingLocation}
               className="glass-button inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSyncingLocation ? "Syncing location..." : "ใช้ตำแหน่งปัจจุบัน"}
+              {isSyncingLocation ? "กำลังค้นหาตำแหน่ง..." : "ใช้ตำแหน่งปัจจุบัน (GPS)"}
             </button>
           </div>
 
-          <div className="dashboard-card rounded-[24px] px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">Quick defaults</p>
-            <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-              {isCreateMode ? "System will fill the rest for you" : "Ready with starter values"}
-            </p>
-            <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-              Car, 1 traveler, clear weather, and 120 fallback minutes are already set. {isCreateMode
-                ? "After saving, the system will create the trip and run live evaluation automatically."
-                : "Open advanced settings only if you want to fine-tune them."}
-            </p>
-          </div>
-
-          {!isCreateMode && showAdvanced ? <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
             <TripFormField label="รูปแบบการเดินทาง" htmlFor="transportMode">
               <select
                 id="transportMode"
@@ -396,7 +452,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                 className={inputClassName}
               >
                 {TRANSPORT_MODE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <option key={option.value} value={option.value} className="bg-white text-slate-900 dark:bg-[#0d2820] dark:text-emerald-100">
                     {option.label}
                   </option>
                 ))}
@@ -414,7 +470,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
               />
               <FormError message={fieldErrors.travelerCount} />
             </TripFormField>
-          </div> : null}
+          </div>
         </div>
       </section>
 

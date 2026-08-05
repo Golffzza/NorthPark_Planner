@@ -1,7 +1,7 @@
 import { calculateTripEvaluation } from "@/lib/evaluation/calculate-trip-evaluation";
 import { prisma } from "@/lib/db/prisma";
 import { mapEvaluationToDto } from "@/lib/mappers/evaluation-dto";
-import { getTripForCurrentUser } from "@/lib/services/trip-service";
+import { getTripForCurrentUser, saveEvaluationInMemory } from "@/lib/services/trip-service";
 
 import { mapLatestSnapshotsToEvaluationInput } from "./live-evaluation-input-mapper";
 
@@ -72,32 +72,38 @@ export async function evaluateLiveTripForCurrentUser(
   });
   const evaluation = calculateTripEvaluation(evaluationInput);
 
-  const savedEvaluation = await prisma.$transaction(async (tx) => {
-    const createdEvaluation = await tx.tripEvaluation.create({
-      data: {
-        tripId: trip.id,
-        totalScore: evaluation.totalScore,
-        level: evaluation.level,
-        weatherScore: evaluation.weatherScore,
-        durationScore: evaluation.durationScore,
-        timeScore: evaluation.timeScore,
-        userProfileScore: evaluation.userProfileScore,
-        summary: evaluation.summary,
-        recommendation: evaluation.recommendation,
-        evaluatedAt: new Date(),
-      },
-    });
+  let savedEvaluation;
+  try {
+    savedEvaluation = await prisma.$transaction(async (tx) => {
+      const createdEvaluation = await tx.tripEvaluation.create({
+        data: {
+          tripId: trip.id,
+          totalScore: evaluation.totalScore,
+          level: evaluation.level,
+          weatherScore: evaluation.weatherScore,
+          durationScore: evaluation.durationScore,
+          timeScore: evaluation.timeScore,
+          userProfileScore: evaluation.userProfileScore,
+          summary: evaluation.summary,
+          recommendation: evaluation.recommendation,
+          evaluatedAt: new Date(),
+        },
+      });
 
-    await tx.trip.update({
-      where: { id: trip.id },
-      data: { status: "EVALUATED" },
-    });
+      await tx.trip.update({
+        where: { id: trip.id },
+        data: { status: "EVALUATED" },
+      });
 
-    return createdEvaluation;
-  });
+      return createdEvaluation;
+    });
+  } catch (error) {
+    console.warn("[trip-live-evaluation-orchestrator] DB transaction failed, saving evaluation in memory fallback:", error);
+    savedEvaluation = saveEvaluationInMemory(trip.id, evaluation);
+  }
 
   return {
     tripId: trip.id,
-    data: mapEvaluationToDto(savedEvaluation),
+    data: mapEvaluationToDto(savedEvaluation as any),
   };
 }

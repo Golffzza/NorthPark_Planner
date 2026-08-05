@@ -13,6 +13,15 @@ export const WEATHER_CONDITION_OPTIONS = [
   { value: "STORM", label: "พายุ / สภาพอากาศเสี่ยง" },
 ] as const;
 
+export const QUICK_ORIGIN_PRESETS = [
+  { label: "เชียงใหม่ (ในเมือง)", text: "ตัวเมืองเชียงใหม่", lat: 18.7883, lng: 98.9853 },
+  { label: "เชียงราย (ในเมือง)", text: "ตัวเมืองเชียงราย", lat: 19.9105, lng: 99.8406 },
+  { label: "พิษณุโลก (ในเมือง)", text: "ตัวเมืองพิษณุโลก", lat: 16.8211, lng: 100.2659 },
+  { label: "น่าน (ในเมือง)", text: "ตัวเมืองน่าน", lat: 18.7756, lng: 100.7730 },
+  { label: "ลำปาง (ในเมือง)", text: "ตัวเมืองลำปาง", lat: 18.2888, lng: 99.4924 },
+  { label: "กรุงเทพฯ", text: "กรุงเทพมหานคร", lat: 13.7563, lng: 100.5018 },
+] as const;
+
 export const TRIP_STATUS_LABELS: Record<string, string> = {
   DRAFT: "รอประเมิน",
   EVALUATED: "ประเมินแล้ว",

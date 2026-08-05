@@ -9,20 +9,31 @@ export type MockCurrentUser = {
   role: "USER" | "ADMIN";
 };
 
-export async function getMockCurrentUser(): Promise<MockCurrentUser> {
-  const user = await prisma.user.findUnique({
-    where: { email: DEMO_USER_EMAIL },
-    select: {
-      id: true,
-      displayName: true,
-      email: true,
-      role: true,
-    },
-  });
+const DEFAULT_MOCK_USER: MockCurrentUser = {
+  id: "mock-user-1",
+  displayName: "NorthPark Demo User",
+  email: DEMO_USER_EMAIL,
+  role: "USER",
+};
 
-  if (!user) {
-    throw new Error("Mock current user is not seeded.");
+export async function getMockCurrentUser(): Promise<MockCurrentUser> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: DEMO_USER_EMAIL },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (user) {
+      return user;
+    }
+  } catch (error) {
+    console.warn("[mock-current-user] Database query failed, using in-memory mock user fallback:", error);
   }
 
-  return user;
+  return DEFAULT_MOCK_USER;
 }

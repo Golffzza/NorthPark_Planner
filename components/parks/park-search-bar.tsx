@@ -37,9 +37,9 @@ export function ParkSearchBar({
         <label className="flex flex-col gap-2">
           <span className="text-sm font-semibold text-[var(--foreground)]">จังหวัด</span>
           <select name="province" defaultValue={defaultProvince} className="form-control">
-            <option value="">ทุกจังหวัด</option>
+            <option value="" className="bg-white text-slate-900 dark:bg-[#0d2820] dark:text-emerald-100">ทุกจังหวัด</option>
             {provinces.map((province) => (
-              <option key={province} value={province}>
+              <option key={province} value={province} className="bg-white text-slate-900 dark:bg-[#0d2820] dark:text-emerald-100">
                 {province}
               </option>
             ))}

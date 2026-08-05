@@ -86,7 +86,7 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
 
   if ("parkId" in input) {
     if (typeof input.parkId !== "string" || input.parkId.trim().length === 0) {
-      issues.push({ field: "parkId", message: "Park id is required", code: "required" });
+      issues.push({ field: "parkId", message: "กรุณาเลือกอุทยานแห่งชาติปลายทาง", code: "required" });
     } else {
       parsed.parkId = input.parkId.trim();
     }
@@ -94,11 +94,11 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
 
   if ("tripDate" in input) {
     if (typeof input.tripDate !== "string" || input.tripDate.trim().length === 0) {
-      issues.push({ field: "tripDate", message: "Must be a non-empty date string", code: "invalid_type" });
+      issues.push({ field: "tripDate", message: "กรุณากำหนดวันที่เดินทาง", code: "invalid_type" });
     } else {
       const tripDate = new Date(input.tripDate);
       if (Number.isNaN(tripDate.getTime())) {
-        issues.push({ field: "tripDate", message: "Must be a valid date", code: "invalid_date" });
+        issues.push({ field: "tripDate", message: "วันที่เดินทางไม่ถูกต้อง", code: "invalid_date" });
       } else {
         parsed.tripDate = tripDate;
       }
@@ -107,7 +107,7 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
 
   if ("departAt" in input) {
     if (typeof input.departAt !== "string" || !TIME_PATTERN.test(input.departAt)) {
-      issues.push({ field: "departAt", message: "Must use HH:MM format", code: "invalid_format" });
+      issues.push({ field: "departAt", message: "กรุณาระบุเวลาในรูปแบบ HH:MM (เช่น 07:00)", code: "invalid_format" });
     } else {
       parsed.departAt = input.departAt;
     }
@@ -115,7 +115,7 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
 
   if ("originText" in input) {
     if (typeof input.originText !== "string" || input.originText.trim().length === 0) {
-      issues.push({ field: "originText", message: "Origin text is required", code: "required" });
+      issues.push({ field: "originText", message: "กรุณาระบุจุดเริ่มต้นเดินทาง", code: "required" });
     } else {
       parsed.originText = input.originText.trim();
     }

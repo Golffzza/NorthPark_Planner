@@ -11,7 +11,7 @@ export function FactorBreakdown({ factors }: FactorBreakdownProps) {
     <section className="soft-card rounded-[34px] px-5 py-6 sm:px-7">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="guide-chip">Factor Breakdown</span>
+          <span className="guide-chip">วิเคราะห์รายปัจจัย</span>
           <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
             คะแนนย่อยของแต่ละปัจจัย
           </h2>

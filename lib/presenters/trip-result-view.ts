@@ -5,6 +5,7 @@ export type FactorScoreKey = "weather" | "duration" | "time" | "userProfile";
 export type FactorScoreViewModel = {
   key: FactorScoreKey;
   label: string;
+  weightLabel: string;
   description: string;
   score: number;
 };
@@ -31,27 +32,32 @@ export type TripResultViewModel = {
 const FACTOR_METADATA: Array<{
   key: FactorScoreKey;
   label: string;
+  weightLabel: string;
   description: string;
 }> = [
   {
     key: "weather",
-    label: "สภาพอากาศ",
-    description: "ความเหมาะสมของสภาพอากาศจากค่าที่บันทึกไว้หรือ snapshot ล่าสุดที่ใช้ในรอบประเมิน",
+    label: "สภาพอากาศ (Weather)",
+    weightLabel: "น้ำหนัก 35%",
+    description: "ประเมินจากปริมาณฝน สภาพอากาศเปิด และโอกาสเกิดพายุตามข้อมูลสภาพอากาศล่าสุด",
   },
   {
     key: "duration",
-    label: "ระยะเวลาเดินทาง",
-    description: "เวลาเดินทางที่ใช้คำนวณความเหมาะสมของทริปจากข้อมูลตั้งต้นหรือ route snapshot ล่าสุด",
+    label: "ระยะเวลาเดินทาง (Duration)",
+    weightLabel: "น้ำหนัก 25%",
+    description: "ประเมินจากระยะทางและเวลาขับขี่เพื่อป้องกันความเหนื่อยล้าในการเดินทาง",
   },
   {
     key: "time",
-    label: "เวลาเดินทาง",
-    description: "ความเหมาะสมของเวลาออกเดินทางเทียบกับช่วงเวลาที่ควรไปถึงอุทยานก่อนพระอาทิตย์ตก",
+    label: "เวลาเดินทางและแสงอาทิตย์ (Time)",
+    weightLabel: "น้ำหนัก 20%",
+    description: "ประเมินเวลาออกเดินทางเทียบกับเวลาเปิด-ปิดอุทยานและช่วงเวลาพระอาทิตย์ตก",
   },
   {
     key: "userProfile",
-    label: "ปัจจัยผู้ใช้",
-    description: "ความเหมาะสมจากจำนวนผู้เดินทางและรูปแบบการเดินทาง",
+    label: "ปัจจัยส่วนบุคคล (User Profile)",
+    weightLabel: "น้ำหนัก 20%",
+    description: "ประเมินความเหมาะสมจากจำนวนผู้ร่วมเดินทางและประเภทพาหนะที่ใช้",
   },
 ];
 

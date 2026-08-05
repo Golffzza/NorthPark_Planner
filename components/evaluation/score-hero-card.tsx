@@ -13,7 +13,7 @@ export function ScoreHeroCard({ parkName, parkProvince, evaluation }: ScoreHeroC
     <section className="soft-card overflow-hidden rounded-[38px] px-5 py-6 sm:px-7 sm:py-7">
       <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
         <div>
-          <span className="guide-chip">Safety Score Dashboard</span>
+          <span className="guide-chip">แดชบอร์ดคะแนนความปลอดภัย</span>
           <p className="mt-4 text-sm font-medium text-[var(--muted)]">{parkProvince}</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
             {parkName}
@@ -41,9 +41,9 @@ export function ScoreHeroCard({ parkName, parkProvince, evaluation }: ScoreHeroC
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-white/70">Trip Safety Companion</p>
+              <p className="text-sm font-medium text-white/70">ระบบประเมินความปลอดภัยทริป</p>
               <p className="mt-2 text-base leading-7 text-white/82">
-                ใช้คะแนนนี้เป็นภาพรวมของความพร้อมในการเดินทาง พร้อมดู factor breakdown และคำแนะนำต่อด้านล่าง
+                ใช้คะแนนนี้เป็นภาพรวมของความพร้อมในการเดินทาง พร้อมดูสรุปคะแนนย่อยรายปัจจัยและคำแนะนำต่อด้านล่าง
               </p>
             </div>
           </div>

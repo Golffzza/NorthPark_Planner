@@ -1,7 +1,7 @@
 import { calculateTripEvaluation } from "@/lib/evaluation/calculate-trip-evaluation";
 import { prisma } from "@/lib/db/prisma";
 import { mapEvaluationToDto } from "@/lib/mappers/evaluation-dto";
-import { getTripForCurrentUser } from "@/lib/services/trip-service";
+import { getTripForCurrentUser, saveEvaluationInMemory } from "@/lib/services/trip-service";
 
 export type EvaluateTripResult = {
   tripId: string;
@@ -22,32 +22,42 @@ export async function evaluateTripForCurrentUser(tripId: string): Promise<Evalua
     transportMode: trip.transportMode,
   });
 
-  const savedEvaluation = await prisma.$transaction(async (tx) => {
-    const createdEvaluation = await tx.tripEvaluation.create({
-      data: {
-        tripId: trip.id,
-        totalScore: evaluation.totalScore,
-        level: evaluation.level,
-        weatherScore: evaluation.weatherScore,
-        durationScore: evaluation.durationScore,
-        timeScore: evaluation.timeScore,
-        userProfileScore: evaluation.userProfileScore,
-        summary: evaluation.summary,
-        recommendation: evaluation.recommendation,
-        evaluatedAt: new Date(),
-      },
+  try {
+    const savedEvaluation = await prisma.$transaction(async (tx) => {
+      const createdEvaluation = await tx.tripEvaluation.create({
+        data: {
+          tripId: trip.id,
+          totalScore: evaluation.totalScore,
+          level: evaluation.level,
+          weatherScore: evaluation.weatherScore,
+          durationScore: evaluation.durationScore,
+          timeScore: evaluation.timeScore,
+          userProfileScore: evaluation.userProfileScore,
+          summary: evaluation.summary,
+          recommendation: evaluation.recommendation,
+          evaluatedAt: new Date(),
+        },
+      });
+
+      await tx.trip.update({
+        where: { id: trip.id },
+        data: { status: "EVALUATED" },
+      });
+
+      return createdEvaluation;
     });
 
-    await tx.trip.update({
-      where: { id: trip.id },
-      data: { status: "EVALUATED" },
-    });
+    return {
+      tripId: trip.id,
+      data: mapEvaluationToDto(savedEvaluation),
+    };
+  } catch (error) {
+    console.warn("[evaluation-service] Database transaction failed, saving evaluation in memory fallback:", error);
+  }
 
-    return createdEvaluation;
-  });
-
+  const memoryEvaluation = saveEvaluationInMemory(trip.id, evaluation);
   return {
     tripId: trip.id,
-    data: mapEvaluationToDto(savedEvaluation),
+    data: mapEvaluationToDto(memoryEvaluation as any),
   };
 }

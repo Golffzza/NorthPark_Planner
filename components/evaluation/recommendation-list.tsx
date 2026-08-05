@@ -5,7 +5,7 @@ type RecommendationListProps = {
 export function RecommendationList({ items }: RecommendationListProps) {
   return (
     <section className="soft-card rounded-[34px] px-5 py-6 sm:px-7">
-      <span className="guide-chip">Safety Recommendations</span>
+      <span className="guide-chip">คำแนะนำความปลอดภัย</span>
       <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
         คำแนะนำเพื่อปรับแผน
       </h2>

@@ -48,7 +48,7 @@ function parseDate(field: string, value: unknown, issues: ValidationIssue[]): Da
   if (typeof value !== "string" || value.trim().length === 0) {
     issues.push({
       field,
-      message: "Must be a non-empty date string",
+      message: "กรุณากำหนดวันที่เดินทาง",
       code: "invalid_type",
     });
     return undefined;
@@ -59,7 +59,7 @@ function parseDate(field: string, value: unknown, issues: ValidationIssue[]): Da
   if (Number.isNaN(parsedDate.getTime())) {
     issues.push({
       field,
-      message: "Must be a valid date",
+      message: "วันที่เดินทางไม่ถูกต้อง",
       code: "invalid_date",
     });
     return undefined;
@@ -72,7 +72,7 @@ function parseTime(field: string, value: unknown, issues: ValidationIssue[]): st
   if (typeof value !== "string" || !TIME_PATTERN.test(value)) {
     issues.push({
       field,
-      message: "Must use HH:MM format",
+      message: "กรุณาระบุเวลาในรูปแบบ HH:MM (เช่น 07:00)",
       code: "invalid_format",
     });
     return undefined;
@@ -90,7 +90,7 @@ function parsePositiveInteger(
   if (typeof value !== "number" || !Number.isInteger(value) || value < minimum) {
     issues.push({
       field,
-      message: `Must be an integer greater than or equal to ${minimum}`,
+      message: `กรุณาระบุจำนวนตัวเลขไม่ต่ำกว่า ${minimum}`,
       code: "out_of_range",
     });
     return undefined;
@@ -108,7 +108,7 @@ function parseEnum<T extends readonly string[]>(
   if (typeof value !== "string" || !allowedValues.includes(value)) {
     issues.push({
       field,
-      message: `Must be one of: ${allowedValues.join(", ")}`,
+      message: "ตัวเลือกไม่ถูกต้อง",
       code: "invalid_enum",
     });
     return undefined;
@@ -129,7 +129,7 @@ function parseOptionalString(
   if (typeof value !== "string") {
     issues.push({
       field,
-      message: "Must be a string",
+      message: "ข้อมูลต้องเป็นข้อความ",
       code: "invalid_type",
     });
     return undefined;
@@ -152,7 +152,7 @@ function parseOptionalCoordinate(
   if (typeof value !== "number" || Number.isNaN(value) || value < minimum || value > maximum) {
     issues.push({
       field,
-      message: `Must be a number between ${minimum} and ${maximum}`,
+      message: `พิกัดละติจูด/ลองจิจูดต้องอยู่ระหว่าง ${minimum} ถึง ${maximum}`,
       code: "out_of_range",
     });
     return undefined;
@@ -166,7 +166,7 @@ export function parseTripCreateInput(input: unknown): TripCreateInput {
     throw new RequestValidationError([
       {
         field: "body",
-        message: "Request body must be a JSON object",
+        message: "ข้อมูลที่ส่งมาไม่ถูกต้อง",
         code: "invalid_type",
       },
     ]);
@@ -179,7 +179,7 @@ export function parseTripCreateInput(input: unknown): TripCreateInput {
       : (() => {
           issues.push({
             field: "parkId",
-            message: "Park id is required",
+            message: "กรุณาเลือกอุทยานแห่งชาติปลายทาง",
             code: "required",
           });
           return undefined;
@@ -192,7 +192,7 @@ export function parseTripCreateInput(input: unknown): TripCreateInput {
       : (() => {
           issues.push({
             field: "originText",
-            message: "Origin text is required",
+            message: "กรุณาระบุจุดเริ่มต้นเดินทาง",
             code: "required",
           });
           return undefined;

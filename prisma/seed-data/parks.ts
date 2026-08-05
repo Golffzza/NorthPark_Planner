@@ -35,27 +35,99 @@ const curatedOverrides: Record<
     }>;
   }
 > = {
+  "Khlong Lan National Park": {
+    slug: "khlong-lan",
+    coverImageUrl: "/images/parks/khlong-lan.jpg",
+    attractions: [
+      {
+        name: "น้ำตกคลองลาน",
+        description: "น้ำตกคลองลานขนาดใหญ่สูงกว่า 100 เมตร สายน้ำตกไหลผ่านหน้าผาสูงตระหง่านกลางป่าอุดมสมบูรณ์",
+        type: "WATERFALL",
+        imageUrl: "/images/parks/khlong-lan.jpg",
+      },
+    ],
+    warnings: [
+      {
+        title: "ระวังโขดหินลื่นและละอองน้ำ",
+        description: "บริเวณหน้าผาน้ำตกมีละอองน้ำกระจายตลอดเวลา ควรระมัดระวังขณะเดินถ่ายภาพ",
+        severity: "MEDIUM",
+        isActive: true,
+      },
+    ],
+  },
+  "Khlong Wang Chao National Park": {
+    slug: "khlong-wang-chao",
+    coverImageUrl: "/images/parks/khlong-wang-chao.jpg",
+    attractions: [
+      {
+        name: "น้ำตกเต่าดำ",
+        description: "น้ำตกขนาดใหญ่ทอดตัวลงมาจากหน้าผาสูงตาดชั้นตระการตา กลางผืนป่าดงดิบสมบูรณ์ของอุทยานแห่งชาติคลองวังเจ้า",
+        type: "WATERFALL",
+        imageUrl: "/images/parks/khlong-wang-chao.jpg",
+      },
+      {
+        name: "สะพานไม้",
+        description: "สะพานแขวนไม้ทอดข้ามลำน้ำคลองวังเจ้า อันเป็นจุดเชื่อมต่อเขตแดนธรรมชาติระหว่าง 2 จังหวัด คือ จังหวัดกำแพงเพชร และจังหวัดตาก",
+        type: "VIEWPOINT",
+        imageUrl: "/images/attractions/khlong-wang-chao-wooden-bridge.jpg",
+      },
+    ],
+    warnings: [
+      {
+        title: "เส้นทางไปน้ำตกเต่าดำวิบากและชันสูง (ควรใช้รถ 4WD)",
+        description: "เส้นทางเดินทางไปน้ำตกเต่าดำเป็นทางลูกรังวิบาก ลาดชันสูง และขรุขระ รถเก๋งหรือรถขับเคลื่อน 2 ล้อทั่วไปไม่สามารถสัญจรได้ ควรใช้รถขับเคลื่อน 4 ล้อ (4WD) หรือใช้บริการรถท้องถิ่นนำทางของอุทยาน",
+        severity: "HIGH",
+        isActive: true,
+      },
+      {
+        title: "ระวังน้ำเชี่ยวหลังฝนตก",
+        description: "บริเวณลำธารและหน้าผาน้ำตกมีกระแสน้ำแรงในช่วงฤดูฝน ควรปฏิบัติตามป้ายเตือนของเจ้าหน้าที่",
+        severity: "HIGH",
+        isActive: true,
+      },
+    ],
+  },
+  "Mae Wong National Park": {
+    slug: "mae-wong",
+    coverImageUrl: "/images/parks/mae-wong.jpg",
+    attractions: [
+      {
+        name: "แก่งผาคอย / ลำน้ำแม่วงก์",
+        description: "สายน้ำลำธารไหลผ่านโขดหินแก่งหินกลางผืนป่าธรรมชาติอันอุดมสมบูรณ์ของอุทยานแห่งชาติแม่วงก์",
+        type: "WATERFALL",
+        imageUrl: "/images/parks/mae-wong.jpg",
+      },
+    ],
+    warnings: [
+      {
+        title: "ระวังกระแสน้ำเชี่ยวช่วงฝนตกหนัก",
+        description: "บริเวณแก่งหินและลำธารมีกระแสน้ำไหลแรงในบางช่วงฤดู ควรระมัดระวังขณะลงเล่นน้ำ",
+        severity: "HIGH",
+        isActive: true,
+      },
+    ],
+  },
   "Doi Inthanon National Park": {
     slug: "doi-inthanon",
     coverImageUrl: "/images/parks/doi-inthanon.jpg",
     attractions: [
       {
-        name: "Kew Mae Pan Nature Trail",
-        description: "A panoramic mountain trail known for sunrise views and cool-season scenery.",
-        type: "TRAIL",
-        imageUrl: "/images/attractions/kew-mae-pan.jpg",
+        name: "จุดชมวิวกิ่วแม่ปาน",
+        description: "จุดชมวิวสันเขาและระเบียงไม้ชมวิวทะเลหมอกยามเช้าอันสวยงามตระการตา บนเส้นทางศึกษาธรรมชาติกิ่วแม่ปาน",
+        type: "VIEWPOINT",
+        imageUrl: "/images/attractions/kew-mae-pan-viewpoint.jpg",
       },
       {
-        name: "Wachirathan Waterfall",
-        description: "A large year-round waterfall popular with visitors.",
+        name: "น้ำตกวชิรธาร",
+        description: "น้ำตกขนาดใหญ่สายน้ำไหลตกจากหน้าผาสูงตระหง่านทอดตัวลงสู่แอ่งน้ำ ท่ามกลางละอองน้ำและป่าธรรมชาติร่มรื่น",
         type: "WATERFALL",
-        imageUrl: "/images/attractions/wachirathan.jpg",
+        imageUrl: "/images/attractions/wachirathan-waterfall.jpg",
       },
     ],
     warnings: [
       {
-        title: "Slippery surfaces during rainy weather",
-        description: "Trails and waterfall paths may become slippery after rain.",
+        title: "โขดหินและทางเดินลื่นในช่วงฝนตก",
+        description: "เส้นทางเดินศึกษาธรรมชาติและบริเวณใกล้น้ำตกอาจมีความลื่นสูงเมื่อมีฝนตก",
         severity: "MEDIUM",
         isActive: true,
       },
@@ -66,16 +138,56 @@ const curatedOverrides: Record<
     coverImageUrl: "/images/parks/doi-suthep-pui.jpg",
     attractions: [
       {
-        name: "Mon Tha Than Waterfall",
-        description: "A forest waterfall area with easy access from the main road.",
+        name: "น้ำตกมณฑาธาร",
+        description: "น้ำตกธรรมชาติบรรยากาศร่มรื่นกลางผืนป่า เข้าถึงได้สะดวกจากถนนขึ้นดอยสุเทพ",
         type: "WATERFALL",
         imageUrl: "/images/attractions/mon-tha-than.jpg",
       },
     ],
     warnings: [
       {
-        title: "Steep mountain roads",
-        description: "Drive carefully on winding roads, especially during foggy mornings.",
+        title: "เส้นทางขึ้นเขาชันและโค้งคดเคี้ยว",
+        description: "ควรขับขี่ด้วยความระมัดระวัง ใช้เกียร์ต่ำ และระวังหมอกหนายามเช้า",
+        severity: "MEDIUM",
+        isActive: true,
+      },
+    ],
+  },
+  "Mae Takhrai National Park": {
+    slug: "mae-takhrai",
+    coverImageUrl: "/images/parks/mae-takhrai.jpg",
+    attractions: [
+      {
+        name: "ลำน้ำสายห้วยและลานกางเต็นท์แม่ตะไคร้",
+        description: "สายน้ำลำธารห้วยไหลผ่านโขดหินกลางผืนป่าร่มรื่น เหมาะแก่การตั้งแคมป์ กางเต็นท์ พักผ่อนท่ามกลางธรรมชาติอันบริสุทธิ์",
+        type: "CAMPSITE",
+        imageUrl: "/images/attractions/mae-takhrai-stream.jpg",
+      },
+    ],
+    warnings: [
+      {
+        title: "ระวังน้ำเชี่ยวบริเวณลำธารช่วงฝนตกหนัก",
+        description: "สายน้ำและลำธารอาจเพิ่มระดับและไหลเชี่ยวได้รวดเร็วเมื่อเกิดฝนตกหนักสะสม ควรระมัดระวังขณะลงเล่นน้ำหรือตั้งแคมป์ริมน้ำ",
+        severity: "MEDIUM",
+        isActive: true,
+      },
+    ],
+  },
+  "Doi Pha Hom Pok National Park": {
+    slug: "doi-pha-hom-pok",
+    coverImageUrl: "/images/parks/doi-pha-hom-pok.jpg",
+    attractions: [
+      {
+        name: "ยอดดอยผ้าห่มปก",
+        description: "ยอดเขาที่สูงเป็นอันดับ 2 ของประเทศไทย (2,285 เมตร) สัมผัสอากาศหนาวเย็น ชมทะเลหมอกและพระอาทิตย์ขึ้นอันสวยงามตระการตา",
+        type: "VIEWPOINT",
+        imageUrl: "/images/attractions/doi-pha-hom-pok-peak.jpg",
+      },
+    ],
+    warnings: [
+      {
+        title: "สภาพอากาศหนาวจัดและอุณหภูมิต่ำ",
+        description: "ยอดดอยมีอากาศหนาวเย็นจัดตลอดปี โดยเฉพาะช่วงฤดูหนาว ควรเตรียมเสื้อผ้ากันหนาวและอุปกรณ์ให้พร้อม",
         severity: "MEDIUM",
         isActive: true,
       },
@@ -86,22 +198,22 @@ const curatedOverrides: Record<
     coverImageUrl: "/images/parks/huai-nam-dang.jpg",
     attractions: [
       {
-        name: "Huai Nam Dang Viewpoint",
-        description: "A popular scenic viewpoint for sunrise and mist-filled valleys.",
+        name: "จุดชมวิวดอยกิ่วลม / ทะเลหมอกห้วยน้ำดัง",
+        description: "จุดชมวิวทะเลหมอกยามเช้าและพระอาทิตย์ขึ้นอันงดงามที่ขึ้นชื่อที่สุดแห่งหนึ่งของภาคเหนือ",
         type: "VIEWPOINT",
         imageUrl: "/images/attractions/huai-nam-dang-viewpoint.jpg",
       },
       {
-        name: "Campground Area",
-        description: "A cool-weather campsite with open mountain views.",
+        name: "ลานกางเต็นท์ห้วยน้ำดัง",
+        description: "ลานกางเต็นท์ท่ามกลางอากาศหนาวเย็น สัมผัสธรรมชาติและวิวทิวทัศน์ภูเขากว้างไกล",
         type: "CAMPSITE",
         imageUrl: "/images/attractions/huai-nam-dang-camp.jpg",
       },
     ],
     warnings: [
       {
-        title: "Low visibility at dawn",
-        description: "Fog can reduce visibility on roads and viewpoints early in the morning.",
+        title: "ทัศนวิสัยต่ำในตอนเช้าตรู่",
+        description: "หมอกหนาอาจลดทัศนวิสัยบนเส้นทางขับรถและจุดชมวิว ควรเปิดไฟส่องสว่างขณะเดินทาง",
         severity: "HIGH",
         isActive: true,
       },
@@ -112,29 +224,49 @@ const curatedOverrides: Record<
     coverImageUrl: "/images/parks/si-lanna.jpg",
     attractions: [
       {
-        name: "Mae Ngat Reservoir View",
-        description: "A lakeside scenic area suitable for light sightseeing.",
+        name: "จุดชมวิวเขื่อนแม่งัดสมบูรณ์ชล",
+        description: "จุดชมวิวทะเลสาบอ่างเก็บน้ำกลางหุบเขา เหมาะสำหรับพักผ่อนและทำกิจกรรมทางน้ำ",
         type: "VIEWPOINT",
         imageUrl: "/images/attractions/mae-ngat-view.jpg",
       },
     ],
     warnings: [],
   },
+  "Khun Khan National Park": {
+    slug: "khun-khan",
+    coverImageUrl: "/images/parks/khun-khan.jpg",
+    attractions: [
+      {
+        name: "จุดชมวิวสะเมิง",
+        description: "จุดชมวิวบนสันเขาอำเภอสะเมิง มองเห็นทิวเขาซับซ้อนสลับซับซ้อนกว้างไกลสุดสายตาท่ามกลางผืนป่าดงดิบอันอุดมสมบูรณ์",
+        type: "VIEWPOINT",
+        imageUrl: "/images/attractions/samoeng-viewpoint.jpg",
+      },
+    ],
+    warnings: [
+      {
+        title: "เส้นทางขึ้นเขาคดเคี้ยวและสูงชัน",
+        description: "เส้นทางสู่จุดชมวิวสะเมิงเป็นถนนสายภูเขาคดเคี้ยวและลาดชัน ควรขับขี่ด้วยความระมัดระวังและใช้เกียร์ต่ำ",
+        severity: "MEDIUM",
+        isActive: true,
+      },
+    ],
+  },
   "Mae Wang National Park": {
     slug: "mae-wang",
     coverImageUrl: "/images/parks/mae-wang.jpg",
     attractions: [
       {
-        name: "Mae Wang Waterfall",
-        description: "A refreshing waterfall zone surrounded by forest.",
+        name: "น้ำตกแม่วาง",
+        description: "น้ำตกธรรมชาติบรรยากาศเย็นสบาย รายล้อมด้วยผืนป่าเบญจพรรณอันสมบูรณ์",
         type: "WATERFALL",
         imageUrl: "/images/attractions/mae-wang-waterfall.jpg",
       },
     ],
     warnings: [
       {
-        title: "Flashy stream conditions after rain",
-        description: "Water levels can rise quickly during heavy rainfall periods.",
+        title: "ระวังกระแสน้ำเชี่ยวช่วงฝนตกหนัก",
+        description: "ระดับน้ำในลำธารสามารถเพิ่มสูงขึ้นอย่างรวดเร็วในช่วงฝนตกหนัก ติดตามป้ายเตือนอย่างใกล้ชิด",
         severity: "HIGH",
         isActive: true,
       },
@@ -145,16 +277,16 @@ const curatedOverrides: Record<
     coverImageUrl: "/images/parks/ob-luang.jpg",
     attractions: [
       {
-        name: "Ob Luang Gorge Bridge",
-        description: "A signature viewpoint over the narrow gorge and river below.",
+        name: "สะพานเชื่อมโตรกเขาออบหลวง",
+        description: "จุดชมวิวโตรกผาหินแคบอันเป็นเอกลักษณ์ พร้อมสายน้ำแม่แจ่มไหลผ่านเบื้องล่าง",
         type: "VIEWPOINT",
         imageUrl: "/images/attractions/ob-luang-gorge.jpg",
       },
     ],
     warnings: [
       {
-        title: "Watch footing near cliff edges",
-        description: "Some elevated viewpoints require extra caution for children and older visitors.",
+        title: "ระมัดระวังการเดินบริเวณริมหน้าผา",
+        description: "จุดชมวิวบางแห่งมีความสูงชัน ควรดูแลเด็กเล็กและผู้สูงอายุอย่างใกล้ชิด",
         severity: "MEDIUM",
         isActive: true,
       },
@@ -165,8 +297,8 @@ const curatedOverrides: Record<
     coverImageUrl: "/images/parks/mae-ping.jpg",
     attractions: [
       {
-        name: "Ko Luang Waterfall",
-        description: "A multi-tier waterfall known for turquoise pools in suitable conditions.",
+        name: "น้ำตกก้อหลวง",
+        description: "น้ำตกหินปูนหลายชั้นอันสวยงามที่มีแอ่งน้ำสีฟ้าอมเขียวใสมรกต",
         type: "WATERFALL",
         imageUrl: "/images/attractions/ko-luang.jpg",
       },
@@ -178,17 +310,55 @@ const curatedOverrides: Record<
     coverImageUrl: "/images/parks/khun-chae.jpg",
     attractions: [
       {
-        name: "Khun Chae Waterfall",
-        description: "A tall waterfall accessed through a short forest approach.",
+        name: "น้ำตกขุนแจ",
+        description: "น้ำตกขนาดใหญ่สวยงามซ่อนตัวอยู่กลางผืนป่าดิบเขา มีเส้นทางเดินศึกษาธรรมชาติร่มรื่น",
         type: "WATERFALL",
         imageUrl: "/images/attractions/khun-chae-waterfall.jpg",
+      },
+      {
+        name: "จุดชมวิวดอยม่อนฝิ่น / ทะเลหมอกขุนแจ",
+        description: "จุดชมวิวทิวทัศน์ทะเลหมอกและพระอาทิตย์ตกดินยามเย็นอันสวยงามบนยอดเขาของอุทยานแห่งชาติขุนแจ",
+        type: "VIEWPOINT",
+        imageUrl: "/images/attractions/doi-mon-fin.jpg",
       },
     ],
     warnings: [
       {
-        title: "Roadside parking is limited",
-        description: "Plan arrival time carefully during busy travel periods.",
+        title: "พื้นที่จอดรถริมทางมีจำนวนจำกัด",
+        description: "ควรวางแผนเวลาเดินทางและช่วงเวลามาถึงให้รอบคอบโดยเฉพาะในช่วงเทศกาลท่องเที่ยว",
         severity: "LOW",
+        isActive: true,
+      },
+      {
+        title: "หมอกหนาและเส้นทางขับขี่ลาดชัน",
+        description: "เส้นทางขับรถขึ้นจุดชมวิวมีความลาดชันและอาจมีหมอกหนาในตอนเช้าและเย็น ควรขับขี่ด้วยความระมัดระวัง",
+        severity: "MEDIUM",
+        isActive: true,
+      },
+    ],
+  },
+  "Doi Luang National Park": {
+    slug: "doi-luang",
+    coverImageUrl: "/images/parks/doi-luang.jpg",
+    attractions: [
+      {
+        name: "น้ำตกปูแกง",
+        description: "น้ำตกหินปูนหลายชั้นอันสวยงาม สายน้ำใสไหลผ่านตาดหินและผืนป่าธรรมชาติอันร่มรื่นของอุทยานแห่งชาติดอยหลวง",
+        type: "WATERFALL",
+        imageUrl: "/images/attractions/pu-kaeng-waterfall.jpg",
+      },
+      {
+        name: "น้ำตกจำปาทอง",
+        description: "น้ำตกสวยงามที่มีสายน้ำไหลลงมาจากหน้าผาสูง รายล้อมด้วยโขดหินและธรรมชาติอุดมสมบูรณ์",
+        type: "WATERFALL",
+        imageUrl: "/images/attractions/champa-thong-waterfall.jpg",
+      },
+    ],
+    warnings: [
+      {
+        title: "โขดหินลื่นและระดับน้ำสูงช่วงฤดูฝน",
+        description: "บริเวณหน้าผาน้ำตกและโขดหินมีคราบตะไคร่น้ำและกระแสน้ำไหลเชี่ยวในบางช่วง ควรเดินด้วยความระมัดระวัง",
+        severity: "MEDIUM",
         isActive: true,
       },
     ],

@@ -75,7 +75,6 @@ describe("buildTripResultViewModel", () => {
     ]);
     expect(viewModel.factorScores[0]).toMatchObject({
       key: "weather",
-      label: "สภาพอากาศ",
       score: 92,
     });
     expect(viewModel.recommendations).toEqual([

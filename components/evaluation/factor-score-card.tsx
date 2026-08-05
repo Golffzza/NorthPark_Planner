@@ -22,13 +22,18 @@ function getTone(score: number) {
 
 export function FactorScoreCard({ factor }: FactorScoreCardProps) {
   return (
-    <article className="dashboard-card rounded-[28px] px-4 py-4">
+    <article className="dashboard-card rounded-[28px] p-5">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-semibold text-[var(--foreground)]">{factor.label}</h3>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{factor.description}</p>
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold text-[var(--foreground)]">{factor.label}</h3>
+            <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+              {factor.weightLabel}
+            </span>
+          </div>
+          <p className="text-sm leading-relaxed text-[var(--muted)]">{factor.description}</p>
         </div>
-        <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${getTone(factor.score)}`}>
+        <span className={`inline-flex shrink-0 rounded-full px-3.5 py-1 text-sm font-bold shadow-xs ${getTone(factor.score)}`}>
           {factor.score}
         </span>
       </div>

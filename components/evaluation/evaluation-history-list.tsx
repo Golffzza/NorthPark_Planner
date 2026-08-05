@@ -9,7 +9,7 @@ type EvaluationHistoryListProps = {
 export function EvaluationHistoryList({ history }: EvaluationHistoryListProps) {
   return (
     <section className="soft-card rounded-[34px] px-5 py-6 sm:px-7">
-      <span className="guide-chip">Evaluation Timeline</span>
+      <span className="guide-chip">ลำดับประวัติการประเมิน</span>
       <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
         ประวัติการประเมิน
       </h2>
