@@ -15,4 +15,21 @@ describe("buildRecommendations", () => {
 
     expect(result).toContain("สภาพอากาศ");
   });
+
+  it.each([
+    ["duration", "duration"],
+    ["time", "time suitability"],
+    ["userProfile", "traveler profile"],
+  ] as const)("returns guidance for the %s factor", (weakestFactor, expectedText) => {
+    const result = buildRecommendations({
+      weakestFactor,
+      weatherCondition: "CLEAR",
+      estimatedTravelMinutes: 120,
+      departAt: "08:00",
+      transportMode: "CAR",
+      travelerCount: 2,
+    });
+
+    expect(result.toLowerCase()).toContain(expectedText);
+  });
 });

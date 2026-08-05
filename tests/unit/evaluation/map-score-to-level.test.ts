@@ -9,4 +9,9 @@ describe("mapScoreToLevel", () => {
     expect(mapScoreToLevel(50)).toBe("MODERATE");
     expect(mapScoreToLevel(25)).toBe("NEEDS_ADJUSTMENT");
   });
+
+  it("clamps scores outside the display range", () => {
+    expect(mapScoreToLevel(150)).toBe("EXCELLENT");
+    expect(mapScoreToLevel(-20)).toBe("NEEDS_ADJUSTMENT");
+  });
 });
