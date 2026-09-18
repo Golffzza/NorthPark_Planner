@@ -36,6 +36,15 @@ export function ParkSearchBar({
     setSelectedProvince(defaultProvince);
   }, [defaultProvince]);
 
+  const scrollToResults = () => {
+    setTimeout(() => {
+      const el = document.getElementById("park-results");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 120);
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const params = new URLSearchParams();
@@ -47,6 +56,7 @@ export function ParkSearchBar({
     }
     const queryStr = params.toString();
     router.push(queryStr ? `/parks?${queryStr}` : "/parks", { scroll: false });
+    scrollToResults();
   };
 
   const handleSuggestionClick = (query: string) => {
@@ -57,6 +67,7 @@ export function ParkSearchBar({
       params.set("province", selectedProvince);
     }
     router.push(`/parks?${params.toString()}`, { scroll: false });
+    scrollToResults();
   };
 
   const handleClear = (e: React.MouseEvent) => {

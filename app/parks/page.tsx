@@ -67,67 +67,99 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
 
         <ParkSearchBar defaultQuery={query.q} defaultProvince={query.province} provinces={provinces} />
 
-        {hasResults ? (
-          <>
-            <section className="grid gap-4 md:grid-cols-2">
-              {parkResult.data.map((park) => (
-                <ParkCard key={park.id} park={park} />
-              ))}
-            </section>
-
-            <ParkPagination
-              currentPage={parkResult.meta.page}
-              totalPages={parkResult.meta.totalPages}
-              totalItems={parkResult.meta.total}
-              query={query}
-            />
-          </>
-        ) : (
-          <div className="space-y-6">
-            <EmptyState
-              title={
-                query.q
-                  ? `ไม่พบอุทยานที่ตรงกับ "${query.q}"`
-                  : "ยังไม่พบอุทยานที่ตรงกับตัวกรอง"
-              }
-              description={
-                query.q
-                  ? "ลองตรวจสอบตัวสะกด หรือเลือกดูอุทยานแนะนำด้านล่างนี้ที่อาจตรงกับสถานที่ที่คุณต้องการ"
-                  : "ลองเปลี่ยนการเลือกจังหวัด หรือล้างตัวกรองเพื่อกลับไปดูอุทยานภาคเหนือทั้งหมด"
-              }
-              actionLabel="ล้างตัวกรองและดูทั้งหมด"
-              actionHref="/parks"
-            />
-
-            {suggestions && suggestions.parks.length > 0 ? (
-              <section className="space-y-4 pt-2">
-                <div className="flex items-center justify-between gap-3 px-1">
-                  <div>
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 dark:bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-600/20 dark:ring-emerald-400/30">
-                      <span>{suggestions.type === "didYouMean" ? "💡" : "🌟"}</span>
-                      <span>
-                        {suggestions.type === "didYouMean"
-                          ? `หรือคุณกำลังมองหา "${suggestions.matchedKeyword}"?`
-                          : "อุทยานยอดนิยมแนะนำสำหรับคุณ"}
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-emerald-200/70 font-normal">
-                      {suggestions.type === "didYouMean"
-                        ? `พบอุทยานที่มีสถานที่หรือคำค้นใกล้เคียงกับที่คุณกำลังค้นหา`
-                        : `สำรวจอุทยานไฮไลท์ภาคเหนือที่มีสถานที่ท่องเที่ยวและธรรมชาติยอดนิยม`}
-                    </p>
-                  </div>
+        <div id="park-results" className="scroll-mt-24 space-y-4">
+          {hasResults ? (
+            <>
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <h3 className="text-sm font-bold text-slate-700 dark:text-emerald-200">
+                    {query.q || query.province ? (
+                      <>
+                        ผลการค้นหา{" "}
+                        <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
+                          ({parkResult.meta.total} แห่ง)
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        รายชื่ออุทยานทั้งหมด{" "}
+                        <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
+                          ({parkResult.meta.total} แห่ง)
+                        </span>
+                      </>
+                    )}
+                  </h3>
                 </div>
+                {(query.q || query.province) ? (
+                  <span className="text-xs text-slate-500 dark:text-emerald-300/70 font-medium">
+                    {query.q ? `คำค้น "${query.q}"` : ""}
+                    {query.q && query.province ? " • " : ""}
+                    {query.province ? `จ.${query.province}` : ""}
+                  </span>
+                ) : null}
+              </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  {suggestions.parks.map((park) => (
-                    <ParkCard key={park.id} park={park} />
-                  ))}
-                </div>
+              <section className="grid gap-4 md:grid-cols-2">
+                {parkResult.data.map((park) => (
+                  <ParkCard key={park.id} park={park} />
+                ))}
               </section>
-            ) : null}
-          </div>
-        )}
+
+              <ParkPagination
+                currentPage={parkResult.meta.page}
+                totalPages={parkResult.meta.totalPages}
+                totalItems={parkResult.meta.total}
+                query={query}
+              />
+            </>
+          ) : (
+            <div className="space-y-6">
+              <EmptyState
+                title={
+                  query.q
+                    ? `ไม่พบอุทยานที่ตรงกับ "${query.q}"`
+                    : "ยังไม่พบอุทยานที่ตรงกับตัวกรอง"
+                }
+                description={
+                  query.q
+                    ? "ลองตรวจสอบตัวสะกด หรือเลือกดูอุทยานแนะนำด้านล่างนี้ที่อาจตรงกับสถานที่ที่คุณต้องการ"
+                    : "ลองเปลี่ยนการเลือกจังหวัด หรือล้างตัวกรองเพื่อกลับไปดูอุทยานภาคเหนือทั้งหมด"
+                }
+                actionLabel="ล้างตัวกรองและดูทั้งหมด"
+                actionHref="/parks"
+              />
+
+              {suggestions && suggestions.parks.length > 0 ? (
+                <section className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between gap-3 px-1">
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 dark:bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-600/20 dark:ring-emerald-400/30">
+                        <span>{suggestions.type === "didYouMean" ? "💡" : "🌟"}</span>
+                        <span>
+                          {suggestions.type === "didYouMean"
+                            ? `หรือคุณกำลังมองหา "${suggestions.matchedKeyword}"?`
+                            : "อุทยานยอดนิยมแนะนำสำหรับคุณ"}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-emerald-200/70 font-normal">
+                        {suggestions.type === "didYouMean"
+                          ? `พบอุทยานที่มีสถานที่หรือคำค้นใกล้เคียงกับที่คุณกำลังค้นหา`
+                          : `สำรวจอุทยานไฮไลท์ภาคเหนือที่มีสถานที่ท่องเที่ยวและธรรมชาติยอดนิยม`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {suggestions.parks.map((park) => (
+                      <ParkCard key={park.id} park={park} />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </div>
+          )}
+        </div>
       </div>
     </AppShell>
   );
