@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CancelTripButton } from "@/components/trips/cancel-trip-button";
 import { EvaluationHistoryList } from "@/components/evaluation/evaluation-history-list";
 import { FactorBreakdown } from "@/components/evaluation/factor-breakdown";
 import { RecommendationList } from "@/components/evaluation/recommendation-list";
@@ -71,23 +72,25 @@ export default async function TripResultPage({ params }: TripResultPageProps) {
       <AppShell>
         <div className="space-y-6">
           <PageHeader
-            eyebrow="Safety Dashboard"
-            title={`ผลประเมินทริปไป ${trip.park.nameTh}`}
-            description="สรุปคะแนนรวม ระดับความเหมาะสม คะแนนย่อย คำแนะนำ และ timeline การประเมินในหน้าที่ออกแบบเป็น safety score dashboard โดยเฉพาะ"
+            compact
+            eyebrow="ผลประเมินความปลอดภัย"
+            title={`ผลประเมิน: ${trip.park.nameTh}`}
+            description="สรุปคะแนนความพร้อม สภาพอากาศล่วงหน้า และคำแนะนำเพื่อการเดินทาง"
             actions={
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex flex-wrap items-center gap-2">
                 <Link
                   href={`/trips/${trip.id}`}
-                  className="ghost-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-[var(--foreground)]"
+                  className="inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-emerald-100 bg-slate-100/90 hover:bg-slate-200/90 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/70 border border-slate-300/80 dark:border-emerald-500/40 backdrop-blur-md shadow-2xs active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  กลับไป Trip Detail
+                  กลับหน้ารายละเอียด
                 </Link>
                 <Link
                   href={`/trips/${trip.id}/edit`}
-                  className="glass-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
+                  className="inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 shadow-sm shadow-emerald-950/30 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   แก้ไขทริป
                 </Link>
+                <CancelTripButton tripId={trip.id} isCancelled={trip.status === "CANCELLED"} variant="compact" />
               </div>
             }
           />

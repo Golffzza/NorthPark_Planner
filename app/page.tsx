@@ -2,18 +2,51 @@ import Link from "next/link";
 
 import { AppShell } from "@/components/layout/app-shell";
 
-const quickActions = [
+const tripSteps = [
   {
-    title: "ค้นหาอุทยานที่ใช่",
-    description: "สำรวจอุทยานในภาคเหนือแบบ travel guide พร้อมภาพ ป้ายหมวดหมู่ และเวลาเปิดปิด",
+    stepLabel: "ขั้นตอนที่ 1",
+    title: "ค้นหาอุทยานที่อยากไป",
+    description: "สำรวจอุทยานแห่งชาติภาคเหนือ ดูไฮไลท์ภาพถ่าย เวลาเปิด-ปิด และสิ่งอำนวยความสะดวก",
+    href: "/parks",
+    actionLabel: "ดูรายชื่ออุทยาน",
+    iconBg: "from-emerald-500 to-teal-600",
+    badgeColor: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 ring-emerald-600/20",
+    icon: (
+      <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3L4 15h5l-3 6h12l-3-6h5L12 3z" />
+        <path d="M12 21v2" />
+      </svg>
+    ),
   },
   {
-    title: "วางแผนทริปทีละขั้น",
-    description: "กรอกวันเดินทาง จุดเริ่มต้น และข้อมูลสำคัญให้ครบใน planner ที่ออกแบบเพื่อหน้าจอมือถือ",
+    stepLabel: "ขั้นตอนที่ 2",
+    title: "ระบุวัน & วิธีเดินทาง",
+    description: "เลือกวันที่ออกเดินทาง จุดเริ่มต้น และยานพาหนะ เพื่อคำนวณระยะทางและเวลาที่เหมาะสม",
+    href: "/trips/new",
+    actionLabel: "เริ่มสร้างทริป",
+    iconBg: "from-teal-500 to-cyan-600",
+    badgeColor: "bg-teal-500/15 text-teal-800 dark:text-teal-300 ring-teal-600/20",
+    icon: (
+      <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+        <path d="M12 14v4M10 16h4" />
+      </svg>
+    ),
   },
   {
-    title: "เช็กความพร้อมก่อนออกทริป",
-    description: "ดูคะแนนความเหมาะสม ปัจจัยเสี่ยง และคำแนะนำสั้น ๆ เพื่อช่วยตัดสินใจก่อนเดินทางจริง",
+    stepLabel: "ขั้นตอนที่ 3",
+    title: "เช็กคะแนนความพร้อม",
+    description: "รับผลประเมินความปลอดภัย สภาพอากาศล่วงหน้า และคำแนะนำเพื่อการเดินทางที่ราบรื่น",
+    href: "/trips",
+    actionLabel: "ดูทริปของฉัน",
+    iconBg: "from-amber-500 to-emerald-600",
+    badgeColor: "bg-amber-500/15 text-amber-900 dark:text-amber-300 ring-amber-600/20",
+    icon: (
+      <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    ),
   },
 ];
 
@@ -69,11 +102,10 @@ export default function HomePage() {
                   Nature Companion • Northern Thailand
                 </span>
                 <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl leading-tight drop-shadow-sm">
-                  วางแผนเที่ยวอุทยานแบบสบายตา คิดเรื่องความปลอดภัยให้ครบ
+                  วางแผนเที่ยวอุทยานภาคเหนือ สะดวก ปลอดภัย มั่นใจทุกทริป
                 </h1>
                 <p className="max-w-xl text-sm leading-relaxed text-slate-100 font-medium sm:text-base drop-shadow-xs">
-                  NorthPark_Planner คือผู้ช่วยวางแผนทริปอุทยานแห่งชาติภาคเหนือในโทน Forest Glass
-                  ที่รวมการค้นหาอุทยาน การวางแผนทริป และประเมินความเหมาะสมล่วงหน้าไว้ในที่เดียว
+                  NorthPark คือผู้ช่วยวางแผนท่องเที่ยวอุทยานแห่งชาติภาคเหนือ ที่ช่วยคุณค้นหาจุดหมาย วางแผนเส้นทาง และประเมินความพร้อมล่วงหน้าได้ในที่เดียว
                 </p>
               </div>
 
@@ -135,7 +167,7 @@ export default function HomePage() {
                       รายละเอียด →
                     </span>
                   </div>
-                  <h2 className="text-2xl font-bold text-white tracking-tight sm:text-3xl">
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight whitespace-nowrap truncate">
                     อุทยานแห่งชาติดอยหลวง
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-200 line-clamp-2 leading-relaxed">
@@ -177,27 +209,69 @@ export default function HomePage() {
 
         {/* Steps / Guide Section */}
         <section className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-          <div className="soft-card rounded-[34px] px-5 py-6 sm:px-7 flex flex-col justify-center">
-            <span className="guide-chip w-max">TRIP SAFETY FLOW</span>
-            <h2 className="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-[var(--foreground)] leading-snug">
-              ระบบผู้ช่วยวางแผนทริปอุทยานแบบครบวงจร
-            </h2>
-            <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[var(--muted)]">
-              ออกแบบรองรับการใช้งานบนมือถือเป็นหลัก เหมาะสมกับ LINE MINI App และเบราว์เซอร์ทั่วไป พร้อมระบบประเมินความปลอดภัยล่วงหน้า
-            </p>
+          <div className="soft-card relative overflow-hidden rounded-[32px] p-6 sm:p-7 flex flex-col justify-between border border-white/60 dark:border-emerald-800/40 shadow-sm backdrop-blur-xl bg-white/80 dark:bg-[#0b1c16]/85">
+            <div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 dark:bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-600/20 dark:ring-emerald-400/30">
+                <span>✨</span>
+                <span>เริ่มต้นง่าย ๆ ใน 3 ขั้นตอน</span>
+              </div>
+              <h2 className="mt-3.5 text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-snug">
+                วางแผนเที่ยวอุทยานภาคเหนือ <br className="hidden sm:inline" />
+                <span className="bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">
+                  ง่าย มั่นใจ ปลอดภัย
+                </span>
+              </h2>
+              <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-emerald-200/80 font-normal">
+                ระบบผู้ช่วยอัจฉริยะช่วยคุณสำรวจอุทยาน จัดตารางเดินทาง และประเมินสภาพอากาศพร้อมความเหมาะสมอัตโนมัติ
+              </p>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2 pt-4 border-t border-slate-200/60 dark:border-white/10">
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950/60 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-emerald-200">
+                🌤️ เช็กสภาพอากาศ
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950/60 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-emerald-200">
+                ⏱️ คำนวณเวลาเดินทาง
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-emerald-950/60 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-emerald-200">
+                🛡️ ประเมินความปลอดภัย
+              </span>
+            </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            {quickActions.map((item, index) => (
-              <article key={item.title} className="soft-card rounded-[32px] px-5 py-5 flex flex-col justify-between">
+          <div className="grid gap-3.5 sm:grid-cols-3">
+            {tripSteps.map((item) => (
+              <Link
+                key={item.title}
+                href={item.href}
+                className="group soft-card relative flex flex-col justify-between rounded-[28px] p-5 border border-white/60 dark:border-emerald-800/40 shadow-sm backdrop-blur-xl bg-white/80 dark:bg-[#0b1c16]/85 transition-all duration-300 hover:-translate-y-1 hover:shadow-md active:scale-[0.98]"
+              >
                 <div>
-                  <span className="guide-chip">{`Step 0${index + 1}`}</span>
-                  <h3 className="mt-4 text-lg font-bold tracking-tight text-[var(--foreground)]">
+                  <div className="flex items-center justify-between">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${item.iconBg} shadow-md shadow-emerald-950/15`}>
+                      {item.icon}
+                    </div>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider ring-1 ${item.badgeColor}`}>
+                      {item.stepLabel}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-4 text-base font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {item.title}
                   </h3>
-                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[var(--muted)]">{item.description}</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-emerald-200/70 font-normal">
+                    {item.description}
+                  </p>
                 </div>
-              </article>
+
+                <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 pt-3 border-t border-slate-100 dark:border-white/5">
+                  <span>{item.actionLabel}</span>
+                  <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </div>
+              </Link>
             ))}
           </div>
         </section>

@@ -1,9 +1,11 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import {
   SunsetCalculationError,
   calculateSunsetSnapshot,
 } from "@/lib/integrations/sun/sunset-service";
 import { getTripForCurrentUser } from "@/lib/services/trip-service";
+import { saveSunsetSnapshotInMemory } from "./in-memory-snapshots";
 
 export class TripSnapshotContextError extends Error {
   constructor(message: string) {
@@ -52,16 +54,36 @@ export async function syncSunsetSnapshotForCurrentUser(tripId: string) {
       timezone: getAppTimezone(),
     });
 
-    return prisma.sunsetSnapshot.create({
-      data: {
-        tripId: trip.id,
-        source: snapshot.source,
-        timezone: snapshot.timezone,
-        latitude,
-        longitude,
-        sunsetAt: snapshot.sunsetAt,
-        sunsetLocalTime: snapshot.sunsetLocalTime,
-      },
+    if (typeof prisma?.sunsetSnapshot?.create === "function") {
+      try {
+        const created = await prisma.sunsetSnapshot.create({
+          data: {
+            tripId: trip.id,
+            source: snapshot.source,
+            timezone: snapshot.timezone,
+            latitude,
+            longitude,
+            sunsetAt: snapshot.sunsetAt,
+            sunsetLocalTime: snapshot.sunsetLocalTime,
+          },
+        });
+        saveSunsetSnapshotInMemory(created);
+        return created;
+      } catch (dbError) {
+        console.warn("[sunset-snapshot] Database create failed, saving in memory fallback:", dbError);
+      }
+    }
+
+    return saveSunsetSnapshotInMemory({
+      id: `sunset-snap-${Date.now()}`,
+      tripId: trip.id,
+      source: snapshot.source,
+      timezone: snapshot.timezone,
+      latitude: new Prisma.Decimal(latitude),
+      longitude: new Prisma.Decimal(longitude),
+      sunsetAt: snapshot.sunsetAt,
+      sunsetLocalTime: snapshot.sunsetLocalTime,
+      createdAt: new Date(),
     });
   } catch (error) {
     if (error instanceof SunsetCalculationError) {

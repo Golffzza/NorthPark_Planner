@@ -42,17 +42,6 @@ type FormState = {
   notes: string;
 };
 
-const plannerSteps = [
-  { id: "01", title: "เลือกอุทยาน", subtitle: "Park guide" },
-  { id: "02", title: "กำหนดวันเวลา", subtitle: "Trip timing" },
-  { id: "03", title: "ระบุจุดเริ่มต้น", subtitle: "Route ready" },
-  { id: "04", title: "ตรวจค่าตั้งต้น", subtitle: "Safety fallback" },
-];
-
-const compactPlannerSteps = plannerSteps.map((step, index) =>
-  index === 2 ? { ...step, subtitle: "Quick start" } : index === 3 ? { ...step, subtitle: "Optional" } : step,
-);
-
 function getInitialState(mode: TripFormMode, initialParkId?: string, trip?: TripDetailDto): FormState {
   if (mode === "edit" && trip) {
     return {
@@ -87,6 +76,85 @@ function getInitialState(mode: TripFormMode, initialParkId?: string, trip?: Trip
   };
 }
 
+function formatThaiDatePreview(dateStr: string): string {
+  if (!dateStr) return "";
+  try {
+    const [yearStr, monthStr, dayStr] = dateStr.split("-");
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+    const day = parseInt(dayStr, 10);
+    if (!year || !month || !day) return "";
+
+    const thaiMonths = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+    const thaiYear = year > 2400 ? year : year + 543;
+    const dateObj = new Date(year, month - 1, day);
+    const dayNames = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
+    const dayName = dayNames[dateObj.getDay()] ?? "วัน";
+
+    return `${dayName}ที่ ${day} ${thaiMonths[month - 1]} พ.ศ. ${thaiYear}`;
+  } catch {
+    return dateStr;
+  }
+}
+
+function getThaiTimeDescription(timeStr: string): { label: string; tone: "positive" | "neutral" | "warning" } {
+  if (!timeStr) return { label: "", tone: "neutral" };
+  const [hourStr, minStr = "00"] = timeStr.split(":");
+  const hour = parseInt(hourStr, 10);
+  if (isNaN(hour)) return { label: `${timeStr} น.`, tone: "neutral" };
+
+  const formattedTime = `${hourStr.padStart(2, "0")}:${minStr.padStart(2, "0")} น.`;
+
+  if (hour >= 5 && hour < 7) {
+    return { label: `ออกเดินทาง ${formattedTime} (เช้าตรู่ • เหมาะชมพระอาทิตย์ขึ้น)`, tone: "positive" };
+  } else if (hour >= 7 && hour < 9) {
+    return { label: `ออกเดินทาง ${formattedTime} (ช่วงเช้า • เวลาแนะนำสำหรับขับรถขึ้นดอย)`, tone: "positive" };
+  } else if (hour >= 9 && hour < 12) {
+    return { label: `ออกเดินทาง ${formattedTime} (ช่วงสาย • สว่างชัดเจน)`, tone: "neutral" };
+  } else if (hour >= 12 && hour < 15) {
+    return { label: `ออกเดินทาง ${formattedTime} (ช่วงบ่าย)`, tone: "neutral" };
+  } else if (hour >= 15 && hour < 17) {
+    return { label: `ออกเดินทาง ${formattedTime} (บ่ายแก่ • ควรระวังเวลาพระอาทิตย์ตก)`, tone: "warning" };
+  } else {
+    return { label: `ออกเดินทาง ${formattedTime} (ช่วงค่ำ • ทัศนวิสัยจำกัด แนะนำปรับเวลา)`, tone: "warning" };
+  }
+}
+
+const QUICK_TIME_PRESETS = [
+  { label: "🌅 06:00 น.", time: "06:00" },
+  { label: "🚗 07:30 น.", time: "07:30" },
+  { label: "☀️ 09:00 น.", time: "09:00" },
+  { label: "🌤️ 13:00 น.", time: "13:00" },
+];
+
+function getQuickDatePresets() {
+  const now = new Date();
+  const formatDate = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const today = new Date(now);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const saturday = new Date(now);
+  const dayOfWeek = saturday.getDay();
+  const daysUntilSaturday = (6 - dayOfWeek + 7) % 7 || 7;
+  saturday.setDate(saturday.getDate() + daysUntilSaturday);
+
+  return [
+    { label: "วันนี้", date: formatDate(today) },
+    { label: "พรุ่งนี้", date: formatDate(tomorrow) },
+    { label: "เสาร์นี้", date: formatDate(saturday) },
+  ];
+}
+
 const inputClassName = "form-control";
 
 function toOptionalNumber(value: string) {
@@ -109,10 +177,6 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
   const [locationMessage, setLocationMessage] = useState<string>();
 
   const parkOptions = useMemo(() => parks, [parks]);
-  const displayPlannerSteps = useMemo(
-    () => (isCreateMode ? compactPlannerSteps.slice(0, 3) : compactPlannerSteps),
-    [isCreateMode],
-  );
 
   function updateField<Key extends keyof FormState>(key: Key, value: FormState[Key]) {
     setFormState((current) => ({ ...current, [key]: value }));
@@ -300,88 +364,157 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <section className="glass-panel rounded-[34px] px-5 py-6 sm:px-7">
-        <p className="guide-chip">Step-Based Planner</p>
-        <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
-          {mode === "create" ? "วางแผนและประเมินทริปเลย" : "ปรับแผนเดินทางของคุณ"}
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-          planner นี้ออกแบบให้ไล่ทีละขั้นเหมือน travel companion บนมือถือ พร้อมข้อมูลที่จำเป็นสำหรับ live
-          weather, route และ sunset evaluation ในภายหลัง
-        </p>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-4">
-          {displayPlannerSteps.map((step) => (
-            <div key={step.id} className="dashboard-card rounded-[24px] px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-strong)]">{step.id}</p>
-              <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{step.title}</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">{step.subtitle}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="soft-card rounded-[34px] px-5 py-6 sm:px-7">
-        <p className="guide-chip">Step 01</p>
-        <h3 className="mt-4 text-xl font-semibold text-[var(--foreground)]">เลือกอุทยาน</h3>
-        <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-          เลือก destination หลักของทริปก่อน เพื่อให้ข้อมูลเวลาทำการและบริบทของอุทยานเชื่อมกับ trip
-          นี้โดยตรง
-        </p>
-        <div className="mt-5">
-          <TripFormField label="อุทยานที่ต้องการเดินทาง" htmlFor="parkId" hint="พิมพ์ค้นหาชื่อหรือจังหวัดเพื่อเลือกอุทยาน">
-            <ParkSearchSelect
-              id="parkId"
-              parks={parkOptions}
-              selectedParkId={formState.parkId}
-              onSelectPark={(parkId) => {
-                updateField("parkId", parkId);
-                if (parkId) {
-                  setFieldErrors((current) => {
-                    const next = { ...current };
-                    delete next.parkId;
-                    return next;
-                  });
-                }
-              }}
-              hasError={!!fieldErrors.parkId}
-            />
-            <FormError message={fieldErrors.parkId} />
-          </TripFormField>
-          <p className="mt-3 text-xs leading-6 text-[var(--muted)]">
-            รายละเอียดอุทยาน เช่น เวลาเปิด-ปิด และข้อมูลเตือนความปลอดภัยจะอัปเดตตามอุทยานที่เลือกที่นี่
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+      <section className="glass-panel rounded-[26px] p-4 sm:p-5">
+        <div>
+          <h2 className="text-base sm:text-lg font-bold text-[var(--foreground)]">
+            {mode === "create" ? "🗺️ ขั้นตอนวางแผนทริป" : "✏️ ปรับแผนการเดินทาง"}
+          </h2>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">
+            กรอก 3 ขั้นตอนง่ายๆ เพื่อให้ระบบคำนวณและประเมินความปลอดภัยของทริป
           </p>
         </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500/15 dark:bg-emerald-950/60 border border-emerald-500/30 py-2 px-1.5 text-center">
+            <span className="text-xs">🌲</span>
+            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">1. อุทยาน</span>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 rounded-2xl bg-[var(--surface-soft)] border border-[var(--border)] py-2 px-1.5 text-center">
+            <span className="text-xs">📅</span>
+            <span className="text-xs font-medium text-[var(--muted)]">2. วันเวลา</span>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 rounded-2xl bg-[var(--surface-soft)] border border-[var(--border)] py-2 px-1.5 text-center">
+            <span className="text-xs">🚗</span>
+            <span className="text-xs font-medium text-[var(--muted)]">3. จุดเริ่มต้น</span>
+          </div>
+        </div>
       </section>
 
-      <section className="soft-card rounded-[34px] px-5 py-6 sm:px-7">
-        <p className="guide-chip">Step 02</p>
-        <h3 className="mt-4 text-xl font-semibold text-[var(--foreground)]">กำหนดวันและเวลาเดินทาง</h3>
-        <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-          กำหนดวันเดินทางและเวลาออกเดินทางให้ชัด เพื่อให้ระบบใช้ต่อกับ trip safety score ได้แม่นขึ้น
+      <section className="soft-card rounded-[28px] p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-2">
+          <span className="guide-chip text-xs">Step 01</span>
+          <span className="text-[11px] text-[var(--muted)]">จำเป็น</span>
+        </div>
+        <h3 className="mt-2 text-lg sm:text-xl font-bold text-[var(--foreground)]">เลือกอุทยาน</h3>
+        <p className="mt-0.5 text-xs text-[var(--muted)]">
+          เลือกจุดหมายปลายทางของทริป
         </p>
+        <div className="mt-4">
+          <ParkSearchSelect
+            id="parkId"
+            parks={parkOptions}
+            selectedParkId={formState.parkId}
+            onSelectPark={(parkId) => {
+              updateField("parkId", parkId);
+              if (parkId) {
+                setFieldErrors((current) => {
+                  const next = { ...current };
+                  delete next.parkId;
+                  return next;
+                });
+              }
+            }}
+            hasError={!!fieldErrors.parkId}
+          />
+          <FormError message={fieldErrors.parkId} />
+        </div>
+      </section>
+
+      <section className="soft-card rounded-[32px] sm:rounded-[36px] p-5 sm:p-7 border border-white/60 dark:border-emerald-800/40 shadow-lg shadow-emerald-950/5 backdrop-blur-2xl bg-white/85 dark:bg-[#0b1c16]/90">
+        <div className="flex items-center gap-2">
+          <span className="guide-chip text-xs">Step 02</span>
+          <span className="text-xs font-semibold text-slate-500 dark:text-emerald-300/80">วันและเวลา</span>
+        </div>
+        <h3 className="mt-3 text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+          กำหนดวันและเวลาออกเดินทาง
+        </h3>
+        <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-emerald-200/70 font-normal">
+          เลือกวันเดินทางและเวลาที่เริ่มออกรถ เพื่อให้ระบบคำนวณระยะเวลา พระอาทิตย์ตก และสภาพอากาศได้อย่างแม่นยำ
+        </p>
+
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <TripFormField label="วันเดินทาง" htmlFor="tripDate">
-            <input
-              id="tripDate"
-              type="date"
-              value={formState.tripDate}
-              onChange={(event) => updateField("tripDate", event.target.value)}
-              className={inputClassName}
-            />
-            <FormError message={fieldErrors.tripDate} />
-          </TripFormField>
-          <TripFormField label="เวลาออกเดินทาง" htmlFor="departAt">
-            <input
-              id="departAt"
-              type="time"
-              value={formState.departAt}
-              onChange={(event) => updateField("departAt", event.target.value)}
-              className={inputClassName}
-            />
-            <FormError message={fieldErrors.departAt} />
-          </TripFormField>
+          {/* วันเดินทาง */}
+          <div className="space-y-2.5">
+            <TripFormField label="วันเดินทาง" htmlFor="tripDate" hint="แตะเลือกวันที่หรือกดปุ่มลัด">
+              <input
+                id="tripDate"
+                type="date"
+                value={formState.tripDate}
+                onChange={(event) => updateField("tripDate", event.target.value)}
+                className="form-control text-sm font-semibold rounded-2xl bg-white/90 dark:bg-[#0c221b]/90 border-slate-200/80 dark:border-emerald-800/40 focus:ring-2 focus:ring-emerald-500/30"
+              />
+              <FormError message={fieldErrors.tripDate} />
+            </TripFormField>
+
+            {/* Quick Date Presets */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-emerald-300/70 mr-0.5">ลัด:</span>
+              {getQuickDatePresets().map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => updateField("tripDate", preset.date)}
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-all active:scale-95 cursor-pointer ${
+                    formState.tripDate === preset.date
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-emerald-500 dark:to-teal-600 text-white shadow-xs ring-1 ring-white/20 dark:ring-emerald-300/30"
+                      : "bg-slate-100 dark:bg-[#0e2a21] hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60 text-slate-700 dark:text-emerald-200 border border-slate-200/80 dark:border-emerald-700/40"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Thai Date Preview Badge */}
+            {formState.tripDate ? (
+              <div className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+                <span>🗓️</span>
+                <span>{formatThaiDatePreview(formState.tripDate)}</span>
+              </div>
+            ) : null}
+          </div>
+
+          {/* เวลาออกเดินทาง */}
+          <div className="space-y-2.5">
+            <TripFormField label="เวลาออกเดินทาง (24 ชม.)" htmlFor="departAt" hint="เวลาเริ่มออกเดินทางจากจุดเริ่มต้น">
+              <input
+                id="departAt"
+                type="time"
+                value={formState.departAt}
+                onChange={(event) => updateField("departAt", event.target.value)}
+                className="form-control text-sm font-semibold rounded-2xl bg-white/90 dark:bg-[#0c221b]/90 border-slate-200/80 dark:border-emerald-800/40 focus:ring-2 focus:ring-emerald-500/30"
+              />
+              <FormError message={fieldErrors.departAt} />
+            </TripFormField>
+
+            {/* Quick Time Presets */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-emerald-300/70 mr-0.5">รอบ:</span>
+              {QUICK_TIME_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => updateField("departAt", preset.time)}
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-all active:scale-95 cursor-pointer ${
+                    formState.departAt === preset.time
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-emerald-500 dark:to-teal-600 text-white shadow-xs ring-1 ring-white/20 dark:ring-emerald-300/30"
+                      : "bg-slate-100 dark:bg-[#0e2a21] hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60 text-slate-700 dark:text-emerald-200 border border-slate-200/80 dark:border-emerald-700/40"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Thai Time Context Badge */}
+            {formState.departAt ? (
+              <div className="inline-flex items-center gap-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/80 px-3 py-1.5 text-xs font-semibold text-teal-800 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/50">
+                <span>⏰</span>
+                <span>{getThaiTimeDescription(formState.departAt).label}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -413,9 +546,9 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                   key={preset.label}
                   type="button"
                   onClick={() => handleSelectOriginPreset(preset)}
-                  className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                     formState.originText === preset.text
-                      ? "bg-[var(--brand-strong)] text-white shadow-xs"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-emerald-500 dark:to-teal-600 text-white shadow-sm ring-1 ring-white/20 dark:ring-emerald-300/30"
                       : "border border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
                   }`}
                 >
@@ -425,7 +558,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-[24px] border border-white/60 bg-white/55 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-[24px] border border-white/60 bg-white/55 dark:border-white/10 dark:bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <p className="text-sm font-semibold text-[var(--foreground)]">Sync current location (GPS)</p>
               <p className="text-xs leading-6 text-[var(--muted)]">
@@ -487,19 +620,19 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
           <button
             type="button"
             onClick={() => setShowAdvanced((current) => !current)}
-            className="inline-flex items-center justify-center rounded-full border border-[var(--border-strong)] bg-white/75 px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] shadow-[0_10px_24px_rgba(33,93,82,0.08)]"
+            className="inline-flex items-center justify-center rounded-full border border-[var(--border-strong)] bg-white/75 dark:bg-slate-800/80 px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] shadow-[0_10px_24px_rgba(33,93,82,0.08)]"
           >
             {showAdvanced ? "Hide advanced settings" : "Open advanced settings"}
           </button>
         </div>
 
         {!showAdvanced ? (
-          <div className="mt-4 rounded-[22px] border border-white/60 bg-white/50 px-4 py-3 text-sm leading-6 text-[var(--muted)]">
+          <div className="mt-4 rounded-[22px] border border-white/60 bg-white/50 dark:border-white/10 dark:bg-white/5 px-4 py-3 text-sm leading-6 text-[var(--muted)]">
             Using starter values: clear weather, 120 fallback minutes, and optional sunset/notes fields hidden.
           </div>
         ) : null}
 
-        {showAdvanced ? <div className="mt-5 grid gap-5 rounded-[24px] border border-white/65 bg-white/45 p-4 sm:grid-cols-2 sm:p-5">
+        {showAdvanced ? <div className="mt-5 grid gap-5 rounded-[24px] border border-white/65 bg-white/45 dark:border-white/10 dark:bg-white/5 p-4 sm:grid-cols-2 sm:p-5">
           <TripFormField label="สภาพอากาศของอุทยาน" htmlFor="weatherCondition">
             <select
               id="weatherCondition"

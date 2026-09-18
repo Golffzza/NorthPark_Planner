@@ -2,6 +2,7 @@ import { calculateTripEvaluation } from "@/lib/evaluation/calculate-trip-evaluat
 import { prisma } from "@/lib/db/prisma";
 import { mapEvaluationToDto } from "@/lib/mappers/evaluation-dto";
 import { getTripForCurrentUser, saveEvaluationInMemory } from "@/lib/services/trip-service";
+import type { TripEvaluation } from "@prisma/client";
 
 export type EvaluateTripResult = {
   tripId: string;
@@ -22,8 +23,9 @@ export async function evaluateTripForCurrentUser(tripId: string): Promise<Evalua
     transportMode: trip.transportMode,
   });
 
+  let savedEvaluation: TripEvaluation | null = null;
   try {
-    const savedEvaluation = await prisma.$transaction(async (tx) => {
+    savedEvaluation = await prisma.$transaction(async (tx) => {
       const createdEvaluation = await tx.tripEvaluation.create({
         data: {
           tripId: trip.id,
@@ -56,8 +58,12 @@ export async function evaluateTripForCurrentUser(tripId: string): Promise<Evalua
   }
 
   const memoryEvaluation = saveEvaluationInMemory(trip.id, evaluation);
+  if (!memoryEvaluation) {
+    throw new Error("Failed to save evaluation in memory");
+  }
+
   return {
     tripId: trip.id,
-    data: mapEvaluationToDto(memoryEvaluation as any),
+    data: mapEvaluationToDto(memoryEvaluation),
   };
 }

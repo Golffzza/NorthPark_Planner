@@ -12,10 +12,13 @@ export function ScoreHeroCard({ parkName, parkProvince, evaluation }: ScoreHeroC
   return (
     <section className="soft-card overflow-hidden rounded-[38px] px-5 py-6 sm:px-7 sm:py-7">
       <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
-        <div>
+        <div className="min-w-0">
           <span className="guide-chip">แดชบอร์ดคะแนนความปลอดภัย</span>
           <p className="mt-4 text-sm font-medium text-[var(--muted)]">{parkProvince}</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
+          <h2
+            className="mt-2 text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] leading-tight break-words"
+            title={parkName}
+          >
             {parkName}
           </h2>
           <div className="mt-4">

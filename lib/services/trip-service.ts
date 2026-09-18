@@ -1,7 +1,8 @@
-import type { Prisma, TripStatus } from "@prisma/client";
+import type { Prisma, TripEvaluation, TripStatus } from "@prisma/client";
 
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/db/prisma";
+import type { TripEvaluationResult } from "@/lib/evaluation/types";
 import { mapTripToDetailDto, mapTripToListDto, type TripDetailDto, type TripListDto } from "@/lib/mappers/trip-dto";
 import { getParkDetail, NotFoundError } from "@/lib/services/park-service";
 import type { TripCreateInput } from "@/lib/validations/trip-create";
@@ -86,6 +87,10 @@ const detailTripInclude = {
   },
 } satisfies Prisma.TripInclude;
 
+type DetailTripRecord = Prisma.TripGetPayload<{
+  include: typeof detailTripInclude;
+}>;
+
 const IMPORTANT_REEVALUATION_FIELDS = new Set([
   "parkId",
   "tripDate",
@@ -111,12 +116,56 @@ export type TripWithParkForEvaluation = Prisma.TripGetPayload<{
   };
 }>;
 
-const inMemoryTrips: any[] = [];
+type InMemoryTripRecord = {
+  id: string;
+  userId: string;
+  parkId: string;
+  tripDate: Date;
+  departAt: string;
+  originText: string;
+  originLat: number | null;
+  originLng: number | null;
+  transportMode: string;
+  travelerCount: number;
+  weatherCondition: string;
+  estimatedTravelMinutes: number;
+  mockSunsetTime: string | null;
+  notes: string | null;
+  status: TripStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  park: {
+    id: string;
+    nameTh: string;
+    nameEn: string | null;
+    province: string;
+    openTime: string;
+    closeTime: string;
+    coverImageUrl: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  };
+  evaluations: TripEvaluation[];
+  weatherSnapshots: Array<{
+    id: string;
+    weatherCondition: string;
+    temperatureC: number | null;
+    createdAt: Date;
+  }>;
+  routeSnapshots: Array<{
+    id: string;
+    distanceMeters: number;
+    durationSeconds: number;
+    createdAt: Date;
+  }>;
+};
 
-export function saveEvaluationInMemory(tripId: string, evalData: any) {
+const inMemoryTrips: InMemoryTripRecord[] = [];
+
+export function saveEvaluationInMemory(tripId: string, evalData: TripEvaluationResult): TripEvaluation | null {
   const trip = inMemoryTrips.find((t) => t.id === tripId);
   if (trip) {
-    const createdEvaluation = {
+    const createdEvaluation: TripEvaluation = {
       id: `eval-${Date.now()}`,
       tripId,
       totalScore: evalData.totalScore,
@@ -129,7 +178,6 @@ export function saveEvaluationInMemory(tripId: string, evalData: any) {
       recommendation: evalData.recommendation,
       evaluatedAt: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
     trip.evaluations.unshift(createdEvaluation);
     trip.status = "EVALUATED";
@@ -163,7 +211,7 @@ export async function getTripForCurrentUser(tripId: string): Promise<TripWithPar
           throw new AuthorizationError("Forbidden");
         }
 
-        return trip as any;
+        return trip;
       }
     } catch (error) {
       if (error instanceof AuthorizationError) throw error;
@@ -180,7 +228,7 @@ export async function getTripForCurrentUser(tripId: string): Promise<TripWithPar
     throw new AuthorizationError("Forbidden");
   }
 
-  return memoryTrip as any;
+  return memoryTrip as unknown as TripWithParkForEvaluation;
 }
 
 export async function listTripsForCurrentUser(status?: TripStatus): Promise<TripListDto[]> {
@@ -211,10 +259,10 @@ export async function listTripsForCurrentUser(status?: TripStatus): Promise<Trip
   }
   userTrips.sort((a, b) => new Date(b.tripDate).getTime() - new Date(a.tripDate).getTime());
 
-  return userTrips.map(mapTripToListDto);
+  return userTrips.map((t) => mapTripToListDto(t as unknown as Parameters<typeof mapTripToListDto>[0]));
 }
 
-async function ensureActivePark(parkId: string) {
+async function ensureActivePark(parkId: string): Promise<string> {
   if (typeof prisma?.park?.findUnique === "function") {
     try {
       const park = await prisma.park.findUnique({
@@ -229,22 +277,48 @@ async function ensureActivePark(parkId: string) {
         if (!park.isActive) {
           throw new NotFoundError("Park not found");
         }
-        return;
+        return park.id;
       }
-      throw new NotFoundError("Park not found");
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
-      console.warn("[trip-service] Database park lookup failed, using park service fallback:", error);
+      console.warn("[trip-service] Database park findUnique lookup failed:", error);
     }
   }
 
-  const parkDetail = await getParkDetail(parkId);
-  if (!parkDetail) {
+  if (typeof prisma?.park?.findFirst === "function") {
+    try {
+      const park = await prisma.park.findFirst({
+        where: {
+          isActive: true,
+          OR: [{ id: parkId }, { slug: parkId }],
+        },
+        select: {
+          id: true,
+          isActive: true,
+        },
+      });
+
+      if (park) {
+        return park.id;
+      }
+    } catch (error) {
+      console.warn("[trip-service] Database park findFirst lookup failed:", error);
+    }
+  }
+
+  try {
+    const parkDetail = await getParkDetail(parkId);
+    if (!parkDetail) {
+      throw new NotFoundError("Park not found");
+    }
+    return parkDetail.id;
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
     throw new NotFoundError("Park not found");
   }
 }
 
-async function getTripDetailRecordForCurrentUser(tripId: string) {
+async function getTripDetailRecordForCurrentUser(tripId: string): Promise<DetailTripRecord | InMemoryTripRecord> {
   const currentUser = await getCurrentUser();
 
   if (typeof prisma?.trip?.findUnique === "function") {
@@ -281,14 +355,14 @@ async function getTripDetailRecordForCurrentUser(tripId: string) {
 
 export async function createTripForCurrentUser(input: TripCreateInput): Promise<TripDetailDto> {
   const currentUser = await getCurrentUser();
+  const resolvedParkId = await ensureActivePark(input.parkId);
 
   if (typeof prisma?.trip?.create === "function") {
     try {
-      await ensureActivePark(input.parkId);
       const trip = await prisma.trip.create({
         data: {
           userId: currentUser.id,
-          parkId: input.parkId,
+          parkId: resolvedParkId,
           tripDate: input.tripDate,
           departAt: input.departAt,
           originText: input.originText,
@@ -310,15 +384,13 @@ export async function createTripForCurrentUser(input: TripCreateInput): Promise<
       if (error instanceof NotFoundError || error instanceof AuthorizationError) throw error;
       console.warn("[trip-service] Database query failed, creating in-memory trip fallback:", error);
     }
-  } else {
-    await ensureActivePark(input.parkId);
   }
 
-  const parkDetail = await getParkDetail(input.parkId);
-  const newMemoryTrip = {
+  const parkDetail = await getParkDetail(resolvedParkId);
+  const newMemoryTrip: InMemoryTripRecord = {
     id: `trip-${Date.now()}`,
     userId: currentUser.id,
-    parkId: input.parkId,
+    parkId: parkDetail.id,
     tripDate: input.tripDate,
     departAt: input.departAt,
     originText: input.originText,
@@ -341,6 +413,8 @@ export async function createTripForCurrentUser(input: TripCreateInput): Promise<
       openTime: parkDetail.openTime,
       closeTime: parkDetail.closeTime,
       coverImageUrl: parkDetail.coverImageUrl,
+      latitude: parkDetail.latitude,
+      longitude: parkDetail.longitude,
     },
     evaluations: [],
     weatherSnapshots: [],
@@ -348,17 +422,17 @@ export async function createTripForCurrentUser(input: TripCreateInput): Promise<
   };
 
   inMemoryTrips.unshift(newMemoryTrip);
-  return mapTripToDetailDto(newMemoryTrip as any);
+  return mapTripToDetailDto(newMemoryTrip as unknown as Parameters<typeof mapTripToDetailDto>[0]);
 }
 
 export async function getTripDetailForCurrentUser(tripId: string): Promise<TripDetailDto> {
   const trip = await getTripDetailRecordForCurrentUser(tripId);
 
-  return mapTripToDetailDto(trip as any);
+  return mapTripToDetailDto(trip as unknown as Parameters<typeof mapTripToDetailDto>[0]);
 }
 
 function shouldResetTripStatus(
-  existingTrip: any,
+  existingTrip: DetailTripRecord | InMemoryTripRecord,
   input: TripUpdateInput,
 ): boolean {
   return Object.entries(input).some(([key, value]) => {
@@ -366,7 +440,7 @@ function shouldResetTripStatus(
       return false;
     }
 
-    const currentValue = existingTrip[key as keyof typeof existingTrip];
+    const currentValue = (existingTrip as Record<string, unknown>)[key];
 
     if (currentValue instanceof Date && value instanceof Date) {
       return currentValue.getTime() !== value.getTime();
@@ -460,11 +534,15 @@ export async function updateTripForCurrentUser(
   if (input.travelerCount) memoryTrip.travelerCount = input.travelerCount;
   if (input.weatherCondition) memoryTrip.weatherCondition = input.weatherCondition;
   if (input.estimatedTravelMinutes) memoryTrip.estimatedTravelMinutes = input.estimatedTravelMinutes;
-  if ("mockSunsetTime" in input) memoryTrip.mockSunsetTime = input.mockSunsetTime === "" ? null : input.mockSunsetTime;
-  if ("notes" in input) memoryTrip.notes = input.notes === "" ? null : input.notes;
+  if ("mockSunsetTime" in input) {
+    memoryTrip.mockSunsetTime = !input.mockSunsetTime ? null : input.mockSunsetTime;
+  }
+  if ("notes" in input) {
+    memoryTrip.notes = !input.notes ? null : input.notes;
+  }
   memoryTrip.updatedAt = new Date();
 
-  return mapTripToDetailDto(memoryTrip as any);
+  return mapTripToDetailDto(memoryTrip as unknown as Parameters<typeof mapTripToDetailDto>[0]);
 }
 
 export async function cancelTripForCurrentUser(tripId: string): Promise<TripDetailDto> {
@@ -498,5 +576,5 @@ export async function cancelTripForCurrentUser(tripId: string): Promise<TripDeta
   memoryTrip.status = "CANCELLED";
   memoryTrip.updatedAt = new Date();
 
-  return mapTripToDetailDto(memoryTrip as any);
+  return mapTripToDetailDto(memoryTrip as unknown as Parameters<typeof mapTripToDetailDto>[0]);
 }

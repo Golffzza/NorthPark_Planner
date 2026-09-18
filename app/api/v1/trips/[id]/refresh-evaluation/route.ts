@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { MissingLiveSnapshotError } from "@/lib/orchestration/trip-live-evaluation-orchestrator";
 import { refreshTripEvaluationForCurrentUser } from "@/lib/orchestration/trip-refresh-evaluation-orchestrator";
 import { AuthorizationError, NotFoundError } from "@/lib/services/trip-service";
 import {
@@ -130,11 +131,25 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
+    if (error instanceof MissingLiveSnapshotError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: error.code,
+            message: error.message,
+          },
+        },
+        { status: 422 },
+      );
+    }
+
+    console.error("[refresh-evaluation] Unexpected error:", error);
+
     return NextResponse.json(
       {
         error: {
           code: "internal_error",
-          message: "Internal server error",
+          message: error instanceof Error ? error.message : "Internal server error",
         },
       },
       { status: 500 },

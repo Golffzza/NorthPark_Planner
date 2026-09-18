@@ -22,9 +22,10 @@ export default async function EditTripPage({ params }: EditTripPageProps) {
       <AppShell>
         <div className="space-y-6">
           <PageHeader
-            eyebrow="Edit Trip"
-            title="แก้ไขแผนทริป"
-            description="ปรับข้อมูลการเดินทาง พิกัดต้นทาง และค่า fallback ให้พร้อมกับสถานการณ์ล่าสุด ก่อนกลับไป sync และประเมินผลใหม่"
+            compact
+            eyebrow="แก้ไขทริป"
+            title="ปรับแผนการเดินทาง"
+            description="แก้ไขวันเวลา จุดเริ่มต้น หรือจำนวนผู้เดินทาง แล้วกดบันทึกเพื่อประเมินใหม่"
           />
           <TripForm mode="edit" parks={parks} trip={trip} />
         </div>

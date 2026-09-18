@@ -1,30 +1,16 @@
-import Link from "next/link";
-
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { ParkCard } from "@/components/parks/park-card";
+import { ParkPagination } from "@/components/parks/park-pagination";
 import { ParkSearchBar } from "@/components/parks/park-search-bar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { listParkProvinces, listParks } from "@/lib/services/park-service";
+import { getSuggestedOrPopularParks, listParkProvinces, listParks } from "@/lib/services/park-service";
 import { BadRequestError } from "@/lib/validations/park-query";
 import { parseParkListQuery } from "@/lib/validations/park-query";
 
 type ParksPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
-function buildSearchParams(query: Record<string, string>) {
-  const params = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(query)) {
-    if (value) {
-      params.set(key, value);
-    }
-  }
-
-  const serialized = params.toString();
-  return serialized ? `?${serialized}` : "";
-}
 
 export default async function ParksPage({ searchParams }: ParksPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
@@ -55,19 +41,26 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
 
   const [parkResult, provinces] = await Promise.all([listParks(query), listParkProvinces()]);
   const hasResults = parkResult.data.length > 0;
-  const prevPage = query.page > 1 ? query.page - 1 : null;
-  const nextPage = query.page < parkResult.meta.totalPages ? query.page + 1 : null;
+  const suggestions = !hasResults ? await getSuggestedOrPopularParks(query) : null;
 
   return (
     <AppShell>
       <div className="space-y-6">
         <PageHeader
-          eyebrow="Park Guide"
-          title="สำรวจอุทยานแห่งชาติในภาคเหนือ"
-          description="เลือกอุทยานจากภาพ บรรยากาศจังหวัด และข้อมูลสำคัญแบบ travel guide ก่อนพาแผนเดินทางไปต่อใน trip planner"
+          compact
+          eyebrow="คู่มือท่องเที่ยว"
+          title="อุทยานแห่งชาติภาคเหนือ"
+          description="เลือกดูอุทยาน เช็กจุดไฮไลท์ แล้วเริ่มวางแผนทริปได้ทันที"
           actions={
-            <div className="dashboard-card rounded-[24px] px-4 py-3 text-sm text-[var(--muted)]">
-              พบทั้งหมด <span className="font-semibold text-[var(--foreground)]">{parkResult.meta.total}</span> แห่ง
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-900/40 px-3 py-1.5 border border-emerald-500/20 text-xs font-semibold text-slate-700 dark:text-emerald-200">
+              <span>🌲</span>
+              <span>
+                ทั้งหมด{" "}
+                <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  {parkResult.meta.total}
+                </strong>{" "}
+                แห่ง
+              </span>
             </div>
           }
         />
@@ -82,52 +75,58 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
               ))}
             </section>
 
-            <section className="glass-panel flex flex-col gap-4 rounded-[32px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[var(--foreground)]">
-                  หน้า {parkResult.meta.page} จาก {parkResult.meta.totalPages || 1}
-                </p>
-                <p className="mt-1 text-sm text-[var(--muted)]">
-                  เลื่อนดูอุทยานเพิ่มเติมหรือปรับตัวกรองเพื่อหา destination ที่ตรงกับ mood ของทริปมากขึ้น
-                </p>
-              </div>
-              <div className="flex items-center gap-2 self-start sm:self-auto">
-                {prevPage ? (
-                  <Link
-                    href={`/parks${buildSearchParams({
-                      ...(query.q ? { q: query.q } : {}),
-                      ...(query.province ? { province: query.province } : {}),
-                      page: String(prevPage),
-                      perPage: String(query.perPage),
-                    })}`}
-                    className="ghost-button rounded-full px-4 py-2.5 text-sm font-semibold text-[var(--foreground)]"
-                  >
-                    ก่อนหน้า
-                  </Link>
-                ) : null}
-                {nextPage ? (
-                  <Link
-                    href={`/parks${buildSearchParams({
-                      ...(query.q ? { q: query.q } : {}),
-                      ...(query.province ? { province: query.province } : {}),
-                      page: String(nextPage),
-                      perPage: String(query.perPage),
-                    })}`}
-                    className="glass-button rounded-full px-4 py-2.5 text-sm font-semibold"
-                  >
-                    ถัดไป
-                  </Link>
-                ) : null}
-              </div>
-            </section>
+            <ParkPagination
+              currentPage={parkResult.meta.page}
+              totalPages={parkResult.meta.totalPages}
+              totalItems={parkResult.meta.total}
+              query={query}
+            />
           </>
         ) : (
-          <EmptyState
-            title="ยังไม่พบอุทยานที่ตรงกับการค้นหา"
-            description="ลองเปลี่ยนคำค้นหา เลือกจังหวัดอื่น หรือรีเซ็ตตัวกรองเพื่อกลับไปดู park guide ทั้งหมด"
-            actionLabel="ล้างตัวกรอง"
-            actionHref="/parks"
-          />
+          <div className="space-y-6">
+            <EmptyState
+              title={
+                query.q
+                  ? `ไม่พบอุทยานที่ตรงกับ "${query.q}"`
+                  : "ยังไม่พบอุทยานที่ตรงกับตัวกรอง"
+              }
+              description={
+                query.q
+                  ? "ลองตรวจสอบตัวสะกด หรือเลือกดูอุทยานแนะนำด้านล่างนี้ที่อาจตรงกับสถานที่ที่คุณต้องการ"
+                  : "ลองเปลี่ยนการเลือกจังหวัด หรือล้างตัวกรองเพื่อกลับไปดูอุทยานภาคเหนือทั้งหมด"
+              }
+              actionLabel="ล้างตัวกรองและดูทั้งหมด"
+              actionHref="/parks"
+            />
+
+            {suggestions && suggestions.parks.length > 0 ? (
+              <section className="space-y-4 pt-2">
+                <div className="flex items-center justify-between gap-3 px-1">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 dark:bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-600/20 dark:ring-emerald-400/30">
+                      <span>{suggestions.type === "didYouMean" ? "💡" : "🌟"}</span>
+                      <span>
+                        {suggestions.type === "didYouMean"
+                          ? `หรือคุณกำลังมองหา "${suggestions.matchedKeyword}"?`
+                          : "อุทยานยอดนิยมแนะนำสำหรับคุณ"}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-emerald-200/70 font-normal">
+                      {suggestions.type === "didYouMean"
+                        ? `พบอุทยานที่มีสถานที่หรือคำค้นใกล้เคียงกับที่คุณกำลังค้นหา`
+                        : `สำรวจอุทยานไฮไลท์ภาคเหนือที่มีสถานที่ท่องเที่ยวและธรรมชาติยอดนิยม`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {suggestions.parks.map((park) => (
+                    <ParkCard key={park.id} park={park} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
         )}
       </div>
     </AppShell>

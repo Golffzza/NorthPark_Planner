@@ -1,9 +1,11 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import {
   OpenMeteoServiceError,
   fetchOpenMeteoWeatherSnapshot,
 } from "@/lib/integrations/open-meteo/open-meteo-service";
 import { getTripForCurrentUser } from "@/lib/services/trip-service";
+import { saveWeatherSnapshotInMemory } from "./in-memory-snapshots";
 
 export class TripSnapshotContextError extends Error {
   constructor(message: string) {
@@ -52,21 +54,46 @@ export async function syncWeatherSnapshotForCurrentUser(tripId: string) {
       timezone: getAppTimezone(),
     });
 
-    return prisma.weatherSnapshot.create({
-      data: {
-        tripId: trip.id,
-        source: snapshot.source,
-        timezone: snapshot.timezone,
-        latitude,
-        longitude,
-        forecastAt: snapshot.forecastAt,
-        weatherCode: snapshot.weatherCode,
-        precipitationMm: snapshot.precipitationMm,
-        weatherCondition: snapshot.weatherCondition,
-        temperatureC: snapshot.temperatureC,
-        windSpeedKmh: snapshot.windSpeedKmh,
-        raw: snapshot.raw,
-      },
+    if (typeof prisma?.weatherSnapshot?.create === "function") {
+      try {
+        const created = await prisma.weatherSnapshot.create({
+          data: {
+            tripId: trip.id,
+            source: snapshot.source,
+            timezone: snapshot.timezone,
+            latitude,
+            longitude,
+            forecastAt: snapshot.forecastAt,
+            weatherCode: snapshot.weatherCode,
+            precipitationMm: snapshot.precipitationMm,
+            weatherCondition: snapshot.weatherCondition,
+            temperatureC: snapshot.temperatureC,
+            windSpeedKmh: snapshot.windSpeedKmh,
+            raw: snapshot.raw,
+          },
+        });
+        saveWeatherSnapshotInMemory(created);
+        return created;
+      } catch (dbError) {
+        console.warn("[weather-snapshot] Database create failed, saving in memory fallback:", dbError);
+      }
+    }
+
+    return saveWeatherSnapshotInMemory({
+      id: `weather-snap-${Date.now()}`,
+      tripId: trip.id,
+      source: snapshot.source,
+      timezone: snapshot.timezone,
+      latitude: new Prisma.Decimal(latitude),
+      longitude: new Prisma.Decimal(longitude),
+      forecastAt: snapshot.forecastAt,
+      weatherCode: snapshot.weatherCode,
+      precipitationMm: snapshot.precipitationMm,
+      weatherCondition: snapshot.weatherCondition,
+      temperatureC: snapshot.temperatureC,
+      windSpeedKmh: snapshot.windSpeedKmh,
+      raw: snapshot.raw as Prisma.JsonValue,
+      createdAt: new Date(),
     });
   } catch (error) {
     if (error instanceof OpenMeteoServiceError) {

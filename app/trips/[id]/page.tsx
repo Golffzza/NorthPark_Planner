@@ -73,18 +73,22 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
       <AppShell>
         <div className="space-y-6">
           <PageHeader
-            eyebrow="Trip Dashboard"
+            compact
+            eyebrow="รายละเอียดทริป"
             title={`ทริปไป ${trip.park.nameTh}`}
-            description="มุมมองแบบ trip safety dashboard สำหรับดูสถานะ แผนเดินทาง ปุ่ม sync ข้อมูลจริง และผลประเมินล่าสุดในหน้าเดียว"
+            description="ดูข้อมูลการเดินทาง สภาพอากาศล่าสุด และประเมินความปลอดภัยของทริป"
             actions={<TripStatusBadge status={trip.status} />}
           />
 
           <section className="soft-card overflow-hidden rounded-[36px]">
             <div className="nature-hero-mesh px-5 py-6 text-white sm:px-7">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                <div className="max-w-2xl">
+                <div className="max-w-2xl min-w-0">
                   <p className="text-sm font-medium text-white/72">{trip.park.province}</p>
-                  <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">
+                  <h2
+                    className="mt-2 text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight whitespace-nowrap truncate"
+                    title={trip.park.nameTh}
+                  >
                     {trip.park.nameTh}
                   </h2>
                   <p className="mt-3 text-sm leading-7 text-white/80">

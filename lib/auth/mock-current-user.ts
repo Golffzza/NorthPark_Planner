@@ -18,8 +18,16 @@ const DEFAULT_MOCK_USER: MockCurrentUser = {
 
 export async function getMockCurrentUser(): Promise<MockCurrentUser> {
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.upsert({
       where: { email: DEMO_USER_EMAIL },
+      update: {},
+      create: {
+        id: "mock-user-1",
+        displayName: "NorthPark Demo User",
+        email: DEMO_USER_EMAIL,
+        phone: "0800000000",
+        role: "USER",
+      },
       select: {
         id: true,
         displayName: true,

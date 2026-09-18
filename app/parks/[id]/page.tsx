@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { AttractionList } from "@/components/parks/attraction-list";
+import { ParkBottomNavigation } from "@/components/parks/park-bottom-navigation";
 import { ParkDetailHero } from "@/components/parks/park-detail-hero";
+import { ParkFeeCard } from "@/components/parks/park-fee-card";
 import { ParkMapCard } from "@/components/parks/park-map-card";
 import { WarningList } from "@/components/parks/warning-list";
 import { getParkDetail, NotFoundError } from "@/lib/services/park-service";
@@ -27,7 +29,9 @@ export default async function ParkDetailPage({ params }: ParkDetailPageProps) {
             <AttractionList attractions={park.attractions} />
             <WarningList warnings={park.warnings} />
           </div>
+          <ParkFeeCard park={park} />
           <ParkMapCard park={park} />
+          <ParkBottomNavigation parkId={park.id} />
         </div>
       </AppShell>
     );

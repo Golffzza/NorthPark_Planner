@@ -58,11 +58,12 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
+    console.error("[api/v1/trips/[id]/evaluate POST] Unexpected error:", error);
     return NextResponse.json(
       {
         error: {
           code: "internal_error",
-          message: "Internal server error",
+          message: error instanceof Error ? error.message : "Internal server error",
         },
       },
       { status: 500 },
