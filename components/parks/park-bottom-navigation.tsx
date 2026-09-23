@@ -30,106 +30,92 @@ export function ParkBottomNavigation({
 
   return (
     <nav
-      className="soft-card mt-8 rounded-[28px] sm:rounded-[34px] p-3 sm:p-4 border border-white/60 dark:border-emerald-800/40 shadow-lg shadow-emerald-950/5 backdrop-blur-2xl bg-white/85 dark:bg-[#0b1c16]/90"
+      className="relative mt-8 overflow-hidden rounded-3xl border border-emerald-500/20 bg-slate-900/70 p-3 sm:p-3.5 backdrop-blur-xl shadow-2xl shadow-emerald-950/30 dark:border-emerald-500/20 dark:bg-emerald-950/50"
       aria-label="การนำทางส่วนท้ายของหน้า"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-        {/* Main CTA (Top on mobile, Center on desktop) */}
+      {/* Ambient background glow */}
+      <div className="pointer-events-none absolute -top-12 left-1/2 h-24 w-72 -translate-x-1/2 rounded-full bg-emerald-500/10 blur-2xl" />
+
+      <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        {/* Main CTA Button: วางแผนทริป */}
         <Link
           href={`/trips/new?parkId=${parkId}`}
-          className="group order-1 sm:order-2 inline-flex sm:flex-[1.4] items-center justify-center gap-2.5 rounded-2xl sm:rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 dark:from-emerald-500 dark:to-teal-600 px-6 py-3 text-sm sm:text-base font-extrabold text-white shadow-md shadow-emerald-950/20 ring-1 ring-white/20 dark:ring-emerald-300/30 transition-all hover:brightness-110 active:scale-[0.98]"
+          className="group relative flex flex-1 items-center justify-between sm:justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 px-6 py-3.5 text-sm sm:text-base font-bold text-slate-950 shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:shadow-emerald-500/35 hover:brightness-105 active:scale-[0.98]"
         >
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 dark:bg-black/25 backdrop-blur-sm shadow-xs ring-1 ring-white/30 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
-            <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" fillOpacity="0.4" />
-            </svg>
+          {/* Subtle sheen highlight */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full duration-700 ease-out group-hover:translate-x-full transition-transform" />
+
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-950/10 transition-transform duration-300 group-hover:rotate-45">
+              <svg
+                className="h-4 w-4 text-slate-950"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
+              </svg>
+            </span>
+            <span className="tracking-tight font-extrabold">วางแผนทริปไปที่นี่</span>
           </div>
-          <span>วางแผนทริปไปที่นี่</span>
-          <svg className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" />
-          </svg>
-        </Link>
 
-        {/* Secondary buttons container on mobile (2 columns) */}
-        <div className="order-2 sm:order-1 grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2.5 sm:flex-1">
-          {/* Back Button */}
-          <button
-            type="button"
-            onClick={handleBack}
-            className="group inline-flex items-center justify-center gap-2 rounded-xl sm:rounded-full border border-slate-200/80 dark:border-emerald-800/40 bg-white/80 dark:bg-slate-900/80 px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-700 dark:text-emerald-200/90 shadow-xs backdrop-blur-md transition-all hover:bg-emerald-50/80 dark:hover:bg-emerald-950/60 active:scale-[0.98] cursor-pointer sm:flex-1"
-          >
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-emerald-950/90 text-slate-600 dark:text-emerald-300 ring-1 ring-slate-200 dark:ring-emerald-700/50 transition-transform duration-200 group-hover:-translate-x-0.5">
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                />
-              </svg>
-            </div>
-            <span>ย้อนกลับ</span>
-          </button>
-
-          {/* Scroll to top (Mobile only inside grid) */}
-          <button
-            type="button"
-            onClick={handleScrollToTop}
-            title="เลื่อนขึ้นบนสุด"
-            aria-label="เลื่อนขึ้นบนสุด"
-            className="group sm:hidden inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200/80 dark:border-emerald-800/40 bg-white/80 dark:bg-slate-900/80 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-emerald-200/90 shadow-xs backdrop-blur-md transition-all hover:bg-emerald-50/80 dark:hover:bg-emerald-950/60 active:scale-[0.98] cursor-pointer"
-          >
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-emerald-950/90 text-slate-600 dark:text-emerald-300 ring-1 ring-slate-200 dark:ring-emerald-700/50 transition-transform duration-200 group-hover:-translate-y-0.5">
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"
-                />
-              </svg>
-            </div>
-            <span>ขึ้นบนสุด</span>
-          </button>
-        </div>
-
-        {/* Scroll To Top for desktop */}
-        <button
-          type="button"
-          onClick={handleScrollToTop}
-          title="เลื่อนขึ้นบนสุด"
-          aria-label="เลื่อนขึ้นบนสุด"
-          className="group hidden sm:inline-flex order-3 items-center justify-center gap-2 rounded-full border border-slate-200/80 dark:border-emerald-800/40 bg-white/80 dark:bg-slate-900/80 px-4 py-3 text-sm font-bold text-slate-700 dark:text-emerald-200/90 shadow-xs backdrop-blur-md transition-all hover:bg-emerald-50/80 dark:hover:bg-emerald-950/60 active:scale-[0.98] cursor-pointer sm:flex-initial"
-        >
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-emerald-950/90 text-slate-600 dark:text-emerald-300 ring-1 ring-slate-200 dark:ring-emerald-700/50 transition-transform duration-200 group-hover:-translate-y-0.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-950/10 transition-transform duration-300 group-hover:translate-x-1">
             <svg
-              className="w-3.5 h-3.5"
+              className="h-4 w-4 text-slate-950"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={2.5}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
             </svg>
           </div>
-          <span>ขึ้นบนสุด</span>
-        </button>
+        </Link>
+
+        {/* Secondary Action Pills */}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2">
+          {/* Back Button */}
+          <button
+            type="button"
+            onClick={handleBack}
+            className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs sm:text-sm font-semibold text-slate-200 backdrop-blur-md transition-all duration-200 hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-white active:scale-95 cursor-pointer dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-900/50"
+          >
+            <svg
+              className="h-4 w-4 text-emerald-400 transition-transform duration-200 group-hover:-translate-x-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.4}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            <span>ย้อนกลับ</span>
+          </button>
+
+          {/* Scroll to top Button */}
+          <button
+            type="button"
+            onClick={handleScrollToTop}
+            title="เลื่อนขึ้นบนสุด"
+            aria-label="เลื่อนขึ้นบนสุด"
+            className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs sm:text-sm font-semibold text-slate-200 backdrop-blur-md transition-all duration-200 hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-white active:scale-95 cursor-pointer dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-900/50"
+          >
+            <svg
+              className="h-4 w-4 text-emerald-400 transition-transform duration-200 group-hover:-translate-y-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.4}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+            </svg>
+            <span>ขึ้นบนสุด</span>
+          </button>
+        </div>
       </div>
     </nav>
   );

@@ -8,6 +8,12 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", "'Noto Sans Thai'", "sans-serif"],
+        heading: ["var(--font-heading)", "'Kanit'", "sans-serif"],
+        kanit: ["'Kanit'", "sans-serif"],
+        noto: ["'Noto Sans Thai'", "sans-serif"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

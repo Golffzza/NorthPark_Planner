@@ -32,6 +32,42 @@ describe("calculateTripEvaluation", () => {
     });
 
     expect(result.weakestFactor).toBe("weather");
-    expect(result.recommendation.toLowerCase()).toContain("weather");
+    expect(result.recommendation).toContain("สภาพอากาศ");
+    expect(result.summary).toContain("สภาพอากาศ");
+  });
+
+  it("reduces score and warns when using public transport to a park with no direct transit", () => {
+    const result = calculateTripEvaluation({
+      weatherCondition: "CLEAR",
+      estimatedTravelMinutes: 60,
+      departAt: "08:00",
+      mockSunsetTime: "18:30",
+      parkOpenTime: "06:00",
+      parkCloseTime: "18:00",
+      travelerCount: 2,
+      transportMode: "PUBLIC_TRANSPORT",
+      hasDirectPublicTransit: false,
+      parkName: "อุทยานแห่งชาติแม่เมย",
+    });
+
+    expect(result.userProfileScore).toBeLessThan(70);
+    if (result.weakestFactor === "userProfile") {
+      expect(result.recommendation).toContain("ไม่มีรถโดยสารประจำทาง");
+    }
+  });
+
+  it("warns about motorcycle risk when weather has heavy rain", () => {
+    const result = calculateTripEvaluation({
+      weatherCondition: "HEAVY_RAIN",
+      estimatedTravelMinutes: 60,
+      departAt: "08:00",
+      mockSunsetTime: "18:30",
+      parkOpenTime: "06:00",
+      parkCloseTime: "18:00",
+      travelerCount: 1,
+      transportMode: "MOTORCYCLE",
+    });
+
+    expect(result.userProfileScore).toBeLessThan(60);
   });
 });

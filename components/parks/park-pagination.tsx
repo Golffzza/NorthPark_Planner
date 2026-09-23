@@ -9,9 +9,10 @@ type ParkPaginationProps = {
     province?: string;
     perPage?: number;
   };
+  variant?: "top" | "bottom";
 };
 
-function buildUrl(page: number, query: ParkPaginationProps["query"]) {
+function buildUrl(page: number, query: ParkPaginationProps["query"], hash?: string) {
   const params = new URLSearchParams();
   if (query.q) params.set("q", query.q);
   if (query.province) params.set("province", query.province);
@@ -19,13 +20,15 @@ function buildUrl(page: number, query: ParkPaginationProps["query"]) {
   if (query.perPage && query.perPage !== 6) params.set("perPage", String(query.perPage));
 
   const qs = params.toString();
-  return `/parks${qs ? `?${qs}` : ""}`;
+  const base = `/parks${qs ? `?${qs}` : ""}`;
+  return hash ? `${base}#${hash}` : base;
 }
 
 export function ParkPagination({
   currentPage,
   totalPages,
   query,
+  variant = "bottom",
 }: ParkPaginationProps) {
   if (totalPages <= 1) {
     return null;
@@ -64,17 +67,27 @@ export function ParkPagination({
 
   const pageNumbers = getPageNumbers();
 
+  const isTop = variant === "top";
+  const targetHash = isTop ? undefined : "park-results";
+  const shouldScroll = !isTop;
+
   return (
-    <div className="sticky bottom-20 sm:bottom-6 z-30 mt-8 flex justify-center px-3 pointer-events-none">
+    <div
+      className={
+        isTop
+          ? "flex justify-center w-full mt-4 mb-8 sm:mt-6 sm:mb-8 px-3 pointer-events-auto"
+          : "sticky bottom-20 sm:bottom-6 z-30 mt-8 flex justify-center px-3 pointer-events-none"
+      }
+    >
       <nav
-        aria-label="การแบ่งหน้าอุทยาน"
-        className="pointer-events-auto glass-tabbar flex items-center gap-1 sm:gap-1.5 rounded-full p-1.5 sm:p-2 shadow-2xl shadow-emerald-950/20 dark:shadow-black/70 ring-1 ring-emerald-900/10 dark:ring-white/10 transition-all duration-300 max-w-full"
+        aria-label={isTop ? "การแบ่งหน้าอุทยาน (แถบด้านบน)" : "การแบ่งหน้าอุทยาน"}
+        className="glass-tabbar pointer-events-auto flex items-center gap-1 sm:gap-1.5 rounded-full p-1.5 sm:p-2 shadow-xl shadow-emerald-950/15 dark:shadow-black/60 ring-1 ring-emerald-900/10 dark:ring-white/10 transition-all duration-300 max-w-full"
       >
         {/* Previous Button */}
         {prevPage ? (
           <Link
-            href={buildUrl(prevPage, query)}
-            scroll={false}
+            href={buildUrl(prevPage, query, targetHash)}
+            scroll={shouldScroll}
             className="inline-flex h-8 w-8 sm:h-9 sm:w-auto items-center justify-center gap-1 rounded-full bg-white/70 hover:bg-white dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 px-2 sm:px-3.5 text-xs sm:text-sm font-semibold text-[var(--foreground)] border border-emerald-800/15 dark:border-emerald-600/30 transition-all duration-200 active:scale-95 shadow-2xs"
             aria-label="ไปหน้าก่อนหน้า"
           >
@@ -120,8 +133,8 @@ export function ParkPagination({
             return (
               <Link
                 key={p}
-                href={buildUrl(p, query)}
-                scroll={false}
+                href={buildUrl(p, query, targetHash)}
+                scroll={shouldScroll}
                 aria-current={isActive ? "page" : undefined}
                 className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full text-xs sm:text-sm font-bold transition-all duration-200 active:scale-90 ${
                   isActive
@@ -138,8 +151,8 @@ export function ParkPagination({
         {/* Next Button */}
         {nextPage ? (
           <Link
-            href={buildUrl(nextPage, query)}
-            scroll={false}
+            href={buildUrl(nextPage, query, targetHash)}
+            scroll={shouldScroll}
             className="inline-flex h-8 w-8 sm:h-9 sm:w-auto items-center justify-center gap-1 rounded-full bg-gradient-to-b from-[var(--brand)] to-[var(--brand-strong)] dark:from-emerald-500 dark:to-teal-600 hover:opacity-95 px-2 sm:px-3.5 text-xs sm:text-sm font-bold text-white transition-all duration-200 active:scale-95 shadow-md shadow-emerald-950/30 dark:shadow-emerald-950/60"
             aria-label="ไปหน้าถัดไป"
           >

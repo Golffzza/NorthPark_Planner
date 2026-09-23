@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getParkEvCharging } from "@/lib/data/park-ev-charging";
 import type { ParkOption } from "@/lib/services/park-service";
 
 type ParkSearchSelectProps = {
@@ -127,6 +128,14 @@ export function ParkSearchSelect({
                       ⏰ {selectedPark.openTime} - {selectedPark.closeTime} น.
                     </span>
                   ) : null}
+                  {(() => {
+                    const evCharging = getParkEvCharging(selectedPark.slug, selectedPark.nameTh);
+                    return evCharging.hasEvCharger ? (
+                      <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-400/50">
+                        ⚡ {evCharging.badgeLabel}
+                      </span>
+                    ) : null;
+                  })()}
                 </div>
 
                 <h4 className="mt-1.5 text-base font-bold text-[var(--foreground)] leading-snug">
@@ -178,7 +187,7 @@ export function ParkSearchSelect({
   }
 
   return (
-    <div ref={containerRef} className="space-y-3">
+    <div ref={containerRef} className={`relative space-y-3 ${isOpen ? "z-50" : "z-30"}`}>
       {/* 🌟 Quick Recommendations */}
       <div>
         <p className="text-xs font-semibold text-[var(--muted)]">🌟 อุทยานยอดนิยม</p>
@@ -220,6 +229,10 @@ export function ParkSearchSelect({
             id={id}
             type="text"
             value={searchQuery}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               if (!isOpen) setIsOpen(true);
@@ -249,7 +262,7 @@ export function ParkSearchSelect({
 
         {/* Dropdown Options List */}
         {isOpen && (
-          <div className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-64 overflow-y-auto rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-strong)] p-1.5 shadow-2xl backdrop-blur-2xl">
+          <div className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-64 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-emerald-800/60 bg-white/98 dark:bg-[#0c231c] p-1.5 shadow-2xl backdrop-blur-2xl ring-1 ring-black/10 dark:ring-emerald-500/20">
             <div className="px-2.5 py-1 text-[10px] font-semibold text-[var(--muted)] border-b border-[var(--border)] mb-1 flex items-center justify-between">
               <span>ผลการค้นหา ({filteredParks.length})</span>
               <button
@@ -309,6 +322,17 @@ export function ParkSearchSelect({
                             <span className="text-[10px] opacity-75">· ⏰ {park.openTime}-{park.closeTime}</span>
                           ) : null}
                         </div>
+
+                        {(() => {
+                          const evCharging = getParkEvCharging(park.slug, park.nameTh);
+                          return evCharging.hasEvCharger ? (
+                            <div className="mt-1 flex items-center">
+                              <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 dark:bg-emerald-400/20 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                                ⚡ มีจุดชาร์จ EV
+                              </span>
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                     </button>
                   );

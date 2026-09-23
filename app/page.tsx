@@ -88,29 +88,30 @@ export default function HomePage() {
         <section className="glass-panel app-section overflow-hidden rounded-[38px] p-3 sm:p-5">
           <div className="relative z-10 grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
             {/* Left Hero Card with Rich Nature Overlay */}
-            <div className="relative flex flex-col justify-between overflow-hidden rounded-[34px] bg-[#05241b] px-6 py-8 sm:px-8 sm:py-10 text-white shadow-xl">
+            <div className="relative flex flex-col justify-between overflow-hidden rounded-[34px] bg-[#05241b] px-5 py-7 sm:px-8 sm:py-10 text-white shadow-xl">
               {/* Background Nature Image - Sharp and Clear */}
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
                 style={{ backgroundImage: `url('/images/parks/doi-luang.jpg')` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#021812]/92 via-[#04221a]/70 to-[#04221a]/30" />
+              {/* Deep multi-stop gradient for maximum text contrast across mobile & desktop */}
+              <div className="absolute inset-0 bg-gradient-to-b from-[#01140e]/90 via-[#021d15]/85 to-[#010c08]/98" />
 
-              <div className="relative z-10 space-y-4">
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#031d16]/85 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300 border border-emerald-500/40 shadow-sm">
+              <div className="relative z-10 space-y-3.5">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#021510]/90 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300 border border-emerald-500/50 shadow-md backdrop-blur-md">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                   Nature Companion • Northern Thailand
                 </span>
-                <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl leading-tight drop-shadow-sm">
+                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-snug sm:leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
                   วางแผนเที่ยวอุทยานภาคเหนือ สะดวก ปลอดภัย มั่นใจทุกทริป
                 </h1>
-                <p className="max-w-xl text-sm leading-relaxed text-slate-100 font-medium sm:text-base drop-shadow-xs">
+                <p className="max-w-xl text-xs sm:text-base leading-relaxed text-emerald-50/95 font-normal drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
                   NorthPark คือผู้ช่วยวางแผนท่องเที่ยวอุทยานแห่งชาติภาคเหนือ ที่ช่วยคุณค้นหาจุดหมาย วางแผนเส้นทาง และประเมินความพร้อมล่วงหน้าได้ในที่เดียว
                 </p>
               </div>
 
-              <div className="relative z-10 mt-8 space-y-6">
-                <div className="flex flex-wrap gap-3">
+              <div className="relative z-10 mt-7 space-y-5 sm:space-y-6">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/parks"
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-extrabold !text-[#04221a] shadow-lg transition-all hover:bg-emerald-50 active:scale-95"
@@ -120,7 +121,7 @@ export default function HomePage() {
                   </Link>
                   <Link
                     href="/trips/new"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/50 bg-[#031d16]/75 px-7 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#031d16]/90 active:scale-95"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-400/40 bg-[#021d16]/90 px-7 py-3.5 text-sm font-bold text-white shadow-md backdrop-blur-md transition-all hover:bg-[#032a20] active:scale-95"
                   >
                     <span>เริ่มวางแผนทริป</span>
                     <span>🧭</span>
@@ -128,18 +129,18 @@ export default function HomePage() {
                 </div>
 
                 {/* Stat Counters */}
-                <div className="grid grid-cols-3 gap-2 border-t border-white/25 pt-5 text-center sm:text-left">
-                  <div>
-                    <p className="text-xl font-bold text-white sm:text-2xl drop-shadow-xs">20+</p>
-                    <p className="text-[11px] font-medium text-emerald-200">อุทยานภาคเหนือ</p>
+                <div className="grid grid-cols-3 gap-2 border-t border-emerald-500/30 pt-4 text-center sm:text-left">
+                  <div className="rounded-2xl bg-black/30 p-2 backdrop-blur-sm sm:bg-transparent sm:p-0">
+                    <p className="text-lg font-extrabold text-white sm:text-2xl drop-shadow-sm">20+</p>
+                    <p className="text-[10px] sm:text-[11px] font-medium text-emerald-200">อุทยานภาคเหนือ</p>
                   </div>
-                  <div>
-                    <p className="text-xl font-bold text-white sm:text-2xl drop-shadow-xs">100%</p>
-                    <p className="text-[11px] font-medium text-emerald-200">ฟรีไม่มีค่าบริการ</p>
+                  <div className="rounded-2xl bg-black/30 p-2 backdrop-blur-sm sm:bg-transparent sm:p-0">
+                    <p className="text-lg font-extrabold text-white sm:text-2xl drop-shadow-sm">100%</p>
+                    <p className="text-[10px] sm:text-[11px] font-medium text-emerald-200">ฟรีไม่มีค่าบริการ</p>
                   </div>
-                  <div>
-                    <p className="text-xl font-bold text-white sm:text-2xl drop-shadow-xs">Live</p>
-                    <p className="text-[11px] font-medium text-emerald-200">ประเมินความพร้อม</p>
+                  <div className="rounded-2xl bg-black/30 p-2 backdrop-blur-sm sm:bg-transparent sm:p-0">
+                    <p className="text-lg font-extrabold text-white sm:text-2xl drop-shadow-sm">Live</p>
+                    <p className="text-[10px] sm:text-[11px] font-medium text-emerald-200">ประเมินความพร้อม</p>
                   </div>
                 </div>
               </div>
@@ -150,55 +151,55 @@ export default function HomePage() {
               {/* Main Featured Park Card */}
               <Link
                 href="/parks/doi-luang"
-                className="group relative flex flex-col justify-end overflow-hidden rounded-[34px] min-h-[220px] p-6 shadow-md transition-transform duration-300 hover:scale-[1.01]"
+                className="group relative flex flex-col justify-end overflow-hidden rounded-[34px] min-h-[210px] p-5 sm:p-6 shadow-md transition-transform duration-300 hover:scale-[1.01]"
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                   style={{ backgroundImage: `url('/images/parks/doi-luang.jpg')` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/98 via-slate-950/70 to-slate-950/20" />
 
                 <div className="relative z-10 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="inline-block rounded-full bg-emerald-500/80 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-md">
+                    <span className="inline-block rounded-full bg-emerald-600/90 border border-emerald-400/40 px-3 py-1 text-[11px] font-bold text-white shadow-sm backdrop-blur-md">
                       Featured Park • ดอยหลวง
                     </span>
-                    <span className="text-xs font-semibold text-white/80 group-hover:translate-x-1 transition-transform">
+                    <span className="text-xs font-bold text-emerald-300 group-hover:translate-x-1 transition-transform drop-shadow-sm">
                       รายละเอียด →
                     </span>
                   </div>
-                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight whitespace-nowrap truncate">
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] truncate">
                     อุทยานแห่งชาติดอยหลวง
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-200 line-clamp-2 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-100 font-normal line-clamp-2 leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
                     ผืนป่าดงดิบอันสมบูรณ์ครอบคลุม 3 จังหวัด เชียงราย พะเยา และลำปาง พร้อมน้ำตกปูแกงและจุดชมวิวทิวทัศน์ธรรมชาติ
                   </p>
                 </div>
               </Link>
 
               {/* Featured Attractions Grid */}
-              <div className="grid gap-3.5 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 grid-cols-2">
                 {featuredAttractions.map((att) => (
                   <Link
                     key={att.name}
                     href={att.link}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] min-h-[145px] p-4 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] min-h-[148px] p-3.5 sm:p-4 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md border border-white/10"
                   >
                     <div
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                       style={{ backgroundImage: `url('${att.imageUrl}')` }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-slate-950/10" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/98 via-slate-950/65 to-slate-950/20" />
 
                     <div className="relative z-10 flex items-start justify-start">
-                      <span className="inline-block rounded-full bg-slate-950/75 border border-white/20 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300 backdrop-blur-md">
+                      <span className="inline-block rounded-full bg-slate-950/85 border border-emerald-500/40 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 backdrop-blur-md shadow-sm">
                         {att.tag}
                       </span>
                     </div>
 
                     <div className="relative z-10 mt-6">
-                      <p className="text-sm font-bold text-white leading-snug drop-shadow-xs">{att.name}</p>
-                      <p className="mt-0.5 text-[11px] font-medium text-slate-300 drop-shadow-xs line-clamp-1">{att.park}</p>
+                      <p className="text-sm font-extrabold text-white leading-snug drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">{att.name}</p>
+                      <p className="mt-0.5 text-[11px] font-medium text-slate-200 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] line-clamp-1">{att.park}</p>
                     </div>
                   </Link>
                 ))}

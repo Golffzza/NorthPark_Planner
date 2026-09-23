@@ -107,6 +107,9 @@ export type TripWithParkForEvaluation = Prisma.TripGetPayload<{
     park: {
       select: {
         id: true;
+        nameTh: true;
+        nameEn: true;
+        province: true;
         openTime: true;
         closeTime: true;
         latitude: true;
@@ -197,6 +200,9 @@ export async function getTripForCurrentUser(tripId: string): Promise<TripWithPar
           park: {
             select: {
               id: true,
+              nameTh: true,
+              nameEn: true,
+              province: true,
               openTime: true,
               closeTime: true,
               latitude: true,

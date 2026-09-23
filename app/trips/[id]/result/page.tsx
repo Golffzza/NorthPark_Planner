@@ -8,7 +8,8 @@ import { RecommendationList } from "@/components/evaluation/recommendation-list"
 import { ScoreHeroCard } from "@/components/evaluation/score-hero-card";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
-import { getWeatherConditionLabel } from "@/lib/constants/trip-form-options";
+import { getParkTransitInfo } from "@/lib/data/park-transit-info";
+import { getTransportModeLabel, getWeatherConditionLabel } from "@/lib/constants/trip-form-options";
 import { buildTripResultViewModel } from "@/lib/presenters/trip-result-view";
 import { getTripDetailForCurrentUser, NotFoundError } from "@/lib/services/trip-service";
 import { formatThaiDate } from "@/lib/utils/date";
@@ -67,6 +68,8 @@ export default async function TripResultPage({ params }: TripResultPageProps) {
     const displayedDistance = formatDistance(trip.latestRouteSnapshot?.distanceMeters);
     const displayedTravelDuration =
       formatTravelDuration(trip.latestRouteSnapshot?.durationSeconds) ?? `${trip.estimatedTravelMinutes} นาที`;
+
+    const transitInfo = getParkTransitInfo(trip.park.nameTh);
 
     return (
       <AppShell>
@@ -135,6 +138,22 @@ export default async function TripResultPage({ params }: TripResultPageProps) {
                     {displayedTravelDuration}
                   </p>
                   <p className="mt-1 text-sm text-[var(--muted)]">{displayedDistance ?? "ยังไม่มีข้อมูลระยะทาง"}</p>
+                </div>
+                <div className="dashboard-card rounded-[24px] px-4 py-4 sm:col-span-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm text-[var(--muted)]">รูปแบบการเดินทาง & ผู้ร่วมเดินทาง</p>
+                      <p className="mt-1 text-base font-semibold text-[var(--foreground)]">
+                        {getTransportModeLabel(trip.transportMode)} • {trip.travelerCount} คน
+                      </p>
+                    </div>
+                    {trip.transportMode === "PUBLIC_TRANSPORT" ? (
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${transitInfo.hasDirectPublicTransit ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30" : "bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30"}`}>
+                        {transitInfo.hasDirectPublicTransit ? "✓ มีรถโดยสารตรง/สองแถว" : "⚠️ ไม่มีรถประจำทางตรง"}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{transitInfo.transitDescription}</p>
                 </div>
               </div>
             </div>

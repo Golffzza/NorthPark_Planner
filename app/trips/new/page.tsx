@@ -14,7 +14,7 @@ export default async function NewTripPage({ searchParams }: NewTripPageProps) {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-5">
         <PageHeader
           compact
           eyebrow="วางแผนท่องเที่ยว"

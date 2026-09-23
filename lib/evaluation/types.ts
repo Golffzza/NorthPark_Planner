@@ -20,6 +20,8 @@ export type TripEvaluationInput = {
   parkCloseTime: string;
   travelerCount: number;
   transportMode: TransportMode;
+  hasDirectPublicTransit?: boolean;
+  parkName?: string;
 };
 
 export type TripEvaluationResult = {
@@ -36,7 +38,7 @@ export type TripEvaluationResult = {
 
 export type RecommendationContext = Pick<
   TripEvaluationInput,
-  "weatherCondition" | "estimatedTravelMinutes" | "departAt" | "transportMode" | "travelerCount"
+  "weatherCondition" | "estimatedTravelMinutes" | "departAt" | "transportMode" | "travelerCount" | "hasDirectPublicTransit" | "parkName"
 > & {
   weakestFactor: WeakestFactor;
 };

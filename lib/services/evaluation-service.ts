@@ -1,3 +1,4 @@
+import { getParkTransitInfo } from "@/lib/data/park-transit-info";
 import { calculateTripEvaluation } from "@/lib/evaluation/calculate-trip-evaluation";
 import { prisma } from "@/lib/db/prisma";
 import { mapEvaluationToDto } from "@/lib/mappers/evaluation-dto";
@@ -11,6 +12,7 @@ export type EvaluateTripResult = {
 
 export async function evaluateTripForCurrentUser(tripId: string): Promise<EvaluateTripResult> {
   const trip = await getTripForCurrentUser(tripId);
+  const transitInfo = getParkTransitInfo(trip.park.nameTh);
 
   const evaluation = calculateTripEvaluation({
     weatherCondition: trip.weatherCondition,
@@ -21,6 +23,8 @@ export async function evaluateTripForCurrentUser(tripId: string): Promise<Evalua
     parkCloseTime: trip.park.closeTime,
     travelerCount: trip.travelerCount,
     transportMode: trip.transportMode,
+    hasDirectPublicTransit: transitInfo.hasDirectPublicTransit,
+    parkName: trip.park.nameTh,
   });
 
   let savedEvaluation: TripEvaluation | null = null;

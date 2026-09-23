@@ -21,7 +21,7 @@ export function TripCard({ trip }: TripCardProps) {
               TRAVEL PASS
             </span>
             <h2
-              className="mt-1 text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-snug break-words"
+              className="mt-1 text-lg sm:text-xl font-semibold tracking-normal text-slate-900 dark:text-white leading-snug break-words"
               title={trip.park.nameTh}
             >
               {trip.park.nameTh}

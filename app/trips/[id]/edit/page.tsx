@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { PageHeader } from "@/components/layout/page-header";
 import { TripForm } from "@/components/trips/trip-form";
 import { listParkOptions } from "@/lib/services/park-service";
 import { getTripDetailForCurrentUser, NotFoundError } from "@/lib/services/trip-service";
@@ -21,12 +20,6 @@ export default async function EditTripPage({ params }: EditTripPageProps) {
     return (
       <AppShell>
         <div className="space-y-6">
-          <PageHeader
-            compact
-            eyebrow="แก้ไขทริป"
-            title="ปรับแผนการเดินทาง"
-            description="แก้ไขวันเวลา จุดเริ่มต้น หรือจำนวนผู้เดินทาง แล้วกดบันทึกเพื่อประเมินใหม่"
-          />
           <TripForm mode="edit" parks={parks} trip={trip} />
         </div>
       </AppShell>

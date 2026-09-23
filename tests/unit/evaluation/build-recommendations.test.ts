@@ -13,6 +13,6 @@ describe("buildRecommendations", () => {
       travelerCount: 2,
     });
 
-    expect(result.toLowerCase()).toContain("weather");
+    expect(result).toContain("สภาพอากาศ");
   });
 });

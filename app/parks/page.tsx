@@ -4,7 +4,7 @@ import { ParkCard } from "@/components/parks/park-card";
 import { ParkPagination } from "@/components/parks/park-pagination";
 import { ParkSearchBar } from "@/components/parks/park-search-bar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getSuggestedOrPopularParks, listParkProvinces, listParks } from "@/lib/services/park-service";
+import { getSuggestedOrPopularParks, listParkOptions, listParkProvinces, listParks } from "@/lib/services/park-service";
 import { BadRequestError } from "@/lib/validations/park-query";
 import { parseParkListQuery } from "@/lib/validations/park-query";
 
@@ -39,7 +39,11 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
     }
   })();
 
-  const [parkResult, provinces] = await Promise.all([listParks(query), listParkProvinces()]);
+  const [parkResult, provinces, allParks] = await Promise.all([
+    listParks(query),
+    listParkProvinces(),
+    listParkOptions(),
+  ]);
   const hasResults = parkResult.data.length > 0;
   const suggestions = !hasResults ? await getSuggestedOrPopularParks(query) : null;
 
@@ -65,7 +69,12 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
           }
         />
 
-        <ParkSearchBar defaultQuery={query.q} defaultProvince={query.province} provinces={provinces} />
+        <ParkSearchBar
+          defaultQuery={query.q}
+          defaultProvince={query.province}
+          provinces={provinces}
+          parks={allParks}
+        />
 
         <div id="park-results" className="scroll-mt-24 space-y-4">
           {hasResults ? (
@@ -91,7 +100,7 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
                     )}
                   </h3>
                 </div>
-                {(query.q || query.province) ? (
+                {query.q || query.province ? (
                   <span className="text-xs text-slate-500 dark:text-emerald-300/70 font-medium">
                     {query.q ? `คำค้น "${query.q}"` : ""}
                     {query.q && query.province ? " • " : ""}
@@ -99,6 +108,15 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
                   </span>
                 ) : null}
               </div>
+
+              {/* Top Centered Pagination */}
+              <ParkPagination
+                currentPage={parkResult.meta.page}
+                totalPages={parkResult.meta.totalPages}
+                totalItems={parkResult.meta.total}
+                query={query}
+                variant="top"
+              />
 
               <section className="grid gap-4 md:grid-cols-2">
                 {parkResult.data.map((park) => (

@@ -12,6 +12,20 @@ function clampScore(score: number): number {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
+const levelThaiLabels: Record<string, string> = {
+  EXCELLENT: "เหมาะสมมาก",
+  GOOD: "เหมาะสม",
+  MODERATE: "ปานกลาง",
+  NEEDS_ADJUSTMENT: "ควรปรับแผน",
+};
+
+const factorThaiLabels: Record<string, string> = {
+  weather: "สภาพอากาศ",
+  duration: "ระยะเวลาเดินทาง",
+  time: "ช่วงเวลาเดินทางและแสงอาทิตย์",
+  userProfile: "ความพร้อมของผู้เดินทางและพาหนะ",
+};
+
 export function calculateTripEvaluation(input: TripEvaluationInput): TripEvaluationResult {
   const weatherScore = scoreWeather(input.weatherCondition);
   const durationScore = scoreDuration(input.estimatedTravelMinutes);
@@ -22,7 +36,10 @@ export function calculateTripEvaluation(input: TripEvaluationInput): TripEvaluat
     parkOpenTime: input.parkOpenTime,
     parkCloseTime: input.parkCloseTime,
   });
-  const userProfileScore = scoreUserProfile(input.travelerCount, input.transportMode);
+  const userProfileScore = scoreUserProfile(input.travelerCount, input.transportMode, {
+    hasDirectPublicTransit: input.hasDirectPublicTransit,
+    weatherCondition: input.weatherCondition,
+  });
 
   const totalScore = clampScore(
     weatherScore * EVALUATION_WEIGHTS.weather +
@@ -45,10 +62,14 @@ export function calculateTripEvaluation(input: TripEvaluationInput): TripEvaluat
     departAt: input.departAt,
     transportMode: input.transportMode,
     travelerCount: input.travelerCount,
+    hasDirectPublicTransit: input.hasDirectPublicTransit,
+    parkName: input.parkName,
   });
 
   const level = mapScoreToLevel(totalScore);
-  const summary = `Trip suitability is ${level.toLowerCase().replaceAll("_", " ")} with the ${weakestFactor} factor needing the most attention.`;
+  const levelText = levelThaiLabels[level] ?? "ปานกลาง";
+  const factorText = factorThaiLabels[weakestFactor] ?? "สภาพอากาศ";
+  const summary = `ผลการประเมินความเหมาะสมทริปอยู่ในเกณฑ์ "${levelText}" โดยมีปัจจัยด้าน${factorText}ที่ควรให้ความสำคัญหรือปรับแผนมากที่สุด`;
 
   return {
     totalScore,

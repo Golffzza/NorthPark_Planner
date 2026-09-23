@@ -9,10 +9,10 @@ type TripFormFieldProps = {
 
 export function TripFormField({ label, htmlFor, hint, children }: TripFormFieldProps) {
   return (
-    <label htmlFor={htmlFor} className="flex flex-col gap-2">
+    <label htmlFor={htmlFor} className="flex flex-col gap-2 min-w-0 w-full max-w-full">
       <span className="text-sm font-semibold text-[var(--foreground)]">{label}</span>
       {hint ? <span className="-mt-1 text-xs leading-6 text-[var(--muted)]">{hint}</span> : null}
-      <div>{children}</div>
+      <div className="min-w-0 w-full max-w-full">{children}</div>
     </label>
   );
 }
