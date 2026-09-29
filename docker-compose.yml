@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:0.8.6-pg16
     container_name: northpark-planner-db
     restart: unless-stopped
     ports:

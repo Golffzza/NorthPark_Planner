@@ -1,0 +1,15 @@
+{
+  "parks": 44,
+  "markdownFiles": 44,
+  "attractions": 150,
+  "sourceReferences": 91,
+  "uniqueSourceRegistryEntries": 86,
+  "evaluationQueries": 220,
+  "legalStatusCounts": {
+    "DECLARED": 40,
+    "PREPARATORY": 4
+  },
+  "missingAttractions": [],
+  "missingSources": [],
+  "canonicalOrderMatches": true
+}

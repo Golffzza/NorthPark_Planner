@@ -1,0 +1,862 @@
+[
+  {
+    "parkSlug": "khlong-lan",
+    "sourceId": "S01",
+    "title": "ข้อมูล/ข่าวอุทยานแห่งชาติคลองลาน",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/11968",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ข้อมูลจุดเด่นและพื้นที่"
+  },
+  {
+    "parkSlug": "khlong-lan",
+    "sourceId": "S02",
+    "title": "National park current information portal",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://nps.dnp.go.th/",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ตรวจสถานะ/บริการล่าสุด"
+  },
+  {
+    "parkSlug": "khlong-wang-chao",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติคลองวังเจ้า",
+    "publisher": "องค์การบริหารการพัฒนาพื้นที่พิเศษเพื่อการท่องเที่ยวอย่างยั่งยืน (DASTA)",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1639/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "จุดท่องเที่ยวและลักษณะการเข้าถึง"
+  },
+  {
+    "parkSlug": "khlong-wang-chao",
+    "sourceId": "S02",
+    "title": "การขยายพื้นที่อุทยานแห่งชาติคลองวังเจ้า",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/21775",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ขอบเขต/สถานะพื้นที่"
+  },
+  {
+    "parkSlug": "mae-wong",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติแม่วงก์",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/351/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "จุดท่องเที่ยวและภาพรวม"
+  },
+  {
+    "parkSlug": "mae-wong",
+    "sourceId": "S02",
+    "title": "ข่าวพื้นที่กลุ่มอุทยานคลองลาน-แม่วงก์",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/11968",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ข้อมูลพื้นที่"
+  },
+  {
+    "parkSlug": "lan-sang",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติลานสาง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1055/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "สถานที่ท่องเที่ยวและการเข้าถึง"
+  },
+  {
+    "parkSlug": "lan-sang",
+    "sourceId": "S02",
+    "title": "ข้อมูลการขยายพื้นที่อุทยานแห่งชาติลานสาง",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/20695",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะพื้นที่"
+  },
+  {
+    "parkSlug": "namtok-pha-charoen",
+    "sourceId": "S01",
+    "title": "เปิดรับฟังความคิดเห็นกำหนดพื้นที่เป็นอุทยานแห่งชาติน้ำตกพาเจริญ",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/43110",
+    "reliability": "สูง",
+    "asOf": "2026-04-16",
+    "use": "สถานะเตรียมการ พื้นที่ และจุดเด่น"
+  },
+  {
+    "parkSlug": "namtok-pha-charoen",
+    "sourceId": "S02",
+    "title": "อุทยานแห่งชาติน้ำตกพาเจริญ",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1729/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ข้อมูลท่องเที่ยวเชิงพื้นที่"
+  },
+  {
+    "parkSlug": "namtok-pha-charoen",
+    "sourceId": "S03",
+    "title": "ข่าวปฏิบัติงาน อช.น้ำตกพาเจริญ (เตรียมการ)",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/34604",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ยืนยันคำว่าเตรียมการในปลายปี 2568"
+  },
+  {
+    "parkSlug": "taksin-maharat",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติตากสินมหาราช",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1173/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "จุดเด่นและการท่องเที่ยว"
+  },
+  {
+    "parkSlug": "taksin-maharat",
+    "sourceId": "S02",
+    "title": "ข้อมูลท่องเที่ยวอุทยานแห่งชาติตากสินมหาราช",
+    "publisher": "Thailand.go.th",
+    "url": "https://thailand.go.th/issue-focus-detail/001_02_168",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ข้อมูลสนับสนุน"
+  },
+  {
+    "parkSlug": "doi-soi-malai",
+    "sourceId": "S01",
+    "title": "เปิดรับฟังความคิดเห็นกำหนดพื้นที่อุทยานแห่งชาติดอยสอยมาลัย-ไม้กลายเป็นหิน (เพิ่มเติม)",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/48181",
+    "reliability": "สูง",
+    "asOf": "2026-08-14",
+    "use": "สถานะเตรียมการ พื้นที่ ระบบนิเวศ"
+  },
+  {
+    "parkSlug": "doi-soi-malai",
+    "sourceId": "S02",
+    "title": "ขยะคืนถิ่นบนยอดดอยหลวงตาก",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/46662",
+    "reliability": "สูง",
+    "asOf": "2026-06-23",
+    "use": "ยืนยันกิจกรรมท่องเที่ยวดอยหลวงตาก"
+  },
+  {
+    "parkSlug": "doi-soi-malai",
+    "sourceId": "S03",
+    "title": "ข้อมูลรับฟังความคิดเห็นและไม้กลายเป็นหิน",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/33639",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "พื้นที่และคุณค่าทางธรณี"
+  },
+  {
+    "parkSlug": "mae-moei",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติแม่เมย",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1067/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "จุดชมวิว ถ้ำ และภาพรวมการท่องเที่ยว"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "sourceId": "S01",
+    "title": "ข้อมูลอุทยานแห่งชาติดอยอินทนนท์",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/17663",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ภาพรวมและจุดท่องเที่ยว"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "sourceId": "S02",
+    "title": "อ่างกาและระบบนิเวศดอยอินทนนท์",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/9398",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "อ่างกา/ป่าดิบเขา"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "sourceId": "S03",
+    "title": "ข่าว/ประกาศเส้นทางกิ่วแม่ปาน",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/48922",
+    "reliability": "สูง",
+    "asOf": "2026-09-10",
+    "use": "บริบทเส้นทางและการจัดการล่าสุด"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "sourceId": "S04",
+    "title": "เส้นทางศึกษาธรรมชาติน้ำตกผาดอกเสี้ยว",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/25671",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "เส้นทางผาดอกเสี้ยว"
+  },
+  {
+    "parkSlug": "doi-suthep-pui",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติดอยสุเทพ-ปุย",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/11865",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ข้อมูลพื้นที่และจุดท่องเที่ยว"
+  },
+  {
+    "parkSlug": "doi-suthep-pui",
+    "sourceId": "S02",
+    "title": "เส้นทางศึกษาธรรมชาติดอยปุย",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/36359",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ข้อมูลเส้นทาง"
+  },
+  {
+    "parkSlug": "doi-pha-hom-pok",
+    "sourceId": "S01",
+    "title": "ดอยผ้าห่มปกและการท่องเที่ยวพื้นที่สูง",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/36368",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะ/บริบทล่าสุด"
+  },
+  {
+    "parkSlug": "doi-pha-hom-pok",
+    "sourceId": "S02",
+    "title": "อุทยานแห่งชาติดอยผ้าห่มปก",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2227/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "จุดท่องเที่ยวและระยะเดิน"
+  },
+  {
+    "parkSlug": "huai-nam-dang",
+    "sourceId": "S01",
+    "title": "โป่งเดือดป่าแป๋และห้วยน้ำดัง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2668/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "จุดท่องเที่ยวและธรรมชาติ"
+  },
+  {
+    "parkSlug": "huai-nam-dang",
+    "sourceId": "S02",
+    "title": "มาตรการไฟป่าห้วยน้ำดัง ปี 2569",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/38896",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ความเสี่ยงตามฤดูกาล"
+  },
+  {
+    "parkSlug": "si-lanna",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติศรีลานนา",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1141/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "เขื่อนแม่งัด น้ำตกม่อนหินไหล และข้อมูลท่องเที่ยว"
+  },
+  {
+    "parkSlug": "khun-khan",
+    "sourceId": "S01",
+    "title": "ข่าว/ข้อมูลอุทยานแห่งชาติขุนขานและถ้ำหลวงแม่สาบ",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/10390",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "จุดเด่นพื้นที่"
+  },
+  {
+    "parkSlug": "khun-khan",
+    "sourceId": "S02",
+    "title": "การขยายพื้นที่อุทยานแห่งชาติขุนขาน",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/30591",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะและขอบเขตพื้นที่"
+  },
+  {
+    "parkSlug": "mae-wang",
+    "sourceId": "S01",
+    "title": "เที่ยวผาช่อ อุทยานแห่งชาติแม่วาง",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/37943",
+    "reliability": "สูง",
+    "asOf": "2026-01-17",
+    "use": "ระยะเส้นทาง ลักษณะผาช่อ และคำแนะนำเวลาเที่ยว"
+  },
+  {
+    "parkSlug": "mae-wang",
+    "sourceId": "S02",
+    "title": "บทความท่องเที่ยวแม่วาง/ผาช่อ",
+    "publisher": "การท่องเที่ยวแห่งประเทศไทย",
+    "url": "https://thai.tourismthailand.org/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "บริบทการท่องเที่ยว"
+  },
+  {
+    "parkSlug": "mae-takhrai",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติแม่ตะไคร้",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1912/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "อ่าง น้ำตก และดอยลังกาหลวง"
+  },
+  {
+    "parkSlug": "mae-takhrai",
+    "sourceId": "S02",
+    "title": "ข้อมูลพื้นที่อุทยานแห่งชาติแม่ตะไคร้",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/32083",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะพื้นที่"
+  },
+  {
+    "parkSlug": "khun-chae",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติขุนแจ",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1034/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตกและเส้นทางยอดดอย"
+  },
+  {
+    "parkSlug": "doi-luang",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติดอยหลวง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/644/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ภาพรวมและน้ำตกปูแกง"
+  },
+  {
+    "parkSlug": "doi-luang",
+    "sourceId": "S02",
+    "title": "อุทยานแห่งชาติดอยหลวง ฝั่งพะเยา",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/966/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตกจำปาทองและเส้นทางดอย"
+  },
+  {
+    "parkSlug": "chae-son",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติแจ้ซ้อน",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2280/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "บ่อน้ำร้อน น้ำตก และเส้นทางธรรมชาติ"
+  },
+  {
+    "parkSlug": "doi-jong",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติดอยจง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2277/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ยอดดอยจง ผาก้าน และแหล่งธรรมชาติ"
+  },
+  {
+    "parkSlug": "tham-pha-thai",
+    "sourceId": "S01",
+    "title": "ถ้ำผาไทโมเดล ผ่านเกณฑ์รับฟังความเห็น เตรียมประกาศจัดตั้ง",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/42233",
+    "reliability": "สูง",
+    "asOf": "2026-04-03",
+    "use": "สถานะเตรียมการ"
+  },
+  {
+    "parkSlug": "tham-pha-thai",
+    "sourceId": "S02",
+    "title": "หล่มภูเขียว",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2033/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "การเข้าถึงและจุดเด่น"
+  },
+  {
+    "parkSlug": "tham-pha-thai",
+    "sourceId": "S03",
+    "title": "ข้อมูลเส้นทางถ้ำผาไทและพื้นที่ใกล้เคียง",
+    "publisher": "การท่องเที่ยวแห่งประเทศไทย",
+    "url": "https://thai.tourismthailand.org/Articles/ครั้งหนึ่งในชีวิตต้องไปพิชิตให้ได้",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ระยะเดินโดยประมาณ"
+  },
+  {
+    "parkSlug": "doi-khun-tan",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติดอยขุนตาล",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2262/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "เส้นทางและจุดเด่น"
+  },
+  {
+    "parkSlug": "doi-khun-tan",
+    "sourceId": "S02",
+    "title": "ข้อมูลการขยายพื้นที่อุทยานแห่งชาติดอยขุนตาล",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/20444",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะพื้นที่"
+  },
+  {
+    "parkSlug": "mae-ping",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติแม่ปิง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2265/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตกก้อหลวง แก่งก้อ และจุดธรรมชาติ"
+  },
+  {
+    "parkSlug": "mae-ping",
+    "sourceId": "S02",
+    "title": "รับฟังความคิดเห็นการปรับพื้นที่อุทยานแห่งชาติแม่ปิง",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/48281",
+    "reliability": "สูง",
+    "asOf": "2026-08",
+    "use": "บริบทพื้นที่ปัจจุบัน"
+  },
+  {
+    "parkSlug": "mae-yom",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติแม่ยม",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2254/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ป่าสัก แก่ง และภาพรวมพื้นที่"
+  },
+  {
+    "parkSlug": "wiang-kosai",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติเวียงโกศัย",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2304/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตกและข้อมูลท่องเที่ยว"
+  },
+  {
+    "parkSlug": "doi-pha-klong",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติดอยผากลอง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/294/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "สวนหิน เส้นทางหินปะการัง ถ้ำและแก่ง"
+  },
+  {
+    "parkSlug": "doi-phu-kha",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติดอยภูคา",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2310/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "เส้นทาง จุดชมวิว และพรรณไม้"
+  },
+  {
+    "parkSlug": "doi-phu-kha",
+    "sourceId": "S02",
+    "title": "ดอยภูคาได้รับรางวัล/การจัดการพื้นที่",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/40966",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ข้อมูล DNP ปัจจุบันด้านพื้นที่"
+  },
+  {
+    "parkSlug": "khun-nan",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติขุนน่าน",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2309/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตกและภาพรวมพื้นที่"
+  },
+  {
+    "parkSlug": "mae-charim",
+    "sourceId": "S01",
+    "title": "ล่องแก่งลำน้ำว้า อุทยานแห่งชาติแม่จริม",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/18155",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ประเภทเส้นทางล่องแก่งและความปลอดภัย"
+  },
+  {
+    "parkSlug": "nanthaburi",
+    "sourceId": "S01",
+    "title": "เปิดรับฟังความเห็นประกาศจัดตั้งอุทยานแห่งชาตินันทบุรี",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/19079",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะและจุดท่องเที่ยว"
+  },
+  {
+    "parkSlug": "nanthaburi",
+    "sourceId": "S02",
+    "title": "ข้อมูลการท่องเที่ยวอุทยานแห่งชาตินันทบุรี",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/4331",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ลานกางเต็นท์และจุดชมวิว"
+  },
+  {
+    "parkSlug": "nanthaburi",
+    "sourceId": "S03",
+    "title": "สำรวจความหลากหลายทางชีวภาพอุทยานแห่งชาตินันทบุรี (เตรียมการ)",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/11596",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ยืนยันสถานะเตรียมการและความหลากหลาย"
+  },
+  {
+    "parkSlug": "sri-nan",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติศรีน่าน",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/464/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ดอยเสมอดาว ผาหัวสิงห์ ผาชู้ แก่งหลวง"
+  },
+  {
+    "parkSlug": "sri-nan",
+    "sourceId": "S02",
+    "title": "มาตรการไฟป่าอุทยานแห่งชาติศรีน่าน",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/43716",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ความเสี่ยงตามฤดูกาล"
+  },
+  {
+    "parkSlug": "doi-phu-nang",
+    "sourceId": "S01",
+    "title": "ข้อมูลท่องเที่ยวอุทยานแห่งชาติดอยภูนาง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/651/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "จุดท่องเที่ยว stable"
+  },
+  {
+    "parkSlug": "doi-phu-nang",
+    "sourceId": "S02",
+    "title": "อธิบดีกรมอุทยานฯ สั่งปิด อช.ดอยภูนาง ไม่มีกำหนด",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/31022",
+    "reliability": "สูง",
+    "asOf": "2025-03-25",
+    "use": "สถานะปิด"
+  },
+  {
+    "parkSlug": "doi-phu-nang",
+    "sourceId": "S03",
+    "title": "ปฏิบัติการไฟป่าดอยภูนางหลังประกาศปิด",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/31076",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ยืนยันการปิดและบริบท"
+  },
+  {
+    "parkSlug": "namtok-mae-surin",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติน้ำตกแม่สุรินทร์",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1984/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตกและภาพรวมพื้นที่"
+  },
+  {
+    "parkSlug": "namtok-mae-surin",
+    "sourceId": "S02",
+    "title": "การขยายพื้นที่อุทยานแห่งชาติน้ำตกแม่สุรินทร์",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/24897",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะพื้นที่"
+  },
+  {
+    "parkSlug": "salawin",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติสาละวิน",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/371/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "แม่น้ำและการท่องเที่ยว"
+  },
+  {
+    "parkSlug": "salawin",
+    "sourceId": "S02",
+    "title": "มาตรการไฟป่าอุทยานแห่งชาติสาละวิน",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/39081",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ความเสี่ยงตามฤดู"
+  },
+  {
+    "parkSlug": "ton-sak-yai",
+    "sourceId": "S01",
+    "title": "มหาสักในอุทยานแห่งชาติต้นสักใหญ่",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/35608",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ต้นสักใหญ่และพื้นที่"
+  },
+  {
+    "parkSlug": "ton-sak-yai",
+    "sourceId": "S02",
+    "title": "ข้อมูลการขยายพื้นที่อุทยานแห่งชาติต้นสักใหญ่",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/22481",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะ/ขอบเขต"
+  },
+  {
+    "parkSlug": "lam-nam-nan",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติลำน้ำน่าน",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1308/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "กิจกรรมและพื้นที่ท่องเที่ยว"
+  },
+  {
+    "parkSlug": "lam-nam-nan",
+    "sourceId": "S02",
+    "title": "รับฟังความคิดเห็นเพิกถอนอุทยานแห่งชาติลำน้ำน่านบางส่วน",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/38915",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "สถานะขอบเขตปัจจุบัน"
+  },
+  {
+    "parkSlug": "phu-soi-dao",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติภูสอยดาว",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/3746/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตก ลานสน ระยะเดิน ดอกไม้"
+  },
+  {
+    "parkSlug": "phu-soi-dao",
+    "sourceId": "S02",
+    "title": "เตรียมความพร้อมฤดูท่องเที่ยวภูสอยดาว",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/36218",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "การจัดการ high season"
+  },
+  {
+    "parkSlug": "ramkhamhaeng",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติรามคำแหง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/777/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ยอดเขา น้ำตก และธรรมชาติ"
+  },
+  {
+    "parkSlug": "si-satchanalai",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติศรีสัชนาลัย",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/659/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ระยะน้ำตก เส้นทาง และถ้ำ"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "sourceId": "S01",
+    "title": "ฐานความรู้ master ภูหินร่องกล้า",
+    "publisher": "NorthPark curated from official/authoritative sources",
+    "url": "local:data/knowledge/parks/phu-hin-rong-kla.md",
+    "reliability": "สูงเมื่ออ้าง source_ids ภายใน",
+    "asOf": null,
+    "use": "ข้อมูล attraction, plan, safety และ source registry"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "sourceId": "S02",
+    "title": "ข่าวอุทยานแห่งชาติภูหินร่องกล้า",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/45168",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "พื้นที่และความปลอดภัย"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "sourceId": "S03",
+    "title": "เพจทางการอุทยานแห่งชาติภูหินร่องกล้า",
+    "publisher": "อุทยานแห่งชาติภูหินร่องกล้า",
+    "url": "https://www.facebook.com/PhuhinrongklaNP/",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ตรวจสถานะหมันแดง/ดอกไม้/ประกาศ"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "sourceId": "S04",
+    "title": "ประกาศปิดภูลมโล 19 ม.ค. 2569",
+    "publisher": "สถานีวิทยุกระจายเสียงแห่งประเทศไทย อำเภอด่านซ้าย",
+    "url": "https://radiodansai.prd.go.th/th/content/category/detail/id/57/iid/466951",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ประวัติสถานะฤดูกาล; ต้องตรวจประกาศใหม่"
+  },
+  {
+    "parkSlug": "thung-salaeng-luang",
+    "sourceId": "S01",
+    "title": "ทุ่งแสลงหลวง โซนหนองแม่นา",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/3321/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ทุ่ง/หนองแม่นา/กิจกรรม"
+  },
+  {
+    "parkSlug": "thung-salaeng-luang",
+    "sourceId": "S02",
+    "title": "อุทยานแห่งชาติทุ่งแสลงหลวง",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/17868",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "ภาพรวมและจุดท่องเที่ยว"
+  },
+  {
+    "parkSlug": "thung-salaeng-luang",
+    "sourceId": "S03",
+    "title": "ข้อมูลท่องเที่ยวทุ่งแสลงหลวง",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2395/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ข้อมูลเสริม"
+  },
+  {
+    "parkSlug": "namtok-chat-trakan",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติน้ำตกชาติตระการ",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/335/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตกและข้อมูลท่องเที่ยว"
+  },
+  {
+    "parkSlug": "nam-nao",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติน้ำหนาว",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/1280/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ภาพรวมและสถานที่ท่องเที่ยว"
+  },
+  {
+    "parkSlug": "nam-nao",
+    "sourceId": "S02",
+    "title": "ข้อมูลท่องเที่ยว/ธรรมชาติอุทยานแห่งชาติน้ำหนาว",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2381/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "เส้นทางและกิจกรรม"
+  },
+  {
+    "parkSlug": "nam-nao",
+    "sourceId": "S03",
+    "title": "ข่าวกรมอุทยานฯ น้ำหนาว ปี 2569",
+    "publisher": "กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช",
+    "url": "https://news.dnp.go.th/news/38420",
+    "reliability": "สูง",
+    "asOf": null,
+    "use": "บริบทการจัดการพื้นที่ล่าสุด"
+  },
+  {
+    "parkSlug": "tat-mok",
+    "sourceId": "S01",
+    "title": "อุทยานแห่งชาติตาดหมอก",
+    "publisher": "DASTA",
+    "url": "https://cbtthailand.dasta.or.th/webapp/relattraction/content/2387/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "น้ำตกและข้อมูลการเข้าถึง"
+  },
+  {
+    "parkSlug": "tat-mok",
+    "sourceId": "S02",
+    "title": "ข้อมูลท่องเที่ยวเพชรบูรณ์",
+    "publisher": "การท่องเที่ยวแห่งประเทศไทย",
+    "url": "https://thai.tourismthailand.org/",
+    "reliability": "สูง-ปานกลาง",
+    "asOf": null,
+    "use": "ข้อมูลสนับสนุนพื้นที่"
+  }
+]

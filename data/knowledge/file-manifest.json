@@ -1,0 +1,222 @@
+[
+  {
+    "file": "data/knowledge/parks/chae-son.md",
+    "bytes": 21084,
+    "sha256": "dcdf7155d8ed13ff09fd504fdf5f1b888f76204b7be232c1a2245e407ba7aa94"
+  },
+  {
+    "file": "data/knowledge/parks/doi-inthanon.md",
+    "bytes": 25376,
+    "sha256": "4fd618091f3f9e8bb5d05b81f2b80f35e09b5a8960f005f8132d6ba52a60b36b"
+  },
+  {
+    "file": "data/knowledge/parks/doi-jong.md",
+    "bytes": 20281,
+    "sha256": "abfb8e79bfdd4870963f9bea5db8aa4141707a321514d7b706926e532f374b6e"
+  },
+  {
+    "file": "data/knowledge/parks/doi-khun-tan.md",
+    "bytes": 21315,
+    "sha256": "ccdbae04acbd857d974e90fda832099345844f19b70a01b902d7b4d0dc41256f"
+  },
+  {
+    "file": "data/knowledge/parks/doi-luang.md",
+    "bytes": 21146,
+    "sha256": "bb1bbaef1c83e96e29b9be571bdaa11e468d70925f2658d9407501c003f215f8"
+  },
+  {
+    "file": "data/knowledge/parks/doi-pha-hom-pok.md",
+    "bytes": 21944,
+    "sha256": "29fe544f5d53ce36008d9dbd5236070e1f60e8a0a062a818e65b6a29b6a0888a"
+  },
+  {
+    "file": "data/knowledge/parks/doi-pha-klong.md",
+    "bytes": 21575,
+    "sha256": "f3896d5d3ddc54c20900deb5c42279765222735875edddd00af8d5c9065eaa46"
+  },
+  {
+    "file": "data/knowledge/parks/doi-phu-kha.md",
+    "bytes": 23383,
+    "sha256": "88b5a945b7eba3efb3f65a9f623030d6fdcd34a4054082d168db556a6b3b8423"
+  },
+  {
+    "file": "data/knowledge/parks/doi-phu-nang.md",
+    "bytes": 23818,
+    "sha256": "44d87a20f5616f6e25d87b62472d76fd94d679a1ab8fd17b8f03d2e450885ade"
+  },
+  {
+    "file": "data/knowledge/parks/doi-soi-malai.md",
+    "bytes": 23972,
+    "sha256": "95ddee31901daac4fa44772a9606f8b9097000c280f90ece42ab9f3a6968f6fd"
+  },
+  {
+    "file": "data/knowledge/parks/doi-suthep-pui.md",
+    "bytes": 23714,
+    "sha256": "ff130517029dc30f65987504266a96901ad9fdb394ac51e61b733275a564caf2"
+  },
+  {
+    "file": "data/knowledge/parks/huai-nam-dang.md",
+    "bytes": 21416,
+    "sha256": "d2e2e1812bb4c676edddcea3a18f4970a2e8674ec4ff51d29d643dd6ca34af5f"
+  },
+  {
+    "file": "data/knowledge/parks/khlong-lan.md",
+    "bytes": 21987,
+    "sha256": "dcb6c6bd5ee85eea249067d6e4c35732341c95f59197cf33c9e64eb6f25e0d14"
+  },
+  {
+    "file": "data/knowledge/parks/khlong-wang-chao.md",
+    "bytes": 22695,
+    "sha256": "8ada864c0ce3d7fc0460f129601e248345751f3cda39b1b93a29cba20f473fe6"
+  },
+  {
+    "file": "data/knowledge/parks/khun-chae.md",
+    "bytes": 22288,
+    "sha256": "0acdcd92f432aef932ca99d42ae2f4b9c12fb185c4ee6c12021506034d9fc99d"
+  },
+  {
+    "file": "data/knowledge/parks/khun-khan.md",
+    "bytes": 20853,
+    "sha256": "b7dde20ee451b0c166b23011bed9077244b843b871ad0555531dde0a5c9b2826"
+  },
+  {
+    "file": "data/knowledge/parks/khun-nan.md",
+    "bytes": 19844,
+    "sha256": "a752a90a611f9cfefe7963ffd8cf83120c4943ec5c60e7f65e9e7784c1094b09"
+  },
+  {
+    "file": "data/knowledge/parks/lam-nam-nan.md",
+    "bytes": 21540,
+    "sha256": "e514a61054bd259efa10c95b8d4c5c4817fb55a8439faa93e8726b4f5a49c0d7"
+  },
+  {
+    "file": "data/knowledge/parks/lan-sang.md",
+    "bytes": 20704,
+    "sha256": "c017aa42e1b832501e513e2175c480d8af0f954771521a9267115c22fdd6f971"
+  },
+  {
+    "file": "data/knowledge/parks/mae-charim.md",
+    "bytes": 21452,
+    "sha256": "9f42a10f6fd377dacc31261b24747c904c35d37290a391cfdce0e77aecdaba51"
+  },
+  {
+    "file": "data/knowledge/parks/mae-moei.md",
+    "bytes": 23000,
+    "sha256": "7a76c8de2bceac69faa574a8974473aa5a7d7bfed53c0319cb4113068a5c686b"
+  },
+  {
+    "file": "data/knowledge/parks/mae-ping.md",
+    "bytes": 21270,
+    "sha256": "b9ad75f536f86ee78e08b7205d804b2d2d6d54c61e41b5d19327efa7b066541c"
+  },
+  {
+    "file": "data/knowledge/parks/mae-takhrai.md",
+    "bytes": 23316,
+    "sha256": "9d4f17912fb28d8f1a3251e1859baeadea76285bba5e421a1c9aa35f5b0a3387"
+  },
+  {
+    "file": "data/knowledge/parks/mae-wang.md",
+    "bytes": 21239,
+    "sha256": "875698ad1d2ec75562faf02452affdcf5093788711cfa38be91a2e79fd97b8b8"
+  },
+  {
+    "file": "data/knowledge/parks/mae-wong.md",
+    "bytes": 22065,
+    "sha256": "5519802ff897daa1c82c3f523ce5d4f869dce5bdcdb49f90460408655e7823b2"
+  },
+  {
+    "file": "data/knowledge/parks/mae-yom.md",
+    "bytes": 20746,
+    "sha256": "c22286ce1b92b501e0f4eddc9a8be5876198e5b9de2a51aeebc861b1248bbbe4"
+  },
+  {
+    "file": "data/knowledge/parks/nam-nao.md",
+    "bytes": 23117,
+    "sha256": "b4be92c53f4069eac0d529a1977282ad07d050c640b3db9a1aa358721d0872b4"
+  },
+  {
+    "file": "data/knowledge/parks/namtok-chat-trakan.md",
+    "bytes": 20867,
+    "sha256": "996c68670c64ff10c097d50502ed63cc5f5e68aabfc58d6bf4e2cba82f0c17d3"
+  },
+  {
+    "file": "data/knowledge/parks/namtok-mae-surin.md",
+    "bytes": 21344,
+    "sha256": "ba110d330d1919fede96adbeb24054146506a14cf25de08cf45321471108fdb9"
+  },
+  {
+    "file": "data/knowledge/parks/namtok-pha-charoen.md",
+    "bytes": 22754,
+    "sha256": "b7db269b75cafae364da2f1a51dbfae044cddd377769c3ee5033ec7f226f076b"
+  },
+  {
+    "file": "data/knowledge/parks/nanthaburi.md",
+    "bytes": 21855,
+    "sha256": "85712e4ac044f3cba4af183a0ba9d7694b96fb924443211608c1b0337c6198a7"
+  },
+  {
+    "file": "data/knowledge/parks/phu-hin-rong-kla.md",
+    "bytes": 29796,
+    "sha256": "fd4420ac52cbc04e43b9600998dea62d06a4033d09d9068e2c95a10037027f4d"
+  },
+  {
+    "file": "data/knowledge/parks/phu-soi-dao.md",
+    "bytes": 23301,
+    "sha256": "6169475e7a15fd9d5be2142019cd8aea8f5e262c139252cda6b0a4ef9e02fc59"
+  },
+  {
+    "file": "data/knowledge/parks/ramkhamhaeng.md",
+    "bytes": 22020,
+    "sha256": "0bb6d28c102d89efa7487cd56f6452afdccd31593501a9b194569199b0b1f038"
+  },
+  {
+    "file": "data/knowledge/parks/salawin.md",
+    "bytes": 21320,
+    "sha256": "75fc025ac3f60577c458d98f631cc6405bc07a8eb7f7f5cb641066b251cdddd3"
+  },
+  {
+    "file": "data/knowledge/parks/si-lanna.md",
+    "bytes": 21870,
+    "sha256": "54035b764668ed2787f66781954bfc14a6133da7e308191afc4123904606b27d"
+  },
+  {
+    "file": "data/knowledge/parks/si-satchanalai.md",
+    "bytes": 21976,
+    "sha256": "e46e58a2b86706cb536e7886ecaac6dec4bd52efafa86f953ffc564db1ed5e2c"
+  },
+  {
+    "file": "data/knowledge/parks/sri-nan.md",
+    "bytes": 21746,
+    "sha256": "fe732ad7f1b502e6d3b833b9a6fff4a6a2fed7734ed8045bbb7eb2361d48b80d"
+  },
+  {
+    "file": "data/knowledge/parks/taksin-maharat.md",
+    "bytes": 20888,
+    "sha256": "5a9c734de3dcad6479f7af8a8a9ae57a1df6c57f5279cc89b351542b2eb0d627"
+  },
+  {
+    "file": "data/knowledge/parks/tat-mok.md",
+    "bytes": 20564,
+    "sha256": "df23e2fe7baab4d3db882815a46d0216ab88d1a860b886517ff236dbfd1051ea"
+  },
+  {
+    "file": "data/knowledge/parks/tham-pha-thai.md",
+    "bytes": 21901,
+    "sha256": "c33aeec78a472d7adf71c04681e5e3b38a9dc41fc7a0b23f5ec25edd5891668b"
+  },
+  {
+    "file": "data/knowledge/parks/thung-salaeng-luang.md",
+    "bytes": 23291,
+    "sha256": "8e4074558da09106386f3f657b0f0471b4f3e0154e94830518e6a24e0037b8d5"
+  },
+  {
+    "file": "data/knowledge/parks/ton-sak-yai.md",
+    "bytes": 20751,
+    "sha256": "38b0fd4dd4b9a58a99a971c736935f52745aecbd1715375ada86a7fbfc3e10af"
+  },
+  {
+    "file": "data/knowledge/parks/wiang-kosai.md",
+    "bytes": 20270,
+    "sha256": "fbc4c5036db5f6955f7c5155fd46206a57b97b10cec87f4d8cf1ead3569df91b"
+  }
+]

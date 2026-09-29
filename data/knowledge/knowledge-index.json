@@ -1,0 +1,939 @@
+[
+  {
+    "slug": "khlong-lan",
+    "nameTh": "อุทยานแห่งชาติคลองลาน",
+    "nameEn": "Khlong Lan National Park",
+    "provinces": [
+      "กำแพงเพชร"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "forest",
+      "photography",
+      "family-day-trip",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/khlong-lan.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "khlong-wang-chao",
+    "nameTh": "อุทยานแห่งชาติคลองวังเจ้า",
+    "nameEn": "Khlong Wang Chao National Park",
+    "provinces": [
+      "กำแพงเพชร",
+      "ตาก"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "forest",
+      "remote",
+      "4wd",
+      "river",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/khlong-wang-chao.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "mae-wong",
+    "nameTh": "อุทยานแห่งชาติแม่วงก์",
+    "nameEn": "Mae Wong National Park",
+    "provinces": [
+      "กำแพงเพชร",
+      "นครสวรรค์"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "forest",
+      "viewpoint",
+      "camping",
+      "wildlife",
+      "trekking",
+      "remote"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/mae-wong.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "lan-sang",
+    "nameTh": "อุทยานแห่งชาติลานสาง",
+    "nameEn": "Lan Sang National Park",
+    "provinces": [
+      "ตาก"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "day-trip",
+      "forest",
+      "family",
+      "short-walk"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/lan-sang.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "namtok-pha-charoen",
+    "nameTh": "อุทยานแห่งชาติน้ำตกพาเจริญ",
+    "nameEn": "Namtok Pha Charoen National Park",
+    "provinces": [
+      "ตาก"
+    ],
+    "legalStatus": "PREPARATORY",
+    "tags": [
+      "waterfall",
+      "hot-spring",
+      "forest",
+      "preparatory-area",
+      "day-trip"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/namtok-pha-charoen.md",
+    "lastKnownStatusNote": "กรมอุทยานฯ วันที่ 16 เมษายน 2569 ระบุว่าเป็นพื้นที่เตรียมประกาศจัดตั้งเป็นอุทยานแห่งชาติ และข่าวปลายปี 2568 ยังใช้คำว่า '(เตรียมการ)'"
+  },
+  {
+    "slug": "taksin-maharat",
+    "nameTh": "อุทยานแห่งชาติตากสินมหาราช",
+    "nameEn": "Taksin Maharat National Park",
+    "provinces": [
+      "ตาก"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "giant-tree",
+      "forest",
+      "trail",
+      "geology",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/taksin-maharat.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-soi-malai",
+    "nameTh": "อุทยานแห่งชาติดอยสอยมาลัย-ไม้กลายเป็นหิน",
+    "nameEn": "Doi Soi Malai National Park",
+    "provinces": [
+      "ตาก"
+    ],
+    "legalStatus": "PREPARATORY",
+    "tags": [
+      "preparatory-area",
+      "trekking",
+      "geology",
+      "petrified-wood",
+      "mountain",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-soi-malai.md",
+    "lastKnownStatusNote": "ข่าวกรมอุทยานฯ วันที่ 14 สิงหาคม 2569 ระบุชัดว่าเป็นพื้นที่สำรวจเพื่อเตรียมประกาศอุทยานแห่งชาติ (เตรียมการ) เนื้อที่ที่อยู่ระหว่างกระบวนการประมาณ 184,249 ไร่ หรือ 294.80 ตร.กม."
+  },
+  {
+    "slug": "mae-moei",
+    "nameTh": "อุทยานแห่งชาติแม่เมย",
+    "nameEn": "Mae Moei National Park",
+    "provinces": [
+      "ตาก"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "viewpoint",
+      "sea-of-mist",
+      "camping",
+      "cave",
+      "mountain",
+      "remote"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/mae-moei.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-inthanon",
+    "nameTh": "อุทยานแห่งชาติดอยอินทนนท์",
+    "nameEn": "Doi Inthanon National Park",
+    "provinces": [
+      "เชียงใหม่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "mountain",
+      "viewpoint",
+      "waterfall",
+      "birdwatching",
+      "nature-trail",
+      "cool-weather",
+      "photography"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-inthanon.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-suthep-pui",
+    "nameTh": "อุทยานแห่งชาติดอยสุเทพ-ปุย",
+    "nameEn": "Doi Suthep-Pui National Park",
+    "provinces": [
+      "เชียงใหม่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "city-access",
+      "temple",
+      "viewpoint",
+      "waterfall",
+      "trail",
+      "culture",
+      "day-trip"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-suthep-pui.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-pha-hom-pok",
+    "nameTh": "อุทยานแห่งชาติดอยผ้าห่มปก",
+    "nameEn": "Doi Pha Hom Pok National Park",
+    "provinces": [
+      "เชียงใหม่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "mountain",
+      "summit",
+      "hot-spring",
+      "trekking",
+      "camping",
+      "waterfall"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-pha-hom-pok.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "huai-nam-dang",
+    "nameTh": "อุทยานแห่งชาติห้วยน้ำดัง",
+    "nameEn": "Huai Nam Dang National Park",
+    "provinces": [
+      "เชียงใหม่",
+      "แม่ฮ่องสอน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "viewpoint",
+      "sea-of-mist",
+      "camping",
+      "hot-spring",
+      "mountain",
+      "photography"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/huai-nam-dang.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "si-lanna",
+    "nameTh": "อุทยานแห่งชาติศรีลานนา",
+    "nameEn": "Sri Lanna National Park",
+    "provinces": [
+      "เชียงใหม่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "reservoir",
+      "boat",
+      "waterfall",
+      "forest",
+      "camping",
+      "4wd"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/si-lanna.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "khun-khan",
+    "nameTh": "อุทยานแห่งชาติขุนขาน",
+    "nameEn": "Khun Khan National Park",
+    "provinces": [
+      "เชียงใหม่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "cave",
+      "forest",
+      "mountain",
+      "quiet",
+      "trail",
+      "viewpoint"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/khun-khan.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "mae-wang",
+    "nameTh": "อุทยานแห่งชาติแม่วาง",
+    "nameEn": "Mae Wang National Park",
+    "provinces": [
+      "เชียงใหม่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "geology",
+      "pha-chor",
+      "day-trip",
+      "trail",
+      "photography",
+      "forest"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/mae-wang.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "mae-takhrai",
+    "nameTh": "อุทยานแห่งชาติแม่ตะไคร้",
+    "nameEn": "Mae Takhrai National Park",
+    "provinces": [
+      "เชียงใหม่",
+      "ลำพูน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "reservoir",
+      "waterfall",
+      "trekking",
+      "forest",
+      "birdwatching",
+      "mountain"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/mae-takhrai.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "khun-chae",
+    "nameTh": "อุทยานแห่งชาติขุนแจ",
+    "nameEn": "Khun Chae National Park",
+    "provinces": [
+      "เชียงราย"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "trekking",
+      "mountain",
+      "camping",
+      "viewpoint",
+      "forest"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/khun-chae.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-luang",
+    "nameTh": "อุทยานแห่งชาติดอยหลวง",
+    "nameEn": "Doi Luang National Park",
+    "provinces": [
+      "เชียงราย",
+      "พะเยา",
+      "ลำปาง"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "forest",
+      "trekking",
+      "mountain",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-luang.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "chae-son",
+    "nameTh": "อุทยานแห่งชาติแจ้ซ้อน",
+    "nameEn": "Chae Son National Park",
+    "provinces": [
+      "ลำปาง"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "hot-spring",
+      "waterfall",
+      "family",
+      "nature-trail",
+      "camping",
+      "day-trip"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/chae-son.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-jong",
+    "nameTh": "อุทยานแห่งชาติดอยจง",
+    "nameEn": "Doi Jong National Park",
+    "provinces": [
+      "ลำปาง",
+      "ลำพูน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "trekking",
+      "mountain",
+      "remote",
+      "camping",
+      "forest",
+      "limestone"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-jong.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "tham-pha-thai",
+    "nameTh": "อุทยานแห่งชาติถ้ำผาไท",
+    "nameEn": "Tham Pha Thai National Park",
+    "provinces": [
+      "ลำปาง"
+    ],
+    "legalStatus": "PREPARATORY",
+    "tags": [
+      "preparatory-area",
+      "cave",
+      "geology",
+      "sinkhole",
+      "trail",
+      "waterfall"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/tham-pha-thai.md",
+    "lastKnownStatusNote": "กรมอุทยานฯ วันที่ 3 เมษายน 2569 ระบุว่าอยู่ระหว่างเตรียมประกาศจัดตั้งและผ่านขั้นตอนรับฟังความคิดเห็นบางส่วนแล้ว แต่ยังใช้สถานะ '(เตรียมการ)'"
+  },
+  {
+    "slug": "doi-khun-tan",
+    "nameTh": "อุทยานแห่งชาติดอยขุนตาล",
+    "nameEn": "Doi Khun Tan National Park",
+    "provinces": [
+      "ลำปาง",
+      "ลำพูน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "train-access",
+      "trekking",
+      "mountain",
+      "camping",
+      "viewpoint",
+      "history"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-khun-tan.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "mae-ping",
+    "nameTh": "อุทยานแห่งชาติแม่ปิง",
+    "nameEn": "Mae Ping National Park",
+    "provinces": [
+      "ลำพูน",
+      "ตาก",
+      "เชียงใหม่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "reservoir",
+      "boat",
+      "forest",
+      "cave",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/mae-ping.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "mae-yom",
+    "nameTh": "อุทยานแห่งชาติแม่ยม",
+    "nameEn": "Mae Yom National Park",
+    "provinces": [
+      "แพร่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "teak-forest",
+      "river",
+      "rapids",
+      "camping",
+      "forest",
+      "photography"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/mae-yom.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "wiang-kosai",
+    "nameTh": "อุทยานแห่งชาติเวียงโกศัย",
+    "nameEn": "Wiang Kosai National Park",
+    "provinces": [
+      "แพร่",
+      "ลำปาง"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "forest",
+      "hot-spring",
+      "trail",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/wiang-kosai.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-pha-klong",
+    "nameTh": "อุทยานแห่งชาติดอยผากลอง",
+    "nameEn": "Doi Pha Klong National Park",
+    "provinces": [
+      "แพร่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "geology",
+      "limestone",
+      "cave",
+      "trail",
+      "rapids",
+      "photography"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-pha-klong.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-phu-kha",
+    "nameTh": "อุทยานแห่งชาติดอยภูคา",
+    "nameEn": "Doi Phu Kha National Park",
+    "provinces": [
+      "น่าน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "mountain",
+      "biodiversity",
+      "flower",
+      "viewpoint",
+      "trekking",
+      "camping",
+      "birdwatching"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-phu-kha.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "khun-nan",
+    "nameTh": "อุทยานแห่งชาติขุนน่าน",
+    "nameEn": "Khun Nan National Park",
+    "provinces": [
+      "น่าน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "forest",
+      "mountain",
+      "quiet",
+      "day-trip"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/khun-nan.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "mae-charim",
+    "nameTh": "อุทยานแห่งชาติแม่จริม",
+    "nameEn": "Mae Charim National Park",
+    "provinces": [
+      "น่าน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "rafting",
+      "river",
+      "adventure",
+      "forest",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/mae-charim.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "nanthaburi",
+    "nameTh": "อุทยานแห่งชาตินันทบุรี",
+    "nameEn": "Nanthaburi National Park",
+    "provinces": [
+      "น่าน"
+    ],
+    "legalStatus": "PREPARATORY",
+    "tags": [
+      "preparatory-area",
+      "waterfall",
+      "viewpoint",
+      "camping",
+      "biodiversity",
+      "mountain"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/nanthaburi.md",
+    "lastKnownStatusNote": "กรมอุทยานฯ ระบุอุทยานแห่งชาตินันทบุรี (เตรียมการ) และอยู่ในกระบวนการประกาศจัดตั้ง; ไม่พบหลักฐานทางการที่ใหม่กว่าว่าได้รับการประกาศสมบูรณ์แล้ว"
+  },
+  {
+    "slug": "sri-nan",
+    "nameTh": "อุทยานแห่งชาติศรีน่าน",
+    "nameEn": "Sri Nan National Park",
+    "provinces": [
+      "น่าน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "viewpoint",
+      "camping",
+      "mountain",
+      "sunrise",
+      "sunset",
+      "trail",
+      "river"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/sri-nan.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "doi-phu-nang",
+    "nameTh": "อุทยานแห่งชาติดอยภูนาง",
+    "nameEn": "Doi Phu Nang National Park",
+    "provinces": [
+      "พะเยา"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "closed-last-known",
+      "waterfall",
+      "wildlife",
+      "peafowl",
+      "geology",
+      "forest"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/doi-phu-nang.md",
+    "lastKnownStatusNote": "Last known authoritative tourism status: CLOSED INDEFINITELY from 25 March 2025 due to severe wildfire pressure; current status requires live verification before any visit recommendation."
+  },
+  {
+    "slug": "namtok-mae-surin",
+    "nameTh": "อุทยานแห่งชาติน้ำตกแม่สุรินทร์",
+    "nameEn": "Namtok Mae Surin National Park",
+    "provinces": [
+      "แม่ฮ่องสอน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "mountain",
+      "viewpoint",
+      "flower-season",
+      "camping",
+      "photography"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/namtok-mae-surin.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "salawin",
+    "nameTh": "อุทยานแห่งชาติสาละวิน",
+    "nameEn": "Salawin National Park",
+    "provinces": [
+      "แม่ฮ่องสอน"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "river",
+      "boat",
+      "border",
+      "forest",
+      "remote",
+      "community"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/salawin.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "ton-sak-yai",
+    "nameTh": "อุทยานแห่งชาติต้นสักใหญ่",
+    "nameEn": "Ton Sak Yai National Park",
+    "provinces": [
+      "อุตรดิตถ์"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "giant-teak",
+      "forest",
+      "education",
+      "photography",
+      "day-trip"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/ton-sak-yai.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "lam-nam-nan",
+    "nameTh": "อุทยานแห่งชาติลำน้ำน่าน",
+    "nameEn": "Lam Nam Nan National Park",
+    "provinces": [
+      "อุตรดิตถ์",
+      "แพร่"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "reservoir",
+      "river",
+      "boat",
+      "viewpoint",
+      "forest",
+      "camping"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/lam-nam-nan.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "phu-soi-dao",
+    "nameTh": "อุทยานแห่งชาติภูสอยดาว",
+    "nameEn": "Phu Soi Dao National Park",
+    "provinces": [
+      "อุตรดิตถ์",
+      "พิษณุโลก"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "trekking",
+      "pine-plateau",
+      "flower-season",
+      "waterfall",
+      "camping",
+      "mountain"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/phu-soi-dao.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "ramkhamhaeng",
+    "nameTh": "อุทยานแห่งชาติรามคำแหง",
+    "nameEn": "Ramkhamhaeng National Park",
+    "provinces": [
+      "สุโขทัย"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "trekking",
+      "summit",
+      "camping",
+      "viewpoint",
+      "forest",
+      "history"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/ramkhamhaeng.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "si-satchanalai",
+    "nameTh": "อุทยานแห่งชาติศรีสัชนาลัย",
+    "nameEn": "Si Satchanalai National Park",
+    "provinces": [
+      "สุโขทัย"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "trail",
+      "cave",
+      "forest",
+      "viewpoint",
+      "day-trip"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/si-satchanalai.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "phu-hin-rong-kla",
+    "nameTh": "อุทยานแห่งชาติภูหินร่องกล้า",
+    "nameEn": "Phu Hin Rong Kla National Park",
+    "provinces": [
+      "พิษณุโลก",
+      "เพชรบูรณ์",
+      "เลย"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "history",
+      "geology",
+      "viewpoint",
+      "waterfall",
+      "flower-season",
+      "trail",
+      "camping"
+    ],
+    "attractionCount": 7,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/phu-hin-rong-kla.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "thung-salaeng-luang",
+    "nameTh": "อุทยานแห่งชาติทุ่งแสลงหลวง",
+    "nameEn": "Thung Salaeng Luang National Park",
+    "provinces": [
+      "พิษณุโลก",
+      "เพชรบูรณ์"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "savanna",
+      "camping",
+      "viewpoint",
+      "waterfall",
+      "forest",
+      "photography",
+      "wildlife"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/thung-salaeng-luang.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "namtok-chat-trakan",
+    "nameTh": "อุทยานแห่งชาติน้ำตกชาติตระการ",
+    "nameEn": "Namtok Chat Trakan National Park",
+    "provinces": [
+      "พิษณุโลก"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "forest",
+      "day-trip",
+      "trail",
+      "family"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/namtok-chat-trakan.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "nam-nao",
+    "nameTh": "อุทยานแห่งชาติน้ำหนาว",
+    "nameEn": "Nam Nao National Park",
+    "provinces": [
+      "เพชรบูรณ์",
+      "ชัยภูมิ"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "wildlife",
+      "birdwatching",
+      "pine-forest",
+      "viewpoint",
+      "cave",
+      "camping",
+      "cool-weather"
+    ],
+    "attractionCount": 4,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/nam-nao.md",
+    "lastKnownStatusNote": null
+  },
+  {
+    "slug": "tat-mok",
+    "nameTh": "อุทยานแห่งชาติตาดหมอก",
+    "nameEn": "Tat Mok National Park",
+    "provinces": [
+      "เพชรบูรณ์"
+    ],
+    "legalStatus": "DECLARED",
+    "tags": [
+      "waterfall",
+      "trail",
+      "forest",
+      "mountain",
+      "day-trip"
+    ],
+    "attractionCount": 3,
+    "verifiedAt": "2026-09-14",
+    "file": "data/knowledge/parks/tat-mok.md",
+    "lastKnownStatusNote": null
+  }
+]

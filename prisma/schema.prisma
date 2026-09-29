@@ -122,6 +122,7 @@ model Park {
   attractions   ParkAttraction[]
   warnings      ParkWarning[]
   trips         Trip[]
+  knowledgeDocuments KnowledgeDocument[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -289,4 +290,42 @@ model SystemSetting {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model KnowledgeDocument {
+  id              String   @id
+  sourceType      String
+  sourceEntityId  String
+  parkId          String
+  park            Park     @relation(fields: [parkId], references: [id], onDelete: Cascade)
+  title           String
+  contentHash     String
+  sourceUpdatedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  chunks KnowledgeChunk[]
+
+  @@unique([sourceType, sourceEntityId])
+  @@index([sourceEntityId])
+  @@index([parkId])
+}
+
+model KnowledgeChunk {
+  id          String @id
+  documentId  String
+  title       String
+  section     String
+  content     String
+  contentHash String
+  ordinal     Int
+
+  embedding Unsupported("vector(768)")
+
+  createdAt DateTime @default(now())
+
+  document KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, ordinal])
+  @@index([documentId])
 }

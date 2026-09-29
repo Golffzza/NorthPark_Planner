@@ -1,0 +1,1762 @@
+[
+  {
+    "parkSlug": "khlong-lan",
+    "query": "อุทยานแห่งชาติคลองลาน เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "khlong-lan",
+    "query": "ไปอุทยานแห่งชาติคลองลานแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกคลองลาน"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "khlong-lan",
+    "query": "จุดไหนของอุทยานแห่งชาติคลองลานเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "จุดชมวิว/เส้นทางธรรมชาติในป่าคลองลาน"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "khlong-lan",
+    "query": "อุทยานแห่งชาติคลองลานมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "khlong-lan",
+    "query": "วันนี้อุทยานแห่งชาติคลองลานเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "khlong-wang-chao",
+    "query": "อุทยานแห่งชาติคลองวังเจ้า เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "khlong-wang-chao",
+    "query": "ไปอุทยานแห่งชาติคลองวังเจ้าแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "สะพานแขวน/ลำน้ำคลองวังเจ้า"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "khlong-wang-chao",
+    "query": "จุดไหนของอุทยานแห่งชาติคลองวังเจ้าเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกเต่าดำ"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "khlong-wang-chao",
+    "query": "อุทยานแห่งชาติคลองวังเจ้ามีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "khlong-wang-chao",
+    "query": "วันนี้อุทยานแห่งชาติคลองวังเจ้าเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "mae-wong",
+    "query": "อุทยานแห่งชาติแม่วงก์ เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "mae-wong",
+    "query": "ไปอุทยานแห่งชาติแม่วงก์แต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ช่องเย็น"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "mae-wong",
+    "query": "จุดไหนของอุทยานแห่งชาติแม่วงก์เดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ยอดเขาโมโกจู"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "mae-wong",
+    "query": "อุทยานแห่งชาติแม่วงก์มีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "mae-wong",
+    "query": "วันนี้อุทยานแห่งชาติแม่วงก์เปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "lan-sang",
+    "query": "อุทยานแห่งชาติลานสาง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "lan-sang",
+    "query": "ไปอุทยานแห่งชาติลานสางแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกลานสาง"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "lan-sang",
+    "query": "จุดไหนของอุทยานแห่งชาติลานสางเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกผาลาด"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "lan-sang",
+    "query": "อุทยานแห่งชาติลานสางมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "lan-sang",
+    "query": "วันนี้อุทยานแห่งชาติลานสางเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "namtok-pha-charoen",
+    "query": "อุทยานแห่งชาติน้ำตกพาเจริญ เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "namtok-pha-charoen",
+    "query": "ไปอุทยานแห่งชาติน้ำตกพาเจริญแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "บ่อน้ำร้อนห้วยน้ำนัก"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "namtok-pha-charoen",
+    "query": "จุดไหนของอุทยานแห่งชาติน้ำตกพาเจริญเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกป่าหวาย"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "namtok-pha-charoen",
+    "query": "อุทยานแห่งชาติน้ำตกพาเจริญมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "namtok-pha-charoen",
+    "query": "วันนี้อุทยานแห่งชาติน้ำตกพาเจริญเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "taksin-maharat",
+    "query": "อุทยานแห่งชาติตากสินมหาราช เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "taksin-maharat",
+    "query": "ไปอุทยานแห่งชาติตากสินมหาราชแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ปางอ้าน้อยและจุดพักธรรมชาติ"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "taksin-maharat",
+    "query": "จุดไหนของอุทยานแห่งชาติตากสินมหาราชเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ต้นกระบากใหญ่"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "taksin-maharat",
+    "query": "อุทยานแห่งชาติตากสินมหาราชมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "taksin-maharat",
+    "query": "วันนี้อุทยานแห่งชาติตากสินมหาราชเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-soi-malai",
+    "query": "อุทยานแห่งชาติดอยสอยมาลัย-ไม้กลายเป็นหิน เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-soi-malai",
+    "query": "ไปอุทยานแห่งชาติดอยสอยมาลัย-ไม้กลายเป็นหินแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "วนอุทยานไม้กลายเป็นหิน/แหล่งไม้กลายเป็นหิน"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-soi-malai",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยสอยมาลัย-ไม้กลายเป็นหินเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ดอยหลวงตาก"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-soi-malai",
+    "query": "อุทยานแห่งชาติดอยสอยมาลัย-ไม้กลายเป็นหินมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-soi-malai",
+    "query": "วันนี้อุทยานแห่งชาติดอยสอยมาลัย-ไม้กลายเป็นหินเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "mae-moei",
+    "query": "อุทยานแห่งชาติแม่เมย เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "mae-moei",
+    "query": "ไปอุทยานแห่งชาติแม่เมยแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ม่อนครูบาใส"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "mae-moei",
+    "query": "จุดไหนของอุทยานแห่งชาติแม่เมยเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางเดินป่าระยะไกลในแม่เมย"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "mae-moei",
+    "query": "อุทยานแห่งชาติแม่เมยมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "mae-moei",
+    "query": "วันนี้อุทยานแห่งชาติแม่เมยเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "query": "อุทยานแห่งชาติดอยอินทนนท์ เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "query": "ไปอุทยานแห่งชาติดอยอินทนนท์แต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ยอดดอยอินทนนท์และอ่างกา"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยอินทนนท์เดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางศึกษาธรรมชาติกิ่วแม่ปาน"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "query": "อุทยานแห่งชาติดอยอินทนนท์มีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-inthanon",
+    "query": "วันนี้อุทยานแห่งชาติดอยอินทนนท์เปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-suthep-pui",
+    "query": "อุทยานแห่งชาติดอยสุเทพ-ปุย เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-suthep-pui",
+    "query": "ไปอุทยานแห่งชาติดอยสุเทพ-ปุยแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกห้วยแก้ว"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-suthep-pui",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยสุเทพ-ปุยเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางดอยปุย/เส้นทางศึกษาธรรมชาติ"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-suthep-pui",
+    "query": "อุทยานแห่งชาติดอยสุเทพ-ปุยมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-suthep-pui",
+    "query": "วันนี้อุทยานแห่งชาติดอยสุเทพ-ปุยเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-pha-hom-pok",
+    "query": "อุทยานแห่งชาติดอยผ้าห่มปก เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-pha-hom-pok",
+    "query": "ไปอุทยานแห่งชาติดอยผ้าห่มปกแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "บ่อน้ำร้อนฝาง"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-pha-hom-pok",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยผ้าห่มปกเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ยอดดอยผ้าห่มปก"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-pha-hom-pok",
+    "query": "อุทยานแห่งชาติดอยผ้าห่มปกมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-pha-hom-pok",
+    "query": "วันนี้อุทยานแห่งชาติดอยผ้าห่มปกเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "huai-nam-dang",
+    "query": "อุทยานแห่งชาติห้วยน้ำดัง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "huai-nam-dang",
+    "query": "ไปอุทยานแห่งชาติห้วยน้ำดังแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "จุดชมวิวดอยกิ่วลม"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "huai-nam-dang",
+    "query": "จุดไหนของอุทยานแห่งชาติห้วยน้ำดังเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "โป่งเดือดป่าแป๋"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "huai-nam-dang",
+    "query": "อุทยานแห่งชาติห้วยน้ำดังมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "huai-nam-dang",
+    "query": "วันนี้อุทยานแห่งชาติห้วยน้ำดังเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "si-lanna",
+    "query": "อุทยานแห่งชาติศรีลานนา เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "si-lanna",
+    "query": "ไปอุทยานแห่งชาติศรีลานนาแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "เขื่อนแม่งัดสมบูรณ์ชล"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "si-lanna",
+    "query": "จุดไหนของอุทยานแห่งชาติศรีลานนาเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกม่อนหินไหล"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "si-lanna",
+    "query": "อุทยานแห่งชาติศรีลานนามีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "si-lanna",
+    "query": "วันนี้อุทยานแห่งชาติศรีลานนาเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "khun-khan",
+    "query": "อุทยานแห่งชาติขุนขาน เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "khun-khan",
+    "query": "ไปอุทยานแห่งชาติขุนขานแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ถ้ำหลวงแม่สาบ"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "khun-khan",
+    "query": "จุดไหนของอุทยานแห่งชาติขุนขานเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ถ้ำหลวงแม่สาบ"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "khun-khan",
+    "query": "อุทยานแห่งชาติขุนขานมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "khun-khan",
+    "query": "วันนี้อุทยานแห่งชาติขุนขานเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "mae-wang",
+    "query": "อุทยานแห่งชาติแม่วาง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "mae-wang",
+    "query": "ไปอุทยานแห่งชาติแม่วางแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ผาช่อ"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "mae-wang",
+    "query": "จุดไหนของอุทยานแห่งชาติแม่วางเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางศึกษาธรรมชาติแม่วาง"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "mae-wang",
+    "query": "อุทยานแห่งชาติแม่วางมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "mae-wang",
+    "query": "วันนี้อุทยานแห่งชาติแม่วางเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "mae-takhrai",
+    "query": "อุทยานแห่งชาติแม่ตะไคร้ เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "mae-takhrai",
+    "query": "ไปอุทยานแห่งชาติแม่ตะไคร้แต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "อ่างเก็บน้ำแม่ตะไคร้และเส้นทางรอบอ่าง"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "mae-takhrai",
+    "query": "จุดไหนของอุทยานแห่งชาติแม่ตะไคร้เดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ดอยลังกาหลวง"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "mae-takhrai",
+    "query": "อุทยานแห่งชาติแม่ตะไคร้มีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "mae-takhrai",
+    "query": "วันนี้อุทยานแห่งชาติแม่ตะไคร้เปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "khun-chae",
+    "query": "อุทยานแห่งชาติขุนแจ เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "khun-chae",
+    "query": "ไปอุทยานแห่งชาติขุนแจแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกแม่โถ"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "khun-chae",
+    "query": "จุดไหนของอุทยานแห่งชาติขุนแจเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ดอยลังกา"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "khun-chae",
+    "query": "อุทยานแห่งชาติขุนแจมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "khun-chae",
+    "query": "วันนี้อุทยานแห่งชาติขุนแจเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-luang",
+    "query": "อุทยานแห่งชาติดอยหลวง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-luang",
+    "query": "ไปอุทยานแห่งชาติดอยหลวงแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกปูแกง"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-luang",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยหลวงเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ดอยหนอก"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-luang",
+    "query": "อุทยานแห่งชาติดอยหลวงมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-luang",
+    "query": "วันนี้อุทยานแห่งชาติดอยหลวงเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "chae-son",
+    "query": "อุทยานแห่งชาติแจ้ซ้อน เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "chae-son",
+    "query": "ไปอุทยานแห่งชาติแจ้ซ้อนแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "บ่อน้ำร้อนแจ้ซ้อน"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "chae-son",
+    "query": "จุดไหนของอุทยานแห่งชาติแจ้ซ้อนเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางศึกษาธรรมชาติ"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "chae-son",
+    "query": "อุทยานแห่งชาติแจ้ซ้อนมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "chae-son",
+    "query": "วันนี้อุทยานแห่งชาติแจ้ซ้อนเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-jong",
+    "query": "อุทยานแห่งชาติดอยจง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-jong",
+    "query": "ไปอุทยานแห่งชาติดอยจงแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกตามฤดูกาลในพื้นที่ดอยจง"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-jong",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยจงเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ยอดดอยจง"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-jong",
+    "query": "อุทยานแห่งชาติดอยจงมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-jong",
+    "query": "วันนี้อุทยานแห่งชาติดอยจงเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "tham-pha-thai",
+    "query": "อุทยานแห่งชาติถ้ำผาไท เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "tham-pha-thai",
+    "query": "ไปอุทยานแห่งชาติถ้ำผาไทแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "หล่มภูเขียว"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "tham-pha-thai",
+    "query": "จุดไหนของอุทยานแห่งชาติถ้ำผาไทเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกตาดเหมย"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "tham-pha-thai",
+    "query": "อุทยานแห่งชาติถ้ำผาไทมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "tham-pha-thai",
+    "query": "วันนี้อุทยานแห่งชาติถ้ำผาไทเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-khun-tan",
+    "query": "อุทยานแห่งชาติดอยขุนตาล เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-khun-tan",
+    "query": "ไปอุทยานแห่งชาติดอยขุนตาลแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "อุโมงค์รถไฟขุนตานและสถานีขุนตาน"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-khun-tan",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยขุนตาลเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทาง ย.1-ย.4 / ยอดดอยขุนตาล"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-khun-tan",
+    "query": "อุทยานแห่งชาติดอยขุนตาลมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-khun-tan",
+    "query": "วันนี้อุทยานแห่งชาติดอยขุนตาลเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "mae-ping",
+    "query": "อุทยานแห่งชาติแม่ปิง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "mae-ping",
+    "query": "ไปอุทยานแห่งชาติแม่ปิงแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "แก่งก้อและแม่น้ำปิง"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "mae-ping",
+    "query": "จุดไหนของอุทยานแห่งชาติแม่ปิงเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ถ้ำยางวีและพื้นที่ธรรมชาติใกล้เคียง"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "mae-ping",
+    "query": "อุทยานแห่งชาติแม่ปิงมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "mae-ping",
+    "query": "วันนี้อุทยานแห่งชาติแม่ปิงเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "mae-yom",
+    "query": "อุทยานแห่งชาติแม่ยม เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "mae-yom",
+    "query": "ไปอุทยานแห่งชาติแม่ยมแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "จุดกางเต็นท์/ริมแม่น้ำยม"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "mae-yom",
+    "query": "จุดไหนของอุทยานแห่งชาติแม่ยมเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ดงสักงาม"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "mae-yom",
+    "query": "อุทยานแห่งชาติแม่ยมมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "mae-yom",
+    "query": "วันนี้อุทยานแห่งชาติแม่ยมเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "wiang-kosai",
+    "query": "อุทยานแห่งชาติเวียงโกศัย เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "wiang-kosai",
+    "query": "ไปอุทยานแห่งชาติเวียงโกศัยแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "บ่อน้ำร้อนแม่จอก"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "wiang-kosai",
+    "query": "จุดไหนของอุทยานแห่งชาติเวียงโกศัยเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกแม่เกิ๋งน้อย"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "wiang-kosai",
+    "query": "อุทยานแห่งชาติเวียงโกศัยมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "wiang-kosai",
+    "query": "วันนี้อุทยานแห่งชาติเวียงโกศัยเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-pha-klong",
+    "query": "อุทยานแห่งชาติดอยผากลอง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-pha-klong",
+    "query": "ไปอุทยานแห่งชาติดอยผากลองแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "สวนหินมหาราช"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-pha-klong",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยผากลองเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางศึกษาธรรมชาติหินปะการัง"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-pha-klong",
+    "query": "อุทยานแห่งชาติดอยผากลองมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-pha-klong",
+    "query": "วันนี้อุทยานแห่งชาติดอยผากลองเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-phu-kha",
+    "query": "อุทยานแห่งชาติดอยภูคา เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-phu-kha",
+    "query": "ไปอุทยานแห่งชาติดอยภูคาแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "จุดชมวิวและโซนชมพูภูคา"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-phu-kha",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยภูคาเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ป่าดึกดำบรรพ์"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-phu-kha",
+    "query": "อุทยานแห่งชาติดอยภูคามีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-phu-kha",
+    "query": "วันนี้อุทยานแห่งชาติดอยภูคาเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "khun-nan",
+    "query": "อุทยานแห่งชาติขุนน่าน เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "khun-nan",
+    "query": "ไปอุทยานแห่งชาติขุนน่านแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกสะปัน"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "khun-nan",
+    "query": "จุดไหนของอุทยานแห่งชาติขุนน่านเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกห้วยห้า"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "khun-nan",
+    "query": "อุทยานแห่งชาติขุนน่านมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "khun-nan",
+    "query": "วันนี้อุทยานแห่งชาติขุนน่านเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "mae-charim",
+    "query": "อุทยานแห่งชาติแม่จริม เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "mae-charim",
+    "query": "ไปอุทยานแห่งชาติแม่จริมแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ล่องแก่งลำน้ำว้าตอนล่าง"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "mae-charim",
+    "query": "จุดไหนของอุทยานแห่งชาติแม่จริมเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ลำน้ำว้าตอนกลาง-ตอนบน"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "mae-charim",
+    "query": "อุทยานแห่งชาติแม่จริมมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "mae-charim",
+    "query": "วันนี้อุทยานแห่งชาติแม่จริมเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "nanthaburi",
+    "query": "อุทยานแห่งชาตินันทบุรี เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "nanthaburi",
+    "query": "ไปอุทยานแห่งชาตินันทบุรีแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "จุดชมวิวลานกางเต็นท์"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "nanthaburi",
+    "query": "จุดไหนของอุทยานแห่งชาตินันทบุรีเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกนันทบุรี 2"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "nanthaburi",
+    "query": "อุทยานแห่งชาตินันทบุรีมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "nanthaburi",
+    "query": "วันนี้อุทยานแห่งชาตินันทบุรีเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "sri-nan",
+    "query": "อุทยานแห่งชาติศรีน่าน เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "sri-nan",
+    "query": "ไปอุทยานแห่งชาติศรีน่านแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ดอยเสมอดาว"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "sri-nan",
+    "query": "จุดไหนของอุทยานแห่งชาติศรีน่านเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ผาหัวสิงห์"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "sri-nan",
+    "query": "อุทยานแห่งชาติศรีน่านมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "sri-nan",
+    "query": "วันนี้อุทยานแห่งชาติศรีน่านเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "doi-phu-nang",
+    "query": "อุทยานแห่งชาติดอยภูนาง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "doi-phu-nang",
+    "query": "ไปอุทยานแห่งชาติดอยภูนางแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกธารสวรรค์"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "doi-phu-nang",
+    "query": "จุดไหนของอุทยานแห่งชาติดอยภูนางเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกห้วยต้นผึ้ง"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "doi-phu-nang",
+    "query": "อุทยานแห่งชาติดอยภูนางมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "doi-phu-nang",
+    "query": "วันนี้อุทยานแห่งชาติดอยภูนางเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "namtok-mae-surin",
+    "query": "อุทยานแห่งชาติน้ำตกแม่สุรินทร์ เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "namtok-mae-surin",
+    "query": "ไปอุทยานแห่งชาติน้ำตกแม่สุรินทร์แต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "จุดชมวิวภูเขาและลานกางเต็นท์"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "namtok-mae-surin",
+    "query": "จุดไหนของอุทยานแห่งชาติน้ำตกแม่สุรินทร์เดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางศึกษาธรรมชาติในป่าแม่สุรินทร์"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "namtok-mae-surin",
+    "query": "อุทยานแห่งชาติน้ำตกแม่สุรินทร์มีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "namtok-mae-surin",
+    "query": "วันนี้อุทยานแห่งชาติน้ำตกแม่สุรินทร์เปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "salawin",
+    "query": "อุทยานแห่งชาติสาละวิน เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "salawin",
+    "query": "ไปอุทยานแห่งชาติสาละวินแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "แม่น้ำสาละวินและจุดชมวิวริมแม่น้ำ"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "salawin",
+    "query": "จุดไหนของอุทยานแห่งชาติสาละวินเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ล่องเรือแม่น้ำสาละวิน"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "salawin",
+    "query": "อุทยานแห่งชาติสาละวินมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "salawin",
+    "query": "วันนี้อุทยานแห่งชาติสาละวินเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "ton-sak-yai",
+    "query": "อุทยานแห่งชาติต้นสักใหญ่ เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "ton-sak-yai",
+    "query": "ไปอุทยานแห่งชาติต้นสักใหญ่แต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "มหาสัก / ต้นสักใหญ่"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "ton-sak-yai",
+    "query": "จุดไหนของอุทยานแห่งชาติต้นสักใหญ่เดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางศึกษาป่าสัก"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "ton-sak-yai",
+    "query": "อุทยานแห่งชาติต้นสักใหญ่มีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "ton-sak-yai",
+    "query": "วันนี้อุทยานแห่งชาติต้นสักใหญ่เปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "lam-nam-nan",
+    "query": "อุทยานแห่งชาติลำน้ำน่าน เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "lam-nam-nan",
+    "query": "ไปอุทยานแห่งชาติลำน้ำน่านแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "อ่างเก็บน้ำเขื่อนสิริกิติ์ในเขต/รอยต่ออุทยาน"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "lam-nam-nan",
+    "query": "จุดไหนของอุทยานแห่งชาติลำน้ำน่านเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "จุดชมวิวและเส้นทางป่า"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "lam-nam-nan",
+    "query": "อุทยานแห่งชาติลำน้ำน่านมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "lam-nam-nan",
+    "query": "วันนี้อุทยานแห่งชาติลำน้ำน่านเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "phu-soi-dao",
+    "query": "อุทยานแห่งชาติภูสอยดาว เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "phu-soi-dao",
+    "query": "ไปอุทยานแห่งชาติภูสอยดาวแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกภูสอยดาว"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "phu-soi-dao",
+    "query": "จุดไหนของอุทยานแห่งชาติภูสอยดาวเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ลานสนภูสอยดาว"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "phu-soi-dao",
+    "query": "อุทยานแห่งชาติภูสอยดาวมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "phu-soi-dao",
+    "query": "วันนี้อุทยานแห่งชาติภูสอยดาวเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "ramkhamhaeng",
+    "query": "อุทยานแห่งชาติรามคำแหง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "ramkhamhaeng",
+    "query": "ไปอุทยานแห่งชาติรามคำแหงแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกสายรุ้ง/น้ำตกในพื้นที่"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "ramkhamhaeng",
+    "query": "จุดไหนของอุทยานแห่งชาติรามคำแหงเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ยอดเขาหลวงสุโขทัย"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "ramkhamhaeng",
+    "query": "อุทยานแห่งชาติรามคำแหงมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "ramkhamhaeng",
+    "query": "วันนี้อุทยานแห่งชาติรามคำแหงเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "si-satchanalai",
+    "query": "อุทยานแห่งชาติศรีสัชนาลัย เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "si-satchanalai",
+    "query": "ไปอุทยานแห่งชาติศรีสัชนาลัยแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "น้ำตกตาดเดือน"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "si-satchanalai",
+    "query": "จุดไหนของอุทยานแห่งชาติศรีสัชนาลัยเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกตาดดาว"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "si-satchanalai",
+    "query": "อุทยานแห่งชาติศรีสัชนาลัยมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "si-satchanalai",
+    "query": "วันนี้อุทยานแห่งชาติศรีสัชนาลัยเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "query": "อุทยานแห่งชาติภูหินร่องกล้า เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "query": "ไปอุทยานแห่งชาติภูหินร่องกล้าแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ศูนย์บริการนักท่องเที่ยวและพิพิธภัณฑ์"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "query": "จุดไหนของอุทยานแห่งชาติภูหินร่องกล้าเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกหมันแดง"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "query": "อุทยานแห่งชาติภูหินร่องกล้ามีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "phu-hin-rong-kla",
+    "query": "วันนี้อุทยานแห่งชาติภูหินร่องกล้าเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "thung-salaeng-luang",
+    "query": "อุทยานแห่งชาติทุ่งแสลงหลวง เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "thung-salaeng-luang",
+    "query": "ไปอุทยานแห่งชาติทุ่งแสลงหลวงแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "ทุ่งแสลงหลวง/ทุ่งหญ้าสะวันนา"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "thung-salaeng-luang",
+    "query": "จุดไหนของอุทยานแห่งชาติทุ่งแสลงหลวงเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "แก่งวังน้ำเย็น"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "thung-salaeng-luang",
+    "query": "อุทยานแห่งชาติทุ่งแสลงหลวงมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "thung-salaeng-luang",
+    "query": "วันนี้อุทยานแห่งชาติทุ่งแสลงหลวงเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "namtok-chat-trakan",
+    "query": "อุทยานแห่งชาติน้ำตกชาติตระการ เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "namtok-chat-trakan",
+    "query": "ไปอุทยานแห่งชาติน้ำตกชาติตระการแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "พื้นที่พัก/ลานกางเต็นท์"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "namtok-chat-trakan",
+    "query": "จุดไหนของอุทยานแห่งชาติน้ำตกชาติตระการเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "เส้นทางศึกษาธรรมชาติรอบน้ำตก"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "namtok-chat-trakan",
+    "query": "อุทยานแห่งชาติน้ำตกชาติตระการมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "namtok-chat-trakan",
+    "query": "วันนี้อุทยานแห่งชาติน้ำตกชาติตระการเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "nam-nao",
+    "query": "อุทยานแห่งชาติน้ำหนาว เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "nam-nao",
+    "query": "ไปอุทยานแห่งชาติน้ำหนาวแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "จุดชมพระอาทิตย์ขึ้นภูค้อ"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "nam-nao",
+    "query": "จุดไหนของอุทยานแห่งชาติน้ำหนาวเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "ถ้ำผาหงษ์/ถ้ำและภูมิประเทศหินปูน"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "nam-nao",
+    "query": "อุทยานแห่งชาติน้ำหนาวมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "nam-nao",
+    "query": "วันนี้อุทยานแห่งชาติน้ำหนาวเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  },
+  {
+    "parkSlug": "tat-mok",
+    "query": "อุทยานแห่งชาติตาดหมอก เด่นเรื่องอะไรบ้าง",
+    "expectedSections": [
+      "1",
+      "3",
+      "4"
+    ],
+    "type": "overview"
+  },
+  {
+    "parkSlug": "tat-mok",
+    "query": "ไปอุทยานแห่งชาติตาดหมอกแต่ไม่อยากเดินเยอะ มีจุดไหนน่าสนใจ",
+    "expectedEvidence": [
+      "จุดชมวิว/ป่าภูเขาตาดหมอก"
+    ],
+    "type": "constraint-recommendation"
+  },
+  {
+    "parkSlug": "tat-mok",
+    "query": "จุดไหนของอุทยานแห่งชาติตาดหมอกเดินหนัก ต้องเตรียมตัวยังไง",
+    "expectedEvidence": [
+      "น้ำตกตาดหมอก"
+    ],
+    "type": "difficulty"
+  },
+  {
+    "parkSlug": "tat-mok",
+    "query": "อุทยานแห่งชาติตาดหมอกมีข้อควรระวังอะไร",
+    "expectedSections": [
+      "9"
+    ],
+    "type": "safety"
+  },
+  {
+    "parkSlug": "tat-mok",
+    "query": "วันนี้อุทยานแห่งชาติตาดหมอกเปิดไหม ค่าเข้าเท่าไร",
+    "expectedBehavior": "live_check_required",
+    "type": "dynamic-guardrail"
+  }
+]

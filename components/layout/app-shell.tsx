@@ -46,11 +46,21 @@ function PlanIcon({ className }: { className?: string }) {
   );
 }
 
+function AssistantIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+      <path d="M8 9h8M8 13h5" />
+    </svg>
+  );
+}
+
 const navItems = [
   { href: "/", label: "หน้าหลัก", shortLabel: "Home", icon: HomeIcon },
   { href: buildMiniAppEntryPath("exploreParks"), label: "อุทยาน", shortLabel: "Parks", icon: ParksIcon },
   { href: buildMiniAppEntryPath("myTrips"), label: "ทริปของฉัน", shortLabel: "Trips", icon: TripsIcon },
   { href: buildMiniAppEntryPath("planTrip"), label: "วางแผน", shortLabel: "Plan", icon: PlanIcon },
+  { href: "/assistant", label: "ผู้ช่วย", shortLabel: "Chat", icon: AssistantIcon },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -155,8 +165,8 @@ export function AppShell({ children }: AppShellProps) {
 
         <main className="flex-1">{children}</main>
 
-        <nav className="glass-tabbar fixed inset-x-3 bottom-3 z-40 mx-auto max-w-lg rounded-full p-1.5 shadow-2xl backdrop-blur-2xl border border-white/40 dark:border-emerald-800/40 dark:bg-[#0b1c16]/90 sm:hidden">
-          <div className="grid grid-cols-4 gap-1">
+        <nav className="glass-tabbar safe-bottom-nav fixed inset-x-4 z-40 rounded-[32px] px-3 py-3 sm:hidden">
+          <div className="grid grid-cols-5 gap-1">
             {navItems.map((item) => {
               const active = isActive(pathname, item.href);
               const Icon = item.icon;
