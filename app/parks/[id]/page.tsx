@@ -6,6 +6,7 @@ import { ParkBottomNavigation } from "@/components/parks/park-bottom-navigation"
 import { ParkDetailHero } from "@/components/parks/park-detail-hero";
 import { ParkFeeCard } from "@/components/parks/park-fee-card";
 import { ParkMapCard } from "@/components/parks/park-map-card";
+import { ParkOfficialChannelBanner } from "@/components/parks/park-official-channel-banner";
 import { WarningList } from "@/components/parks/warning-list";
 import { getParkDetail, NotFoundError } from "@/lib/services/park-service";
 
@@ -29,6 +30,7 @@ export default async function ParkDetailPage({ params }: ParkDetailPageProps) {
             <AttractionList attractions={park.attractions} />
             <WarningList warnings={park.warnings} />
           </div>
+          <ParkOfficialChannelBanner park={park} />
           <ParkFeeCard park={park} />
           <ParkMapCard park={park} />
           <ParkBottomNavigation parkId={park.id} />

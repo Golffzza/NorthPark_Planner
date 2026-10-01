@@ -118,13 +118,17 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
           </div>
 
           {/* Bottom Exemption Strip */}
-          <div className="rounded-2xl bg-[#062018] border border-[#0f3c30] p-3 sm:p-3.5 flex items-center gap-2.5 text-xs text-emerald-200/80">
-            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0c3629] text-[#86efac] text-[10px]">
+          <div className="rounded-2xl bg-[#062018] border border-[#0f3c30] p-3 sm:p-3.5 flex items-start gap-2.5 sm:gap-3 text-xs sm:text-sm text-emerald-100/90 leading-relaxed shadow-xs">
+            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0c3629] text-[#86efac] text-[10px] mt-0.5 border border-[#164d3b]">
               ✦
             </div>
-            <div>
-              <strong className="font-bold text-white mr-1.5">เข้าฟรี:</strong>
-              <span>ผู้สูงอายุ 60 ปีขึ้นไป เด็กเล็กต่ำกว่า 3 ปี และพระภิกษุสงฆ์</span>
+            <div className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="inline-flex shrink-0 items-center rounded-md bg-[#0c3629] px-2 py-0.5 text-[11px] font-bold text-[#86efac] border border-[#164d3b]">
+                เข้าฟรี
+              </span>
+              <span className="text-emerald-100/90">
+                ผู้สูงอายุ 60 ปีขึ้นไป เด็กเล็กต่ำกว่า 3 ปี และพระภิกษุสงฆ์
+              </span>
             </div>
           </div>
         </div>
@@ -167,7 +171,7 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
             <div className="rounded-2xl border border-[#124133] bg-[#07261d]/90 p-3.5 flex flex-col justify-between space-y-2 shadow-sm">
               <div className="flex items-center justify-between gap-1">
                 <span className="text-xs text-slate-200 font-medium flex items-center gap-1">
-                  <span>🛵</span> มอเตอร์ไซค์
+                  <span>🛵</span> รถจักรยานยนต์
                 </span>
               </div>
               <div>
@@ -219,13 +223,17 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
           </div>
 
           {/* Bottom Vehicle Note */}
-          <div className="rounded-2xl bg-[#062018] border border-[#0f3c30] p-3 sm:p-3.5 flex items-center gap-2.5 text-xs text-emerald-200/80">
-            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0c3629] text-[#86efac] text-[10px]">
+          <div className="rounded-2xl bg-[#062018] border border-[#0f3c30] p-3 sm:p-3.5 flex items-start gap-2.5 sm:gap-3 text-xs sm:text-sm text-emerald-100/90 leading-relaxed shadow-xs">
+            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0c3629] text-[#86efac] text-[10px] mt-0.5 border border-[#164d3b]">
               ✦
             </div>
-            <div>
-              <strong className="font-bold text-white mr-1.5">หมายเหตุ:</strong>
-              <span>ชำระค่าธรรมเนียมเพียงครั้งเดียว ณ ด่านตรวจทางเข้าหลัก และใช้ได้ตลอดการเข้าชมในวันนั้น</span>
+            <div className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="inline-flex shrink-0 items-center rounded-md bg-[#0c3629] px-2 py-0.5 text-[11px] font-bold text-[#86efac] border border-[#164d3b]">
+                หมายเหตุ
+              </span>
+              <span className="text-emerald-100/90 leading-relaxed">
+                ชำระค่าธรรมเนียมเพียงครั้งเดียว ณ ด่านตรวจทางเข้าหลัก และใช้ได้ตลอดการเข้าชมในวันนั้น
+              </span>
             </div>
           </div>
         </div>

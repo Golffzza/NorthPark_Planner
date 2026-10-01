@@ -88,26 +88,16 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="app-backdrop min-h-screen relative overflow-x-hidden selection:bg-emerald-500/20">
-      {/* Dynamic Ambient Background Accents & Topo Contours */}
+      {/* Lightweight Ambient Background (Optimized for Mobile Battery & GPU) */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
-        {/* Topographic Contour Map Pattern */}
-        <div className="absolute inset-0 bg-topo-pattern opacity-[0.06] dark:opacity-[0.12] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_90%)]" />
-
-        {/* Aurora Emerald Glow - Top Left */}
-        <div className="absolute -top-28 -left-20 h-[520px] w-[520px] rounded-full bg-gradient-to-br from-emerald-500/20 via-teal-600/15 to-transparent blur-[90px] animate-pulse-slow" />
-
-        {/* Alpine Cyan Stream - Top Right */}
-        <div className="absolute top-[8%] -right-24 h-[460px] w-[460px] rounded-full bg-gradient-to-bl from-cyan-500/18 via-teal-500/10 to-transparent blur-[100px] animate-float-slow" />
-
-        {/* Sunset Mountain Gold / Amber Contrast Accent - Mid Right */}
-        <div className="absolute top-[48%] -right-20 h-[380px] w-[380px] rounded-full bg-gradient-to-l from-amber-500/12 via-orange-500/5 to-transparent blur-[90px]" />
-
-        {/* Midnight Forest Indigo - Bottom Left */}
-        <div className="absolute bottom-[5%] -left-24 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-indigo-600/15 via-emerald-800/12 to-transparent blur-[110px]" />
+        {/* Subtle Static Gradients without heavy continuous blur loop */}
+        <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-emerald-500/10 dark:bg-emerald-600/15 blur-3xl" />
+        <div className="absolute top-1/3 -right-20 h-72 w-72 rounded-full bg-teal-500/10 dark:bg-teal-600/10 blur-3xl" />
+        <div className="absolute bottom-10 -left-20 h-72 w-72 rounded-full bg-emerald-800/10 dark:bg-emerald-950/20 blur-3xl" />
       </div>
 
       <div className="app-safe-shell mx-auto flex min-h-screen w-full max-w-6xl flex-col pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:pb-10 sm:pt-5 relative z-10">
-        <header className="glass-nav safe-top-offset sticky z-30 mb-4 rounded-2xl sm:rounded-full px-3.5 py-2.5 sm:mb-5 sm:px-5 sm:py-3 border border-white/60 dark:border-emerald-700/30 shadow-lg shadow-emerald-950/5 backdrop-blur-2xl bg-white/80 dark:bg-[#0c1e18]/85">
+        <header className="glass-nav safe-top-offset sticky z-30 mb-4 rounded-2xl sm:rounded-full px-3.5 py-2.5 sm:mb-5 sm:px-5 sm:py-3 border border-white/60 dark:border-emerald-700/30 shadow-lg shadow-emerald-950/5 backdrop-blur-md bg-white/80 dark:bg-[#0c1e18]/85">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="group flex items-center gap-2.5 sm:gap-3 transition-transform active:scale-[0.98] min-w-0">
               <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 p-2 shadow-md shadow-emerald-950/20 ring-1 ring-white/40 dark:ring-emerald-400/20">

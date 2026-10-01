@@ -17,6 +17,14 @@ export class NotFoundError extends Error {
   }
 }
 
+export type ParkOption = ParkOptionDto;
+
+export type ParkSuggestionResult = {
+  type: "didYouMean" | "popular";
+  matchedKeyword?: string;
+  parks: ParkListItemDto[];
+};
+
 export type ParkListResult = {
   data: ParkListItemDto[];
   meta: {
@@ -50,6 +58,9 @@ export async function listParkOptions(): Promise<ParkOptionDto[]> {
       province: true,
       latitude: true,
       longitude: true,
+      coverImageUrl: true,
+      openTime: true,
+      closeTime: true,
     },
   });
 
@@ -61,6 +72,9 @@ export async function listParkOptions(): Promise<ParkOptionDto[]> {
     province: park.province,
     latitude: park.latitude === null ? null : Number(park.latitude),
     longitude: park.longitude === null ? null : Number(park.longitude),
+    coverImageUrl: park.coverImageUrl,
+    openTime: park.openTime,
+    closeTime: park.closeTime,
   }));
 }
 
@@ -156,4 +170,31 @@ export async function getParkDetail(idOrSlug: string): Promise<ParkDetailDto> {
   }
 
   return mapParkToDetailDto(park);
+}
+
+export async function getSuggestedOrPopularParks(_query?: ParkListQuery): Promise<ParkSuggestionResult | null> {
+  const parks = await prisma.park.findMany({
+    where: { isActive: true },
+    take: 4,
+    orderBy: [{ province: "asc" }, { nameTh: "asc" }],
+    select: {
+      id: true,
+      slug: true,
+      nameTh: true,
+      nameEn: true,
+      province: true,
+      region: true,
+      latitude: true,
+      longitude: true,
+      openTime: true,
+      closeTime: true,
+      description: true,
+      coverImageUrl: true,
+    },
+  });
+
+  return {
+    type: "popular",
+    parks: parks.map(mapParkToListDto),
+  };
 }

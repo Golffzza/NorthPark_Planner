@@ -85,10 +85,10 @@ export default function HomePage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <section className="glass-panel app-section overflow-hidden rounded-[38px] p-3 sm:p-5">
-          <div className="relative z-10 grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
+        <section className="relative">
+          <div className="grid gap-4 sm:gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
             {/* Left Hero Card with Rich Nature Overlay */}
-            <div className="relative flex flex-col justify-between overflow-hidden rounded-[34px] bg-[#05241b] px-5 py-7 sm:px-8 sm:py-10 text-white shadow-xl">
+            <div className="relative flex flex-col justify-between overflow-hidden rounded-[32px] sm:rounded-[38px] bg-[#05241b] px-6 py-8 sm:px-9 sm:py-10 text-white shadow-xl">
               {/* Background Nature Image - Sharp and Clear */}
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
@@ -98,11 +98,11 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-gradient-to-b from-[#01140e]/90 via-[#021d15]/85 to-[#010c08]/98" />
 
               <div className="relative z-10 space-y-3.5">
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#021510]/90 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300 border border-emerald-500/50 shadow-md backdrop-blur-md">
+                <span className="inline-flex items-center gap-2 rounded-full bg-black/60 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300 border border-white/20 shadow-md backdrop-blur-md">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                   Nature Companion • Northern Thailand
                 </span>
-                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-snug sm:leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold font-heading tracking-tight text-white leading-snug sm:leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
                   วางแผนเที่ยวอุทยานภาคเหนือ สะดวก ปลอดภัย มั่นใจทุกทริป
                 </h1>
                 <p className="max-w-xl text-xs sm:text-base leading-relaxed text-emerald-50/95 font-normal drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
@@ -114,14 +114,14 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/parks"
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-extrabold !text-[#04221a] shadow-lg transition-all hover:bg-emerald-50 active:scale-95"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold font-heading !text-[#04221a] shadow-lg transition-all hover:bg-emerald-50 active:scale-95"
                   >
-                    <span className="!text-[#04221a] font-extrabold">สำรวจ 20+ อุทยาน</span>
+                    <span className="!text-[#04221a] font-bold font-heading">สำรวจ 44 อุทยาน</span>
                     <span>🌲</span>
                   </Link>
                   <Link
                     href="/trips/new"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-400/40 bg-[#021d16]/90 px-7 py-3.5 text-sm font-bold text-white shadow-md backdrop-blur-md transition-all hover:bg-[#032a20] active:scale-95"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/50 bg-[#021d16]/90 px-7 py-3.5 text-sm font-bold font-heading text-white shadow-md backdrop-blur-md transition-all hover:bg-[#032a20] active:scale-95"
                   >
                     <span>เริ่มวางแผนทริป</span>
                     <span>🧭</span>
@@ -131,15 +131,15 @@ export default function HomePage() {
                 {/* Stat Counters */}
                 <div className="grid grid-cols-3 gap-2 border-t border-emerald-500/30 pt-4 text-center sm:text-left">
                   <div className="rounded-2xl bg-black/30 p-2 backdrop-blur-sm sm:bg-transparent sm:p-0">
-                    <p className="text-lg font-extrabold text-white sm:text-2xl drop-shadow-sm">20+</p>
+                    <p className="text-lg font-extrabold font-heading text-white sm:text-2xl drop-shadow-sm">44</p>
                     <p className="text-[10px] sm:text-[11px] font-medium text-emerald-200">อุทยานภาคเหนือ</p>
                   </div>
                   <div className="rounded-2xl bg-black/30 p-2 backdrop-blur-sm sm:bg-transparent sm:p-0">
-                    <p className="text-lg font-extrabold text-white sm:text-2xl drop-shadow-sm">100%</p>
+                    <p className="text-lg font-extrabold font-heading text-white sm:text-2xl drop-shadow-sm">100%</p>
                     <p className="text-[10px] sm:text-[11px] font-medium text-emerald-200">ฟรีไม่มีค่าบริการ</p>
                   </div>
                   <div className="rounded-2xl bg-black/30 p-2 backdrop-blur-sm sm:bg-transparent sm:p-0">
-                    <p className="text-lg font-extrabold text-white sm:text-2xl drop-shadow-sm">Live</p>
+                    <p className="text-lg font-extrabold font-heading text-white sm:text-2xl drop-shadow-sm">Live</p>
                     <p className="text-[10px] sm:text-[11px] font-medium text-emerald-200">ประเมินความพร้อม</p>
                   </div>
                 </div>

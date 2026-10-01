@@ -450,8 +450,19 @@ export const parkContactDictionary: Record<string, ParkContactInfo> = {
 };
 
 export function getParkContactInfo(slug: string, nameTh: string, province: string): ParkContactInfo {
-  const found = parkContactDictionary[slug];
+  let found = parkContactDictionary[slug];
   const cleanName = nameTh.startsWith("อุทยานแห่งชาติ") ? nameTh : `อุทยานแห่งชาติ${nameTh}`;
+  const coreName = nameTh.replace(/^อุทยานแห่งชาติ/, "").trim();
+
+  if (!found && coreName) {
+    const matchedKey = Object.keys(parkContactDictionary).find((key) => {
+      const item = parkContactDictionary[key];
+      return item.facebookName?.includes(coreName) || item.address?.includes(coreName) || key.includes(coreName);
+    });
+    if (matchedKey) {
+      found = parkContactDictionary[matchedKey];
+    }
+  }
 
   if (found) {
     return {

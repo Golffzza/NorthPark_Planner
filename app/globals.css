@@ -1,9 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Noto+Sans+Thai:wght@100..900&display=swap");
 @import "tailwindcss";
 
 :root {
-  --font-sans: "Noto Sans Thai", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-heading: "Kanit", "Noto Sans Thai", sans-serif;
+  --font-sans: var(--font-kanit), "Kanit", var(--font-noto), "Noto Sans Thai", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-kanit), "Kanit", sans-serif;
   --background: #edf4ef;
   --background-deep: #dbe8df;
   --foreground: #17342d;
@@ -131,24 +130,25 @@ a {
 .glass-nav,
 .glass-tabbar {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(248, 250, 249, 0.62)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 249, 0.85)),
     linear-gradient(135deg, rgba(223, 242, 234, 0.16), rgba(220, 234, 246, 0.08));
   border: 1px solid rgba(255, 255, 255, 0.82);
   box-shadow:
     var(--shadow-glass),
     inset 0 1px 0 rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .glass-nav {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(247, 250, 248, 0.52)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 250, 248, 0.85)),
     linear-gradient(135deg, rgba(223, 242, 234, 0.12), rgba(220, 234, 246, 0.08));
 }
 
 .glass-tabbar {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(243, 248, 245, 0.68)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 248, 245, 0.88)),
     linear-gradient(135deg, rgba(223, 242, 234, 0.12), rgba(220, 234, 246, 0.08));
 }
 

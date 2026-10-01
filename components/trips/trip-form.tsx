@@ -705,7 +705,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-5">
               {[
                 { value: "CAR", label: "รถยนต์", icon: "🚗", desc: "เก๋ง / SUV / กระบะ" },
-                { value: "MOTORCYCLE", label: "มอเตอร์ไซค์", icon: "🛵", desc: "ออโต้ / บิ๊กไบค์" },
+                { value: "MOTORCYCLE", label: "รถจักรยานยนต์", icon: "🛵", desc: "ออโต้ / บิ๊กไบค์" },
                 { value: "TRAIN", label: "รถไฟ", icon: "🚆", desc: "สายเหนือ / ขุนตาน" },
                 { value: "PUBLIC_TRANSPORT", label: "รถสาธารณะ", icon: "🚌", desc: "รถตู้ / สองแถว" },
                 { value: "OTHER", label: "อื่น ๆ", icon: "🚙", desc: "เหมารถพร้อมคนขับ" },
@@ -823,7 +823,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             <div className="animate-in fade-in slide-in-from-top-3 duration-250 space-y-3 rounded-2xl border border-emerald-500/30 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/40 p-4">
               <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                 <span>⚙️</span>
-                <span>ประเภทและขนาดเครื่องยนต์มอเตอร์ไซค์</span>
+                <span>ประเภทและขนาดเครื่องยนต์รถจักรยานยนต์</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -915,7 +915,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                 </div>
                 <div className="text-[11.5px] leading-relaxed text-slate-600 dark:text-emerald-200/90 space-y-1">
                   <p>
-                    • <strong className="text-emerald-700 dark:text-emerald-300">อุทยานแห่งชาติดอยขุนตาล:</strong> สามารถนั่งรถไฟลงที่ <em>"สถานีรถไฟขุนตาน"</em> แล้วเดินเท้าตรงเข้าสู่ที่ทำการอุทยานฯ ได้ทันที ผ่านอุโมงค์ขุนตาน
+                    • <strong className="text-emerald-700 dark:text-emerald-300">อุทยานแห่งชาติดอยขุนตาล:</strong> สามารถนั่งรถไฟลงที่ <em>&quot;สถานีรถไฟขุนตาน&quot;</em> แล้วเดินเท้าตรงเข้าสู่ที่ทำการอุทยานฯ ได้ทันที ผ่านอุโมงค์ขุนตาน
                   </p>
                   <p>
                     • <strong className="text-emerald-700 dark:text-emerald-300">อุทยานฯ อื่นๆ ในภาคเหนือ:</strong> ลงที่สถานีหลัก เช่น สถานีเชียงใหม่ สถานีลำปาง สถานีเด่นชัย (แพร่/น่าน) สถานีพิษณุโลก แล้วต่อรถสองแถว รถโดยสารประจำทาง หรือเช่ารถขับ
@@ -935,7 +935,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                     <span>คุณต้องการเช่ารถขับเองที่ปลายทางหรือไม่?</span>
                   </label>
                   <p className="text-xs text-slate-500 dark:text-emerald-300/70">
-                    เช่น เช่ารถยนต์หรือเช่ามอเตอร์ไซค์ขับต่อจากสถานี/จุดส่งผู้โดยสาร
+                    เช่น เช่ารถยนต์หรือเช่ารถจักรยานยนต์ขับต่อจากสถานี/จุดส่งผู้โดยสาร
                   </p>
                 </div>
 
@@ -1163,7 +1163,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                 </li>
               )}
 
-              {/* คำแนะนำสำหรับมอเตอร์ไซค์ */}
+              {/* คำแนะนำสำหรับรถจักรยานยนต์ */}
               {formState.transportMode === "MOTORCYCLE" && formState.motorcycleType === "AUTO_UNDER_150" && (
                 <li className="flex items-start gap-2">
                   <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>

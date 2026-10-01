@@ -130,7 +130,7 @@ export function ParkDetailHero({ park }: ParkDetailHeroProps) {
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/trips/new?parkId=${park.id}`}
-                className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-7 py-3.5 text-sm font-extrabold !text-[#04221a] shadow-lg shadow-black/20 transition-all hover:bg-emerald-50 active:scale-95"
+                className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-7 py-3.5 text-sm font-bold font-heading !text-[#04221a] shadow-lg shadow-black/20 transition-all hover:bg-emerald-50 active:scale-95"
               >
                 <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600/15 text-emerald-800 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
@@ -138,7 +138,7 @@ export function ParkDetailHero({ park }: ParkDetailHeroProps) {
                     <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" fillOpacity="0.5" />
                   </svg>
                 </div>
-                <span className="!text-[#04221a] font-extrabold">วางแผนทริปไปที่นี่</span>
+                <span className="!text-[#04221a] font-bold font-heading">วางแผนทริปไปที่นี่</span>
                 <svg className="h-4 w-4 text-emerald-800 transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />
@@ -147,13 +147,13 @@ export function ParkDetailHero({ park }: ParkDetailHeroProps) {
               <button
                 type="button"
                 onClick={handleBack}
-                className="group inline-flex items-center justify-center gap-2 rounded-full border border-white/60 bg-[#04221a]/85 px-7 py-3.5 text-sm font-bold !text-white shadow-md backdrop-blur-md transition-all hover:bg-[#04221a] active:scale-95 cursor-pointer"
+                className="group inline-flex items-center justify-center gap-2 rounded-full border border-white/60 bg-[#04221a]/85 px-7 py-3.5 text-sm font-bold font-heading !text-white shadow-md backdrop-blur-md transition-all hover:bg-[#04221a] active:scale-95 cursor-pointer"
               >
                 <svg className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                   <path d="m12 19-7-7 7-7" />
                   <path d="M19 12H5" />
                 </svg>
-                <span className="!text-white font-bold">กลับไปหน้าอุทยาน</span>
+                <span className="!text-white font-bold font-heading">กลับไปหน้าอุทยาน</span>
               </button>
             </div>
           </div>

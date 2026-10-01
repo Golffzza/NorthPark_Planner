@@ -17,9 +17,9 @@ describe("buildRecommendations", () => {
   });
 
   it.each([
-    ["duration", "duration"],
-    ["time", "time suitability"],
-    ["userProfile", "traveler profile"],
+    ["duration", "ระยะเวลาเดินทาง"],
+    ["time", "เวลาเดินทาง"],
+    ["userProfile", "ความพร้อมของผู้เดินทาง"],
   ] as const)("returns guidance for the %s factor", (weakestFactor, expectedText) => {
     const result = buildRecommendations({
       weakestFactor,
@@ -30,6 +30,6 @@ describe("buildRecommendations", () => {
       travelerCount: 2,
     });
 
-    expect(result.toLowerCase()).toContain(expectedText);
+    expect(result).toContain(expectedText);
   });
 });

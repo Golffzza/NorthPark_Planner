@@ -21,9 +21,23 @@ type LiffProviderProps = {
 };
 
 export function LiffProvider({ children }: LiffProviderProps) {
-  const [state, setState] = useState<LiffContextValue>(initialState);
+  const [state, setState] = useState<LiffContextValue>(() => {
+    const hasLiffId = Boolean(process.env.NEXT_PUBLIC_LIFF_ID?.trim());
+    if (!hasLiffId) {
+      return {
+        status: "notInLine",
+        isInLine: false,
+        liffIdConfigured: false,
+      };
+    }
+    return initialState;
+  });
 
   useEffect(() => {
+    if (!state.liffIdConfigured) {
+      return;
+    }
+
     let isActive = true;
 
     async function init() {
@@ -39,7 +53,7 @@ export function LiffProvider({ children }: LiffProviderProps) {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [state.liffIdConfigured]);
 
   return <LiffContext.Provider value={state}>{children}</LiffContext.Provider>;
 }

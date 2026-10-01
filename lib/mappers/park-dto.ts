@@ -17,7 +17,7 @@ export type ParkListItemDto = {
 
 export type ParkOptionDto = Pick<
   ParkListItemDto,
-  "id" | "slug" | "nameTh" | "nameEn" | "province" | "latitude" | "longitude"
+  "id" | "slug" | "nameTh" | "nameEn" | "province" | "latitude" | "longitude" | "coverImageUrl" | "openTime" | "closeTime"
 >;
 
 export type ParkDetailDto = ParkListItemDto & {

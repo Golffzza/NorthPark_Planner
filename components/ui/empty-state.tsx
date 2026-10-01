@@ -5,9 +5,10 @@ type EmptyStateProps = {
   description: string;
   actionLabel?: string;
   actionHref?: string;
+  onActionClick?: () => void;
 };
 
-export function EmptyState({ title, description, actionLabel, actionHref }: EmptyStateProps) {
+export function EmptyState({ title, description, actionLabel, actionHref, onActionClick }: EmptyStateProps) {
   return (
     <section className="glass-panel app-section relative overflow-hidden rounded-[32px] sm:rounded-[36px] px-6 py-10 text-center sm:px-10 sm:py-12 border border-white/60 dark:border-emerald-800/40 shadow-lg shadow-emerald-950/5 backdrop-blur-2xl bg-white/85 dark:bg-[#0b1c16]/90">
       {/* Decorative background glow */}
@@ -30,10 +31,18 @@ export function EmptyState({ title, description, actionLabel, actionHref }: Empt
         {actionLabel && actionHref ? (
           <Link
             href={actionHref}
-            className="glass-button mt-6 inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold shadow-md shadow-emerald-950/20 active:scale-95 transition-all"
+            className="glass-button mt-6 inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold shadow-md shadow-emerald-950/20 active:scale-95 transition-all cursor-pointer"
           >
             <span>{actionLabel}</span>
           </Link>
+        ) : actionLabel && onActionClick ? (
+          <button
+            type="button"
+            onClick={onActionClick}
+            className="glass-button mt-6 inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold shadow-md shadow-emerald-950/20 active:scale-95 transition-all cursor-pointer"
+          >
+            <span>{actionLabel}</span>
+          </button>
         ) : null}
       </div>
     </section>
