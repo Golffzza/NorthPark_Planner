@@ -7,6 +7,8 @@ import { getParkCatalog } from "@/lib/chat/core/park-catalog";
 import type { SearchParksResult } from "@/lib/chat-v2/shared/contracts";
 import { toParkSummary } from "@/lib/chat-v2/tools/park-resolution";
 
+import { normalizeProvinceInput } from "@/lib/chat-v2/tools/recommend-parks";
+
 export const searchParksInputSchema = z.object({
   province: z.string().trim().optional()
     .describe("จังหวัดที่ผู้ใช้ระบุ หรือเว้นว่างเมื่อต้องการทั้งฐานข้อมูล"),
@@ -23,7 +25,7 @@ export function executeSearchParks(
   dependencies: SearchParksDependencies = { getParkCatalog },
 ): SearchParksResult {
   const catalog = dependencies.getParkCatalog();
-  const province = input.province?.trim() || undefined;
+  const province = normalizeProvinceInput(input.province);
   const matchingParks = province
     ? catalog.filter((park) => park.provinces.includes(province))
     : catalog;

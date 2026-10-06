@@ -349,5 +349,53 @@ export function createConversationAwareAssistantV2Tools(
         }),
     }),
     selectPark: createSelectParkTool(context),
+    findNearbyParks: tool({
+      description:
+        "ค้นหาอุทยานที่ใกล้และเดินทางสะดวกที่สุดจากจังหวัดต้นทางหรือพิกัด เช่น 'เดินทางจากกำแพงเพชร', 'จากเชียงใหม่', หรือพิกัด lat/lng",
+      inputSchema: z.object({
+        province: z.string().trim().optional().describe("ชื่อจังหวัดต้นทาง เช่น กำแพงเพชร, เชียงใหม่, ตาก"),
+        lat: z.number().optional().describe("ละติจูดต้นทาง (ถ้ามี)"),
+        lng: z.number().optional().describe("ลองจิจูดต้นทาง (ถ้ามี)"),
+      }),
+      execute: async (input) =>
+        context.runExclusive(async (state) => {
+          const { findNearbyParksFromOrigin } = await import("@/lib/services/province-route-service");
+          const query = input.province || (input.lat !== undefined && input.lng !== undefined ? { lat: input.lat, lng: input.lng } : undefined);
+          if (!query) {
+            return { status: "ERROR", message: "กรุณาระบุจังหวัดต้นทางหรือพิกัด" };
+          }
+          const result = findNearbyParksFromOrigin(query, 4);
+          if (!result) {
+            return { status: "NOT_FOUND", message: `ไม่พบข้อมูลพิกัดของจังหวัด ${input.province}` };
+          }
+
+          const mappedParks = result.parks.map((p) => ({
+            id: p.slug,
+            slug: p.slug,
+            name: p.nameTh,
+          }));
+
+          setCurrentResults(state, mappedParks);
+          if (mappedParks.length > 0) {
+            state.selectedPark = mappedParks[0];
+          }
+
+          return {
+            status: "OK",
+            origin: result.originName,
+            originCoordinates: { lat: result.originLat, lng: result.originLng },
+            nearestParks: result.parks.map((p) => ({
+              parkName: p.nameTh,
+              province: p.province,
+              distanceKm: p.distanceKm,
+              estimatedDrivingMinutes: p.estimatedDrivingMinutes,
+              openingHours: `${p.openTime} - ${p.closeTime}`,
+              hasCampsite: p.hasCampsite,
+              highlight: p.highlightAttraction,
+            })),
+          };
+        }),
+    }),
   };
 }
+

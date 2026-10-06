@@ -50,21 +50,83 @@ export function getKnownProvinces(): string[] {
   );
 }
 
+function levenshteinSimilarity(a: string, b: string): number {
+  if (a === b) return 1.0;
+  if (!a || !b) return 0.0;
+  const la = a.length;
+  const lb = b.length;
+  const d: number[][] = [];
+  for (let i = 0; i <= la; i++) d[i] = [i];
+  for (let j = 0; j <= lb; j++) d[0][j] = j;
+  for (let i = 1; i <= la; i++) {
+    for (let j = 1; j <= lb; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+    }
+  }
+  return 1.0 - d[la][lb] / Math.max(la, lb);
+}
+
 export function findMentionedParks(query: string): ParkCatalogEntry[] {
   const normalized = normalize(query);
 
   const aliases: Record<string, string[]> = {
     "doi-suthep-pui": ["ดอยสุเทพ", "สุเทพปุย", "สุเทพ"],
-    "doi-inthanon": ["อินทนนท์"], "si-lanna": ["ศรีลานนา", "ศรีล้านนา"],
+    "doi-inthanon": ["อินทนนท์"],
+    "si-lanna": ["ศรีลานนา", "ศรีล้านนา"],
     "doi-soi-malai": ["ดอยสอยมาลัย"],
+    "phu-hin-rong-kla": ["ภูหินร่องกล้า", "ร่องกล้า"],
   };
-  return catalog.map(park => {
-    const names = [park.name, park.name.replace(/^อุทยานแห่งชาติ/, ""), park.nameEn,
-      park.nameEn.replace(/ National Park$/i, ""), ...(aliases[park.slug] ?? [])];
-    const positions = names.map(name => normalized.indexOf(normalize(name))).filter(i => i >= 0);
-    return {park, position: positions.length ? Math.min(...positions) : -1};
-  }).filter(item => item.position >= 0).sort((a,b) => a.position - b.position)
-    .map(item => item.park);
+
+  const exactMatches = catalog
+    .map((park) => {
+      const names = [
+        park.name,
+        park.name.replace(/^อุทยานแห่งชาติ/, ""),
+        park.nameEn,
+        park.nameEn.replace(/ National Park$/i, ""),
+        ...(aliases[park.slug] ?? []),
+      ];
+      const positions = names
+        .map((name) => normalized.indexOf(normalize(name)))
+        .filter((i) => i >= 0);
+      return { park, position: positions.length ? Math.min(...positions) : -1 };
+    })
+    .filter((item) => item.position >= 0)
+    .sort((a, b) => a.position - b.position)
+    .map((item) => item.park);
+
+  if (exactMatches.length > 0) {
+    return exactMatches;
+  }
+
+  // Fuzzy matching for typo / misspelling handling
+  const cleanQuery = normalized.replace(/^อุทยานแห่งชาติ|^อุทยาน/, "").trim();
+  if (cleanQuery.length >= 3) {
+    const fuzzyCandidates = catalog
+      .map((park) => {
+        const names = [
+          park.name,
+          park.name.replace(/^อุทยานแห่งชาติ/, ""),
+          ...(aliases[park.slug] ?? []),
+        ];
+        let maxSim = 0;
+        for (const name of names) {
+          const normName = normalize(name).replace(/^อุทยานแห่งชาติ|^อุทยาน/, "");
+          const sim = levenshteinSimilarity(cleanQuery, normName);
+          if (sim > maxSim) maxSim = sim;
+        }
+        return { park, similarity: maxSim };
+      })
+      .filter((item) => item.similarity >= 0.65)
+      .sort((a, b) => b.similarity - a.similarity);
+
+    if (fuzzyCandidates.length > 0) {
+      return [fuzzyCandidates[0].park];
+    }
+  }
+
+  return [];
 }
 
 // Entity vocabulary only; knowledge coverage still comes from the catalog.

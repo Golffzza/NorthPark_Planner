@@ -33,8 +33,13 @@ export const recommendParksInputSchema = z.object({
     .describe("LOW เมื่อผู้ใช้ขอเดินน้อย MEDIUM เมื่อขอปานกลาง HIGH เมื่อขอท้าทาย"),
   companions: z.array(z.enum(["FAMILY", "ELDERLY"])).optional()
     .describe("พ่อแม่ใช้ FAMILY และ ELDERLY; ห้ามสร้างค่าอื่น"),
-  durationDays: z.number().int().positive().optional()
-    .describe("ใส่เฉพาะเมื่อผู้ใช้ระบุจำนวนวันเป็นตัวเลขหรือคำจำนวนวันชัดเจน"),
+  durationDays: z.preprocess((val) => {
+    if (typeof val === "number") {
+      return val > 0 ? Math.max(1, Math.round(val)) : undefined;
+    }
+    return val;
+  }, z.number().int().positive().optional())
+    .describe("จำนวนวันเที่ยวเต็มวัน (1, 2, 3...) หากผู้ใช้ระบุครึ่งวันหรือวันเดย์ทริป ให้ใส่ 1 หรือเว้นว่างไว้"),
 });
 
 export type RecommendParksInput = z.infer<typeof recommendParksInputSchema>;
@@ -83,13 +88,23 @@ function serializeRecommendations(
   }));
 }
 
+export function normalizeProvinceInput(province?: string): string | undefined {
+  if (!province) return undefined;
+  const trimmed = province.trim();
+  if (/^(ภาค)?เหนือ$|^(ภาค)?เหนือ(ตอนบน|ตอนล่าง)$|^ทั่ว(ประเทศ|ภาคเหนือ)?$|^ทั้ง(หมด|ประเทศ)$|^ไทย$/i.test(trimmed)) {
+    return undefined;
+  }
+  return trimmed;
+}
+
 export async function executeRecommendParks(
   input: RecommendParksInput,
   dependencies: RecommendParksDependencies = {},
 ): Promise<RecommendParksResult> {
   const catalog = (dependencies.getParkCatalog ?? getParkCatalog)();
-  const candidates = input.province
-    ? catalog.filter((park) => park.provinces.includes(input.province!))
+  const effectiveProvince = normalizeProvinceInput(input.province);
+  const candidates = effectiveProvince
+    ? catalog.filter((park) => park.provinces.includes(effectiveProvince))
     : catalog;
   const findByParkSlugs = dependencies.findByParkSlugs
     ?? knowledgeRetriever.findByParkSlugs.bind(knowledgeRetriever);
@@ -100,7 +115,10 @@ export async function executeRecommendParks(
     evidence,
     input.excludedActivities,
   );
-  const constraints: AssistantConstraints = input;
+  const constraints: AssistantConstraints = {
+    ...input,
+    ...(effectiveProvince ? { province: effectiveProvince } : { province: undefined }),
+  };
   const recommendations = serializeRecommendations(
     (dependencies.recommendParks ?? recommendParks)(
       candidates,
