@@ -7,11 +7,14 @@ import {
 
 describe("fetchOpenMeteoWeatherSnapshot", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-10T00:00:00.000Z"));
     process.env.OPEN_METEO_BASE_URL = "https://api.open-meteo.com";
     process.env.APP_TIMEZONE = "Asia/Bangkok";
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 

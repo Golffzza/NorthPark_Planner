@@ -31,7 +31,10 @@ vi.mock("@/lib/services/trip-service", async () => {
   };
 });
 
-vi.mock("@/lib/integrations/sun/sunset-service", () => sunsetServiceMock);
+vi.mock("@/lib/integrations/sun/sunset-service", async () => ({
+  ...await vi.importActual<typeof import("@/lib/integrations/sun/sunset-service")>("@/lib/integrations/sun/sunset-service"),
+  ...sunsetServiceMock,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 
 describe("syncSunsetSnapshotForCurrentUser", () => {
@@ -118,5 +121,11 @@ describe("syncSunsetSnapshotForCurrentUser", () => {
       AuthorizationError,
     );
     expect(prismaMock.sunsetSnapshot.create).not.toHaveBeenCalled();
+  });
+
+  it("surfaces sunset snapshot persistence failure", async () => {
+    const dbError = new Error("sunset insert failed");
+    prismaMock.sunsetSnapshot.create.mockRejectedValue(dbError);
+    await expect(syncSunsetSnapshotForCurrentUser("trip_1")).rejects.toBe(dbError);
   });
 });

@@ -1,9 +1,19 @@
+//* ./lib/services/trip-service.ts
+
 import type { Prisma, TripStatus } from "@prisma/client";
 
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/db/prisma";
-import { mapTripToDetailDto, mapTripToListDto, type TripDetailDto, type TripListDto } from "@/lib/mappers/trip-dto";
+
+import {
+  mapTripToDetailDto,
+  mapTripToListDto,
+  type TripDetailDto,
+  type TripListDto,
+} from "@/lib/mappers/trip-dto";
+
 import { NotFoundError } from "@/lib/services/park-service";
+
 import type { TripCreateInput } from "@/lib/validations/trip-create";
 import type { TripUpdateInput } from "@/lib/validations/trip-update";
 
@@ -28,6 +38,7 @@ const listTripInclude = {
       coverImageUrl: true,
     },
   },
+
   evaluations: {
     select: {
       id: true,
@@ -36,9 +47,11 @@ const listTripInclude = {
       summary: true,
       evaluatedAt: true,
     },
+
     orderBy: {
       createdAt: "desc" as const,
     },
+
     take: 1,
   },
 } satisfies Prisma.TripInclude;
@@ -55,11 +68,38 @@ const detailTripInclude = {
       coverImageUrl: true,
     },
   },
+
   evaluations: {
+    include: {
+      weatherSnapshot: {
+        select: {
+          id: true,
+          weatherCondition: true,
+          temperatureC: true,
+          createdAt: true,
+        },
+      },
+      routeSnapshot: {
+        select: {
+          id: true,
+          distanceMeters: true,
+          durationSeconds: true,
+          createdAt: true,
+        },
+      },
+      sunsetSnapshot: {
+        select: {
+          id: true,
+          sunsetLocalTime: true,
+          createdAt: true,
+        },
+      },
+    },
     orderBy: {
       createdAt: "desc" as const,
     },
   },
+
   weatherSnapshots: {
     select: {
       id: true,
@@ -67,11 +107,14 @@ const detailTripInclude = {
       temperatureC: true,
       createdAt: true,
     },
+
     orderBy: {
       createdAt: "desc" as const,
     },
+
     take: 1,
   },
+
   routeSnapshots: {
     select: {
       id: true,
@@ -79,54 +122,124 @@ const detailTripInclude = {
       durationSeconds: true,
       createdAt: true,
     },
+
     orderBy: {
       createdAt: "desc" as const,
     },
+
     take: 1,
   },
 } satisfies Prisma.TripInclude;
 
+/**
+ * Include สำหรับ Evaluation โดยเฉพาะ
+ *
+ * ดึง snapshot ล่าสุดมาให้ evaluation-service
+ * เลือกใช้ข้อมูลจริงแทนค่าที่เก็บใน Trip ได้
+ */
+const evaluationTripInclude = {
+  park: {
+    select: {
+      id: true,
+      nameTh: true,
+
+      openTime: true,
+      closeTime: true,
+
+      latitude: true,
+      longitude: true,
+    },
+  },
+
+  weatherSnapshots: {
+    select: {
+      id: true,
+      weatherCondition: true,
+      forecastAt: true,
+      createdAt: true,
+    },
+
+    orderBy: {
+      createdAt: "desc" as const,
+    },
+
+    take: 1,
+  },
+
+  routeSnapshots: {
+    select: {
+      id: true,
+      distanceMeters: true,
+      durationSeconds: true,
+      createdAt: true,
+    },
+
+    orderBy: {
+      createdAt: "desc" as const,
+    },
+
+    take: 1,
+  },
+
+  sunsetSnapshots: {
+    select: {
+      id: true,
+      sunsetAt: true,
+      sunsetLocalTime: true,
+      timezone: true,
+      createdAt: true,
+    },
+
+    orderBy: {
+      createdAt: "desc" as const,
+    },
+
+    take: 1,
+  },
+} satisfies Prisma.TripInclude;
+
+/**
+ * Field เหล่านี้เปลี่ยนแล้วควรประเมินใหม่
+ *
+ * transportMode:
+ * มีผลต่อ accessibility score
+ *
+ * travelerCount:
+ * ถึงไม่กระทบคะแนนแล้ว
+ * แต่มีผลต่อ recommendation
+ */
 const IMPORTANT_REEVALUATION_FIELDS = new Set([
   "parkId",
   "tripDate",
   "departAt",
+
   "originLat",
   "originLng",
+
+  "transportMode",
+  "travelerCount",
+
   "weatherCondition",
   "estimatedTravelMinutes",
   "mockSunsetTime",
 ]);
 
 export type TripWithParkForEvaluation = Prisma.TripGetPayload<{
-  include: {
-    park: {
-      select: {
-        id: true;
-        openTime: true;
-        closeTime: true;
-        latitude: true;
-        longitude: true;
-      };
-    };
-  };
+  include: typeof evaluationTripInclude;
 }>;
 
-export async function getTripForCurrentUser(tripId: string): Promise<TripWithParkForEvaluation> {
+export async function getTripForCurrentUser(
+  tripId: string,
+): Promise<TripWithParkForEvaluation> {
   const [currentUser, trip] = await Promise.all([
     getCurrentUser(),
+
     prisma.trip.findUnique({
-      where: { id: tripId },
-      include: {
-        park: {
-          select: {
-            id: true,
-            openTime: true,
-            closeTime: true,
-            latitude: true,
-            longitude: true,
-          },
-        },
+      where: {
+        id: tripId,
       },
+
+      include: evaluationTripInclude,
     }),
   ]);
 
@@ -141,15 +254,66 @@ export async function getTripForCurrentUser(tripId: string): Promise<TripWithPar
   return trip;
 }
 
-export async function listTripsForCurrentUser(status?: TripStatus): Promise<TripListDto[]> {
+export class CancelledTripEvaluationError extends Error {
+  constructor() {
+    super("Cancelled trips cannot be evaluated");
+    this.name = "CancelledTripEvaluationError";
+  }
+}
+
+export function assertTripCanBeEvaluated(trip: { status: TripStatus }) {
+  if (trip.status === "CANCELLED") {
+    throw new CancelledTripEvaluationError();
+  }
+}
+
+export async function getTripIdForCurrentUser(tripId: string): Promise<string> {
+  const [currentUser, trip] = await Promise.all([
+    getCurrentUser(),
+    prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { id: true, userId: true, status: true },
+    }),
+  ]);
+
+  if (!trip) {
+    throw new NotFoundError("Trip not found");
+  }
+
+  if (trip.userId !== currentUser.id) {
+    throw new AuthorizationError("Forbidden");
+  }
+
+  assertTripCanBeEvaluated(trip);
+
+  return trip.id;
+}
+
+export async function listTripsForCurrentUser(
+  status?: TripStatus,
+): Promise<TripListDto[]> {
   const currentUser = await getCurrentUser();
 
   const trips = await prisma.trip.findMany({
     where: {
       userId: currentUser.id,
-      ...(status ? { status } : {}),
+
+      ...(status
+        ? {
+            status,
+          }
+        : {}),
     },
-    orderBy: [{ tripDate: "desc" }, { createdAt: "desc" }],
+
+    orderBy: [
+      {
+        tripDate: "desc",
+      },
+      {
+        createdAt: "desc",
+      },
+    ],
+
     include: listTripInclude,
   });
 
@@ -158,8 +322,14 @@ export async function listTripsForCurrentUser(status?: TripStatus): Promise<Trip
 
 async function ensureActivePark(parkId: string) {
   const park = await prisma.park.findUnique({
-    where: { id: parkId },
-    select: { id: true, isActive: true },
+    where: {
+      id: parkId,
+    },
+
+    select: {
+      id: true,
+      isActive: true,
+    },
   });
 
   if (!park || !park.isActive) {
@@ -170,8 +340,12 @@ async function ensureActivePark(parkId: string) {
 async function getTripDetailRecordForCurrentUser(tripId: string) {
   const [currentUser, trip] = await Promise.all([
     getCurrentUser(),
+
     prisma.trip.findUnique({
-      where: { id: tripId },
+      where: {
+        id: tripId,
+      },
+
       include: detailTripInclude,
     }),
   ]);
@@ -187,37 +361,69 @@ async function getTripDetailRecordForCurrentUser(tripId: string) {
   return trip;
 }
 
-export async function createTripForCurrentUser(input: TripCreateInput): Promise<TripDetailDto> {
+export async function createTripForCurrentUser(
+  input: TripCreateInput,
+): Promise<TripDetailDto> {
   const currentUser = await getCurrentUser();
+
   await ensureActivePark(input.parkId);
 
   const trip = await prisma.trip.create({
     data: {
       userId: currentUser.id,
+
       parkId: input.parkId,
+
       tripDate: input.tripDate,
+
       departAt: input.departAt,
+
       originText: input.originText,
+
       originLat: input.originLat ?? null,
+
       originLng: input.originLng ?? null,
+
       transportMode: input.transportMode,
+
       travelerCount: input.travelerCount,
+
       weatherCondition: input.weatherCondition,
+
       estimatedTravelMinutes: input.estimatedTravelMinutes,
+
       mockSunsetTime: input.mockSunsetTime ?? null,
+
       notes: input.notes ?? null,
+
       status: "DRAFT",
     },
+
     include: detailTripInclude,
   });
 
   return mapTripToDetailDto(trip);
 }
 
-export async function getTripDetailForCurrentUser(tripId: string): Promise<TripDetailDto> {
+export async function getTripDetailForCurrentUser(
+  tripId: string,
+): Promise<TripDetailDto> {
   const trip = await getTripDetailRecordForCurrentUser(tripId);
 
   return mapTripToDetailDto(trip);
+}
+
+function normalizeComparableValue(value: unknown): unknown {
+  if (
+    value &&
+    typeof value === "object" &&
+    "toNumber" in value &&
+    typeof (value as { toNumber?: unknown }).toNumber === "function"
+  ) {
+    return (value as { toNumber(): number }).toNumber();
+  }
+
+  return value;
 }
 
 function shouldResetTripStatus(
@@ -239,7 +445,10 @@ function shouldResetTripStatus(
       return currentValue !== null;
     }
 
-    return currentValue !== value;
+    const normalizedCurrent = normalizeComparableValue(currentValue);
+    const normalizedIncoming = normalizeComparableValue(value);
+
+    return normalizedCurrent !== normalizedIncoming;
   });
 }
 
@@ -248,42 +457,119 @@ export async function updateTripForCurrentUser(
   input: TripUpdateInput,
 ): Promise<TripDetailDto> {
   const trip = await getTripDetailRecordForCurrentUser(tripId);
+
   if (input.parkId) {
     await ensureActivePark(input.parkId);
   }
 
   const resetToDraft = shouldResetTripStatus(trip, input);
+
   const updatedTrip = await prisma.trip.update({
-    where: { id: tripId },
-    data: {
-      ...(input.parkId ? { parkId: input.parkId } : {}),
-      ...(input.tripDate ? { tripDate: input.tripDate } : {}),
-      ...(input.departAt ? { departAt: input.departAt } : {}),
-      ...(input.originText ? { originText: input.originText } : {}),
-      ...("originLat" in input ? { originLat: input.originLat } : {}),
-      ...("originLng" in input ? { originLng: input.originLng } : {}),
-      ...(input.transportMode ? { transportMode: input.transportMode } : {}),
-      ...(input.travelerCount ? { travelerCount: input.travelerCount } : {}),
-      ...(input.weatherCondition ? { weatherCondition: input.weatherCondition } : {}),
-      ...(input.estimatedTravelMinutes ? { estimatedTravelMinutes: input.estimatedTravelMinutes } : {}),
-      ...("mockSunsetTime" in input
-        ? { mockSunsetTime: input.mockSunsetTime === "" ? null : input.mockSunsetTime }
-        : {}),
-      ...("notes" in input ? { notes: input.notes === "" ? null : input.notes } : {}),
-      ...(resetToDraft ? { status: "DRAFT" } : {}),
+    where: {
+      id: tripId,
     },
+
+    data: {
+      ...(input.parkId
+        ? {
+            parkId: input.parkId,
+          }
+        : {}),
+
+      ...(input.tripDate
+        ? {
+            tripDate: input.tripDate,
+          }
+        : {}),
+
+      ...(input.departAt
+        ? {
+            departAt: input.departAt,
+          }
+        : {}),
+
+      ...(input.originText
+        ? {
+            originText: input.originText,
+          }
+        : {}),
+
+      ...("originLat" in input
+        ? {
+            originLat: input.originLat,
+          }
+        : {}),
+
+      ...("originLng" in input
+        ? {
+            originLng: input.originLng,
+          }
+        : {}),
+
+      ...(input.transportMode
+        ? {
+            transportMode: input.transportMode,
+          }
+        : {}),
+
+      ...(input.travelerCount
+        ? {
+            travelerCount: input.travelerCount,
+          }
+        : {}),
+
+      ...(input.weatherCondition
+        ? {
+            weatherCondition: input.weatherCondition,
+          }
+        : {}),
+
+      ...(input.estimatedTravelMinutes
+        ? {
+            estimatedTravelMinutes: input.estimatedTravelMinutes,
+          }
+        : {}),
+
+      ...("mockSunsetTime" in input
+        ? {
+            mockSunsetTime:
+              input.mockSunsetTime === "" ? null : input.mockSunsetTime,
+          }
+        : {}),
+
+      ...("notes" in input
+        ? {
+            notes: input.notes === "" ? null : input.notes,
+          }
+        : {}),
+
+      ...(resetToDraft
+        ? {
+            status: "DRAFT",
+          }
+        : {}),
+    },
+
     include: detailTripInclude,
   });
 
   return mapTripToDetailDto(updatedTrip);
 }
 
-export async function cancelTripForCurrentUser(tripId: string): Promise<TripDetailDto> {
+export async function cancelTripForCurrentUser(
+  tripId: string,
+): Promise<TripDetailDto> {
   await getTripDetailRecordForCurrentUser(tripId);
 
   const cancelledTrip = await prisma.trip.update({
-    where: { id: tripId },
-    data: { status: "CANCELLED" },
+    where: {
+      id: tripId,
+    },
+
+    data: {
+      status: "CANCELLED",
+    },
+
     include: detailTripInclude,
   });
 

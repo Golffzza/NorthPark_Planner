@@ -1,27 +1,77 @@
+//* ./lib/evaluation/build-recommendations.ts
+
 import type { RecommendationContext } from "./types";
 
-export function buildRecommendations(context: RecommendationContext): string {
+function buildPrimaryRecommendation(
+  context: RecommendationContext,
+): string {
   switch (context.weakestFactor) {
     case "weather":
-      return `สภาพอากาศเป็นปัจจัยหลักที่ต้องระวัง ควรตรวจสอบพยากรณ์อากาศล่วงหน้าหรือรอช่วงสภาพอากาศแจ่มใสก่อนออกเดินทาง`;
+      switch (context.weatherCondition) {
+        case "STORM":
+          return "สภาพอากาศเป็นปัจจัยหลักที่ควรให้ความสำคัญ ควรตรวจสอบพยากรณ์อากาศล่าสุดก่อนออกเดินทาง และพิจารณาปรับแผนหากสภาพอากาศยังรุนแรง";
+
+        case "HEAVY_RAIN":
+          return "มีฝนตกหนักในช่วงวันที่ประเมิน ควรตรวจสอบพยากรณ์อากาศล่าสุดและเผื่อเวลาเดินทางเพิ่มเติม";
+
+        case "LIGHT_RAIN":
+          return "มีฝนเล็กน้อยในช่วงวันที่ประเมิน ควรตรวจสอบพยากรณ์อากาศอีกครั้งก่อนออกเดินทางและเผื่อเวลาสำหรับการเดินทาง";
+
+        case "CLOUDY":
+          return "มีเมฆมากในช่วงวันที่ประเมิน ควรติดตามพยากรณ์อากาศล่าสุดก่อนออกเดินทาง";
+
+        case "CLEAR":
+        default:
+          return "สภาพอากาศโดยรวมอยู่ในเกณฑ์ที่เหมาะสม ควรตรวจสอบข้อมูลล่าสุดอีกครั้งก่อนออกเดินทาง";
+      }
+
     case "duration":
-      return `ระยะเวลาเดินทางค่อนข้างนาน อาจทำให้เหนื่อยล้า ควรวางแผนจุดพักรถ ออกเดินทางให้เช้าขึ้น หรือแวะพักค้างคืนระหว่างทาง`;
+      return "ระยะเวลาเดินทางเป็นปัจจัยที่ควรพิจารณา ควรวางแผนเวลาพักระหว่างทางและเผื่อเวลาเพิ่มเติมหากการเดินทางใช้เวลานาน";
+
     case "time":
-      return `เวลาเดินทางและแสงอาทิตย์เป็นปัจจัยที่ควรปรับปรุง ควรออกเดินทางให้เช้าขึ้นเพื่อหลีกเลี่ยงการเดินทางถึงอุทยานใกล้ค่ำหรือหลังเวลาปิดทำการ`;
+      return "ช่วงเวลาที่คาดว่าจะถึงจุดหมายเป็นปัจจัยที่ควรตรวจสอบ ควรพิจารณาออกเดินทางให้เร็วขึ้น และตรวจสอบเวลาเข้าถึงกับอุทยานก่อนเดินทาง";
+
     case "userProfile":
-      if (context.transportMode === "PUBLIC_TRANSPORT" && context.hasDirectPublicTransit === false) {
-        return `อุทยาน${context.parkName ? ` (${context.parkName})` : ""}ไม่มีรถโดยสารประจำทางวิ่งตรงถึงที่ทำการ แนะนำให้วางแผนเหมารถสองแถวท้องถิ่นจากตัวอำเภอล่วงหน้า หรือเปลี่ยนไปใช้รถยนต์ส่วนบุคคล`;
-      }
       if (
-        context.transportMode === "MOTORCYCLE" &&
-        (context.weatherCondition === "HEAVY_RAIN" || context.weatherCondition === "STORM" || context.weatherCondition === "LIGHT_RAIN")
+        context.transportMode ===
+          "PUBLIC_TRANSPORT" &&
+        context.hasDirectPublicTransit === false
       ) {
-        return `การขับขี่รถจักรยานยนต์บนเส้นทางภูเขาในสภาพอากาศที่มีฝนตกมีความเสี่ยงสูง ควรตรวจเช็คดอกยาง เบรก สวมชุดกันฝน หรือพิจารณาเปลี่ยนไปใช้รถยนต์ส่วนบุคคล`;
+        return `อุทยาน${
+          context.parkName
+            ? ` (${context.parkName})`
+            : ""
+        }ไม่มีระบบขนส่งสาธารณะตรงถึงจุดหมายตามข้อมูลที่ระบบมี ควรวางแผนการต่อรถหรือจัดหาพาหนะสำหรับช่วงสุดท้ายของการเดินทางล่วงหน้า`;
       }
-      if (context.travelerCount <= 1) {
-        return `ความพร้อมของผู้เดินทางและพาหนะควรได้รับการดูแล การเดินทางคนเดียวในเส้นทางธรรมชาติแนะนำแจ้งแผนการเดินทางแก่คนใกล้ชิดและศึกษาเส้นทางล่วงหน้า`;
+
+      if (
+        context.transportMode ===
+          "PUBLIC_TRANSPORT" &&
+        context.hasDirectPublicTransit === undefined
+      ) {
+        return "ยังไม่มีข้อมูลยืนยันเกี่ยวกับระบบขนส่งสาธารณะตรงถึงจุดหมาย ควรตรวจสอบเส้นทางและการต่อรถก่อนเดินทาง";
       }
-      return `ความพร้อมของผู้เดินทางและพาหนะควรได้รับการดูแล แนะนำเดินทางเป็นกลุ่มหรือเลือกใช้ยานพาหนะที่มีความปลอดภัยสูงขึ้น`;
+
+      return "ควรตรวจสอบรายละเอียดการเข้าถึงจุดหมายด้วยรูปแบบการเดินทางที่เลือกก่อนออกเดินทาง";
   }
 }
 
+export function buildRecommendations(
+  context: RecommendationContext,
+): string {
+  const recommendations: string[] = [
+    buildPrimaryRecommendation(context),
+  ];
+
+  /**
+   * จำนวนผู้เดินทางไม่มีผลต่อคะแนนอีกแล้ว
+   * แต่ยังใช้สร้างคำแนะนำที่เป็นประโยชน์ได้
+   */
+  if (context.travelerCount <= 1) {
+    recommendations.push(
+      "หากเดินทางคนเดียว ควรแจ้งแผนการเดินทางและช่วงเวลาที่คาดว่าจะถึงให้บุคคลใกล้ชิดทราบ",
+    );
+  }
+
+  return recommendations.join(" ");
+}

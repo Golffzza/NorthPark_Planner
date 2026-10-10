@@ -208,6 +208,26 @@ describe("trip service CRUD", () => {
         {
           id: "eval_1",
           tripId: "trip_1",
+          weatherSnapshotId: "weather_1",
+          routeSnapshotId: "route_1",
+          sunsetSnapshotId: "sunset_1",
+          weatherSnapshot: {
+            id: "weather_1",
+            weatherCondition: "CLOUDY",
+            temperatureC: 24.6,
+            createdAt: new Date("2026-05-21T07:00:00.000Z"),
+          },
+          routeSnapshot: {
+            id: "route_1",
+            distanceMeters: 90000,
+            durationSeconds: 7200,
+            createdAt: new Date("2026-05-21T07:00:00.000Z"),
+          },
+          sunsetSnapshot: {
+            id: "sunset_1",
+            sunsetLocalTime: "18:35",
+            createdAt: new Date("2026-05-21T07:00:00.000Z"),
+          },
           totalScore: 88,
           level: "EXCELLENT",
           weatherScore: 95,
@@ -222,7 +242,7 @@ describe("trip service CRUD", () => {
       ],
       weatherSnapshots: [
         {
-          id: "weather_1",
+          id: "weather_2",
           weatherCondition: "CLEAR",
           temperatureC: 24.6,
           createdAt: new Date("2026-05-21T08:00:00.000Z"),
@@ -230,7 +250,7 @@ describe("trip service CRUD", () => {
       ],
       routeSnapshots: [
         {
-          id: "route_1",
+          id: "route_2",
           distanceMeters: 98500,
           durationSeconds: 8100,
           createdAt: new Date("2026-05-21T08:05:00.000Z"),
@@ -244,6 +264,27 @@ describe("trip service CRUD", () => {
     expect(result.originLat).toBe(18.7883);
     expect(result.originLng).toBe(98.9853);
     expect(result.evaluations).toHaveLength(1);
+    expect(prismaMock.trip.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          evaluations: expect.objectContaining({
+            include: expect.objectContaining({
+              weatherSnapshot: expect.any(Object),
+              routeSnapshot: expect.any(Object),
+              sunsetSnapshot: expect.any(Object),
+            }),
+          }),
+        }),
+      }),
+    );
+    expect(result.evaluations[0]).toMatchObject({
+      weatherSnapshotId: "weather_1",
+      routeSnapshotId: "route_1",
+      sunsetSnapshotId: "sunset_1",
+      weatherSnapshot: { id: "weather_1", weatherCondition: "CLOUDY" },
+      routeSnapshot: { id: "route_1", distanceMeters: 90000 },
+      sunsetSnapshot: { id: "sunset_1", sunsetLocalTime: "18:35" },
+    });
     expect(result.park.id).toBe("park_1");
     expect(result.latestWeatherSnapshot?.temperatureC).toBe(24.6);
     expect(result.latestRouteSnapshot?.distanceMeters).toBe(98500);

@@ -90,6 +90,17 @@ function buildParkWhere(query: ParkListQuery): Prisma.ParkWhereInput {
             { nameTh: { contains: search, mode: "insensitive" } },
             { nameEn: { contains: search, mode: "insensitive" } },
             { province: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+            {
+              attractions: {
+                some: {
+                  OR: [
+                    { name: { contains: search, mode: "insensitive" } },
+                    { description: { contains: search, mode: "insensitive" } },
+                  ],
+                },
+              },
+            },
           ],
         }
       : {}),
@@ -172,11 +183,46 @@ export async function getParkDetail(idOrSlug: string): Promise<ParkDetailDto> {
   return mapParkToDetailDto(park);
 }
 
-export async function getSuggestedOrPopularParks(_query?: ParkListQuery): Promise<ParkSuggestionResult | null> {
+export async function getSuggestedOrPopularParks(
+  query?: ParkListQuery,
+): Promise<ParkSuggestionResult> {
+  const rawSearch = query?.q?.trim();
+
+  if (rawSearch) {
+    const cleanedSearch = rawSearch
+      .replace(/อุทยานแห่งชาติ|อุทยาน|แห่งชาติ|น้ำตก|ยอดดอย|ดอย|ภู|ลานกางเต็นท์|ลานกางเต้นท์|กางเต็นท์|กางเต้นท์|ที่เที่ยว|เที่ยว|ป่า/g, "")
+      .trim();
+
+    if (cleanedSearch.length >= 2 && cleanedSearch !== rawSearch) {
+      const suggestedResult = await listParks({
+        q: cleanedSearch,
+        province: query?.province,
+        page: 1,
+        perPage: 4,
+      });
+
+      if (suggestedResult.data.length > 0) {
+        return {
+          type: "didYouMean",
+          parks: suggestedResult.data,
+          matchedKeyword: cleanedSearch,
+        };
+      }
+    }
+  }
+
+  const popularSlugs = [
+    "doi-inthanon",
+    "phu-soi-dao",
+    "wiang-kosai",
+    "namtok-mae-surin",
+    "salawin",
+    "ton-sak-yai",
+    "lam-nam-nan",
+  ];
   const parks = await prisma.park.findMany({
-    where: { isActive: true },
+    where: { isActive: true, slug: { in: popularSlugs } },
     take: 4,
-    orderBy: [{ province: "asc" }, { nameTh: "asc" }],
     select: {
       id: true,
       slug: true,
@@ -193,8 +239,5 @@ export async function getSuggestedOrPopularParks(_query?: ParkListQuery): Promis
     },
   });
 
-  return {
-    type: "popular",
-    parks: parks.map(mapParkToListDto),
-  };
+  return { type: "popular", parks: parks.map(mapParkToListDto) };
 }

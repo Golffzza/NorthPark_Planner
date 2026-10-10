@@ -1,7 +1,9 @@
+// ./app/api/v1/trips/[id]/evaluate/route.ts
+
 import { NextResponse } from "next/server";
 
 import { evaluateTripForCurrentUser } from "@/lib/services/evaluation-service";
-import { AuthorizationError, NotFoundError } from "@/lib/services/trip-service";
+import { AuthorizationError, CancelledTripEvaluationError, NotFoundError } from "@/lib/services/trip-service";
 
 type RouteContext = {
   params: Promise<{
@@ -34,6 +36,9 @@ export async function POST(_request: Request, context: RouteContext) {
       },
     });
   } catch (error) {
+    if (error instanceof CancelledTripEvaluationError) {
+      return NextResponse.json({ error: { code: "trip_cancelled", message: error.message } }, { status: 409 });
+    }
     if (error instanceof NotFoundError) {
       return NextResponse.json(
         {

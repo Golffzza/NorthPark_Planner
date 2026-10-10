@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTripResultViewModel } from "@/lib/presenters/trip-result-view";
 import { evaluateTripForCurrentUser } from "@/lib/services/evaluation-service";
 import {
+  cancelTripForCurrentUser,
   createTripForCurrentUser,
   getTripDetailForCurrentUser,
   updateTripForCurrentUser,
@@ -71,6 +72,9 @@ function buildTripDetailRecord(trip: TripRecord, park: ParkRecord, evaluations: 
       coverImageUrl: park.coverImageUrl,
     },
     evaluations,
+    weatherSnapshots: [],
+    routeSnapshots: [],
+    sunsetSnapshots: [],
   };
 }
 
@@ -91,7 +95,7 @@ const txMock = vi.hoisted(() => ({
     create: vi.fn(),
   },
   trip: {
-    update: vi.fn(),
+    updateMany: vi.fn(),
   },
 }));
 
@@ -104,6 +108,13 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 vi.mock("@/lib/auth/current-user", () => authMock);
+
+vi.mock("@/lib/services/evaluation-explainer-service", () => ({
+  explainTripEvaluation: vi.fn().mockResolvedValue({
+    headline: "ผลประเมิน",
+    explanation: "คำอธิบาย",
+  }),
+}));
 
 describe("trip planner evaluation flow", () => {
   beforeEach(() => {
@@ -210,10 +221,12 @@ describe("trip planner evaluation flow", () => {
       return createdEvaluation;
     });
 
-    txMock.trip.update.mockImplementation(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+    txMock.trip.updateMany.mockImplementation(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
       if (!state.trip || state.trip.id !== where.id) {
         throw new Error("Trip not found in transaction");
       }
+
+      if (state.trip.status === "CANCELLED") return { count: 0 };
 
       state.trip = {
         ...state.trip,
@@ -221,7 +234,7 @@ describe("trip planner evaluation flow", () => {
         updatedAt: new Date("2026-06-01T08:45:00.000Z"),
       };
 
-      return state.trip;
+      return { count: 1 };
     });
 
     prismaMock.$transaction.mockImplementation(async (callback: (tx: typeof txMock) => Promise<unknown>) => {
@@ -277,5 +290,23 @@ describe("trip planner evaluation flow", () => {
     expect(resultView.latestEvaluation.id).toBe(evaluationResult.data.id);
     expect(resultView.history).toHaveLength(1);
     expect(resultView.factorScores).toHaveLength(4);
+  });
+
+  it("preserves existing evaluation history and CANCELLED status after a rejected direct evaluation", async () => {
+    const trip = await createTripForCurrentUser({
+      parkId: "park_1", tripDate: new Date("2026-06-12T00:00:00.000Z"),
+      departAt: "08:00", originText: "Chiang Mai", transportMode: "CAR",
+      travelerCount: 1, weatherCondition: "CLEAR", estimatedTravelMinutes: 120,
+    });
+    await evaluateTripForCurrentUser(trip.id);
+    await cancelTripForCurrentUser(trip.id);
+    const savedHistory = [...state.evaluations];
+
+    await expect(evaluateTripForCurrentUser(trip.id)).rejects.toMatchObject({
+      name: "CancelledTripEvaluationError",
+    });
+    expect(state.trip?.status).toBe("CANCELLED");
+    expect(state.evaluations).toEqual(savedHistory);
+    expect(state.evaluations).toHaveLength(1);
   });
 });

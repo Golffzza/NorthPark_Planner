@@ -198,26 +198,55 @@ model TripEvaluation {
   id               String          @id @default(cuid())
   tripId           String
   trip             Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  weatherSnapshotId String?
+  routeSnapshotId   String?
+  sunsetSnapshotId  String?
+  weatherSnapshot   WeatherSnapshot? @relation(fields: [weatherSnapshotId], references: [id], onDelete: Restrict)
+  routeSnapshot     RouteSnapshot?   @relation(fields: [routeSnapshotId], references: [id], onDelete: Restrict)
+  sunsetSnapshot    SunsetSnapshot?  @relation(fields: [sunsetSnapshotId], references: [id], onDelete: Restrict)
+
   totalScore       Int
   level            EvaluationLevel
+
   weatherScore     Int
   durationScore    Int
   timeScore        Int
+
+  // ชื่อเดิมเก็บไว้เพื่อ compatibility
+  // ปัจจุบันใช้แทนคะแนนด้าน transport/accessibility
   userProfileScore Int
+
+  // ถ้ามี hard constraint เช่นไปถึงหลังอุทยานปิด จะเป็น false
+  canProceed       Boolean         @default(true)
+
+  // รายละเอียดคะแนน + reason ของแต่ละ factor
+  factors          Json?
+
+  // hard constraints / warnings เชิงโครงสร้าง
+  constraints      Json?
+
   summary          String
   recommendation   String
+
+  explanationHeadline String?
+  explanationText     String?
+
   evaluatedAt      DateTime
   createdAt        DateTime        @default(now())
 
   @@index([tripId])
   @@index([tripId, createdAt])
   @@index([level])
+  @@index([weatherSnapshotId])
+  @@index([routeSnapshotId])
+  @@index([sunsetSnapshotId])
 }
 
 model WeatherSnapshot {
   id               String           @id @default(cuid())
   tripId           String
   trip             Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  evaluations      TripEvaluation[]
   source           String
   timezone         String
   latitude         Decimal          @db.Decimal(9, 6)
@@ -240,6 +269,7 @@ model SunsetSnapshot {
   id              String   @id @default(cuid())
   tripId          String
   trip            Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  evaluations     TripEvaluation[]
   source          String
   timezone        String
   latitude        Decimal  @db.Decimal(9, 6)
@@ -256,6 +286,7 @@ model RouteSnapshot {
   id                 String   @id @default(cuid())
   tripId             String
   trip               Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  evaluations        TripEvaluation[]
   source             String
   originLat          Decimal  @db.Decimal(9, 6)
   originLng          Decimal  @db.Decimal(9, 6)

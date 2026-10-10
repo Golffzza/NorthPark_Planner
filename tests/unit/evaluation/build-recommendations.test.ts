@@ -13,13 +13,13 @@ describe("buildRecommendations", () => {
       travelerCount: 2,
     });
 
-    expect(result).toContain("สภาพอากาศ");
+    expect(result).toContain("ฝนตกหนัก");
   });
 
   it.each([
     ["duration", "ระยะเวลาเดินทาง"],
-    ["time", "เวลาเดินทาง"],
-    ["userProfile", "ความพร้อมของผู้เดินทาง"],
+    ["time", "เวลาเข้าถึง"],
+    ["userProfile", "การเข้าถึงจุดหมาย"],
   ] as const)("returns guidance for the %s factor", (weakestFactor, expectedText) => {
     const result = buildRecommendations({
       weakestFactor,

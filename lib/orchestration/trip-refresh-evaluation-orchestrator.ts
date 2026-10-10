@@ -1,5 +1,7 @@
+// ./lib/orchestration/trip-refresh-evaluation-orchestrator.ts
+
 import { evaluateLiveTripForCurrentUser } from "@/lib/orchestration/trip-live-evaluation-orchestrator";
-import { getTripForCurrentUser } from "@/lib/services/trip-service";
+import { assertTripCanBeEvaluated, getTripForCurrentUser } from "@/lib/services/trip-service";
 import { syncRouteSnapshotForCurrentUser } from "@/lib/snapshots/route-snapshot-service";
 import { syncSunsetSnapshotForCurrentUser } from "@/lib/snapshots/sunset-snapshot-service";
 import { syncWeatherSnapshotForCurrentUser } from "@/lib/snapshots/weather-snapshot-service";
@@ -30,12 +32,16 @@ export type RefreshTripEvaluationResult = {
 export async function refreshTripEvaluationForCurrentUser(
   tripId: string,
 ): Promise<RefreshTripEvaluationResult> {
-  await getTripForCurrentUser(tripId);
+  assertTripCanBeEvaluated(await getTripForCurrentUser(tripId));
 
   const weatherSnapshot = await syncWeatherSnapshotForCurrentUser(tripId);
   const sunsetSnapshot = await syncSunsetSnapshotForCurrentUser(tripId);
   const routeSnapshot = await syncRouteSnapshotForCurrentUser(tripId);
-  const evaluationResult = await evaluateLiveTripForCurrentUser(tripId);
+  const evaluationResult = await evaluateLiveTripForCurrentUser(tripId, {
+    weatherSnapshotId: weatherSnapshot.id,
+    routeSnapshotId: routeSnapshot.id,
+    sunsetSnapshotId: sunsetSnapshot.id,
+  });
 
   return {
     tripId,

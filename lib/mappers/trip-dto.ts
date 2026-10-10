@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
-import { mapEvaluationToDto } from "@/lib/mappers/evaluation-dto";
+import { mapEvaluationToDto, type EvaluationDto } from "@/lib/mappers/evaluation-dto";
 
 type TripParkSummary = {
   id: string;
@@ -38,8 +38,28 @@ export type TripListDto = {
   };
 };
 
+export type TripDetailEvaluationDto = EvaluationDto & {
+  weatherSnapshot?: {
+    id: string;
+    weatherCondition: string;
+    temperatureC: number | null;
+    createdAt: string;
+  } | null;
+  routeSnapshot?: {
+    id: string;
+    distanceMeters: number;
+    durationSeconds: number;
+    createdAt: string;
+  } | null;
+  sunsetSnapshot?: {
+    id: string;
+    sunsetLocalTime: string;
+    createdAt: string;
+  } | null;
+};
+
 export type TripDetailDto = Omit<TripListDto, "latestEvaluation"> & {
-  evaluations: ReturnType<typeof mapEvaluationToDto>[];
+  evaluations: TripDetailEvaluationDto[];
   latestWeatherSnapshot?: {
     id: string;
     weatherCondition: string;
@@ -92,7 +112,33 @@ type TripDetailRecord = Prisma.TripGetPayload<{
         coverImageUrl: true;
       };
     };
-    evaluations: true;
+    evaluations: {
+      include: {
+        weatherSnapshot: {
+          select: {
+            id: true;
+            weatherCondition: true;
+            temperatureC: true;
+            createdAt: true;
+          };
+        };
+        routeSnapshot: {
+          select: {
+            id: true;
+            distanceMeters: true;
+            durationSeconds: true;
+            createdAt: true;
+          };
+        };
+        sunsetSnapshot: {
+          select: {
+            id: true;
+            sunsetLocalTime: true;
+            createdAt: true;
+          };
+        };
+      };
+    };
     weatherSnapshots: {
       select: {
         id: true;
@@ -179,7 +225,32 @@ export function mapTripToDetailDto(trip: TripDetailRecord): TripDetailDto {
     createdAt: trip.createdAt.toISOString(),
     updatedAt: trip.updatedAt.toISOString(),
     park: mapPark(trip.park),
-    evaluations: trip.evaluations.map(mapEvaluationToDto),
+    evaluations: trip.evaluations.map((evaluation) => ({
+      ...mapEvaluationToDto(evaluation),
+      weatherSnapshot: evaluation.weatherSnapshot
+        ? {
+            id: evaluation.weatherSnapshot.id,
+            weatherCondition: evaluation.weatherSnapshot.weatherCondition,
+            temperatureC: evaluation.weatherSnapshot.temperatureC,
+            createdAt: evaluation.weatherSnapshot.createdAt.toISOString(),
+          }
+        : null,
+      routeSnapshot: evaluation.routeSnapshot
+        ? {
+            id: evaluation.routeSnapshot.id,
+            distanceMeters: evaluation.routeSnapshot.distanceMeters,
+            durationSeconds: evaluation.routeSnapshot.durationSeconds,
+            createdAt: evaluation.routeSnapshot.createdAt.toISOString(),
+          }
+        : null,
+      sunsetSnapshot: evaluation.sunsetSnapshot
+        ? {
+            id: evaluation.sunsetSnapshot.id,
+            sunsetLocalTime: evaluation.sunsetSnapshot.sunsetLocalTime,
+            createdAt: evaluation.sunsetSnapshot.createdAt.toISOString(),
+          }
+        : null,
+    })),
     ...(latestWeatherSnapshot
       ? {
           latestWeatherSnapshot: {

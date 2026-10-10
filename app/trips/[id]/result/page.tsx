@@ -1,19 +1,43 @@
+//* ./app/trips/[id]/result/page.tsx
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CancelTripButton } from "@/components/trips/cancel-trip-button";
+import { EvaluateLiveTripButton } from "@/components/trips/evaluate-live-trip-button";
 import { EvaluationHistoryList } from "@/components/evaluation/evaluation-history-list";
 import { FactorBreakdown } from "@/components/evaluation/factor-breakdown";
-import { PlanAdjustmentBanner } from "@/components/evaluation/plan-adjustment-banner";
-import { RecommendationList } from "@/components/evaluation/recommendation-list";
-import { ScoreHeroCard } from "@/components/evaluation/score-hero-card";
+
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
-import { getParkTransitInfo } from "@/lib/data/park-transit-info";
-import { getTransportModeLabel, getWeatherConditionLabel } from "@/lib/constants/trip-form-options";
+
+import {
+  getTransportModeLabel,
+  getWeatherConditionLabel,
+} from "@/lib/constants/trip-form-options";
+
 import { buildTripResultViewModel } from "@/lib/presenters/trip-result-view";
-import { getTripDetailForCurrentUser, NotFoundError } from "@/lib/services/trip-service";
+import { getTripResultSnapshotData } from "@/lib/presenters/trip-result-snapshot-data";
+
+import {
+  getTripDetailForCurrentUser,
+  NotFoundError,
+} from "@/lib/services/trip-service";
+
 import { formatThaiDate } from "@/lib/utils/date";
+
+import {
+  ArrowLeft,
+  CalendarDays,
+  Car,
+  ChevronDown,
+  CircleCheck,
+  CircleX,
+  Clock,
+  CloudRain,
+  Route,
+  TriangleAlert,
+} from "lucide-react";
 
 type TripResultPageProps = {
   params: Promise<{
@@ -21,26 +45,183 @@ type TripResultPageProps = {
   }>;
 };
 
-function formatTemperature(value: number | null | undefined) {
-  return typeof value === "number" ? `${value.toFixed(1)}°C` : null;
+type FactorKey =
+  | "weather"
+  | "duration"
+  | "time"
+  | "userProfile";
+
+type FactorStatus =
+  | "GOOD"
+  | "CAUTION"
+  | "RISK";
+
+type FactorInsight = {
+  key: FactorKey;
+  label: string;
+  score: number;
+  status: FactorStatus;
+  reason: string;
+};
+
+type ConstraintInsight = {
+  code: string;
+  severity: "BLOCKING" | "WARNING";
+  message: string;
+};
+
+const FACTOR_LABELS: Record<
+  FactorKey,
+  string
+> = {
+  weather: "สภาพอากาศ",
+  duration: "ระยะเวลาเดินทาง",
+  time: "ช่วงเวลาที่คาดว่าจะถึง",
+  userProfile: "การเข้าถึงและพาหนะ",
+};
+
+function isRecord(
+  value: unknown,
+): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
 }
 
-function formatDistance(distanceMeters: number | undefined) {
-  if (typeof distanceMeters !== "number") {
+function parseFactors(
+  value: unknown,
+): FactorInsight[] {
+  if (!isRecord(value)) {
+    return [];
+  }
+
+  const keys: FactorKey[] = [
+    "weather",
+    "duration",
+    "time",
+    "userProfile",
+  ];
+
+  return keys.flatMap((key) => {
+    const raw = value[key];
+
+    if (!isRecord(raw)) {
+      return [];
+    }
+
+    const score =
+      typeof raw.score === "number"
+        ? raw.score
+        : null;
+
+    const reason =
+      typeof raw.reason === "string"
+        ? raw.reason
+        : null;
+
+    const status =
+      raw.status === "GOOD" ||
+      raw.status === "CAUTION" ||
+      raw.status === "RISK"
+        ? raw.status
+        : null;
+
+    if (
+      score === null ||
+      reason === null ||
+      status === null
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        key,
+        label: FACTOR_LABELS[key],
+        score,
+        status,
+        reason,
+      },
+    ];
+  });
+}
+
+function parseConstraints(
+  value: unknown,
+): ConstraintInsight[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!isRecord(item)) {
+      return [];
+    }
+
+    if (
+      typeof item.code !== "string" ||
+      typeof item.message !== "string" ||
+      (
+        item.severity !== "BLOCKING" &&
+        item.severity !== "WARNING"
+      )
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        code: item.code,
+        severity: item.severity,
+        message: item.message,
+      },
+    ];
+  });
+}
+
+function formatTemperature(
+  value: number | null | undefined,
+) {
+  return typeof value === "number"
+    ? `${value.toFixed(1)}°C`
+    : null;
+}
+
+function formatDistance(
+  distanceMeters: number | undefined,
+) {
+  if (
+    typeof distanceMeters !== "number"
+  ) {
     return null;
   }
 
-  return `${(distanceMeters / 1000).toFixed(1)} กม.`;
+  return `${(
+    distanceMeters / 1000
+  ).toFixed(1)} กม.`;
 }
 
-function formatTravelDuration(durationSeconds: number | undefined) {
-  if (typeof durationSeconds !== "number") {
+function formatTravelDuration(
+  durationSeconds: number | undefined,
+) {
+  if (
+    typeof durationSeconds !== "number"
+  ) {
     return null;
   }
 
-  const totalMinutes = Math.max(1, Math.round(durationSeconds / 60));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
+  const totalMinutes = Math.max(
+    1,
+    Math.round(durationSeconds / 60),
+  );
+
+  const hours =
+    Math.floor(totalMinutes / 60);
+
+  const minutes =
+    totalMinutes % 60;
 
   if (hours === 0) {
     return `${totalMinutes} นาที`;
@@ -53,237 +234,758 @@ function formatTravelDuration(durationSeconds: number | undefined) {
   return `${hours} ชม. ${minutes} นาที`;
 }
 
-export default async function TripResultPage({ params }: TripResultPageProps) {
+function formatEvaluationTime(
+  value: string,
+) {
+  const date = new Date(value);
+
+  if (
+    Number.isNaN(date.getTime())
+  ) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat(
+    "th-TH",
+    {
+      dateStyle: "medium",
+      timeStyle: "short",
+    },
+  ).format(date);
+}
+
+function getStatusLabel(
+  level: string,
+  canProceed: boolean,
+) {
+  if (!canProceed) {
+    return "ควรปรับแผนก่อนเดินทาง";
+  }
+
+  switch (level) {
+    case "EXCELLENT":
+      return "พร้อมตามแผน";
+
+    case "GOOD":
+      return "เดินทางได้ แต่ควรตรวจสอบบางจุด";
+
+    case "MODERATE":
+      return "ควรปรับบางส่วนก่อนเดินทาง";
+
+    default:
+      return "ควรตรวจสอบแผนอีกครั้ง";
+  }
+}
+
+function getStatusClasses(
+  canProceed: boolean,
+  level: string,
+) {
+  if (!canProceed) {
+    return {
+      badge:
+        "border-rose-500/30 bg-rose-500/10 text-rose-300",
+    };
+  }
+
+  if (
+    level === "EXCELLENT" ||
+    level === "GOOD"
+  ) {
+    return {
+      badge:
+        "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+    };
+  }
+
+  return {
+    badge:
+      "border-amber-500/30 bg-amber-500/10 text-amber-300",
+  };
+}
+
+export default async function TripResultPage({
+  params,
+}: TripResultPageProps) {
   const { id } = await params;
 
   try {
-    const trip = await getTripDetailForCurrentUser(id);
+    const trip =
+      await getTripDetailForCurrentUser(
+        id,
+      );
 
-    if (trip.evaluations.length === 0) {
-      notFound();
+    const hasPreviousEvaluation =
+      trip.evaluations.length > 0;
+
+    const evaluationIsStale =
+      trip.status === "DRAFT" &&
+      hasPreviousEvaluation;
+
+    if (evaluationIsStale) {
+      const staleResultView =
+        buildTripResultViewModel(trip);
+
+      return (
+        <AppShell>
+          <div className="space-y-6">
+            <PageHeader
+              compact
+              eyebrow="ผลประเมินทริป"
+              title={`ทริป: ${trip.park.nameTh}`}
+              description="แผนนี้มีการเปลี่ยนแปลงหลังจากการประเมินครั้งล่าสุด"
+              actions={
+                <Link
+                  href="/trips"
+                  className="ghost-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0" />
+                  <span>กลับไปทริปของฉัน</span>
+                </Link>
+              }
+            />
+
+            <section className="soft-card rounded-[32px] p-6 sm:p-8">
+              <div className="flex items-start gap-4">
+                <TriangleAlert className="mt-1 h-6 w-6 shrink-0 text-amber-400" />
+
+                <div className="min-w-0">
+                  <span className="guide-chip">
+                    ต้องประเมินใหม่
+                  </span>
+
+                  <h1 className="mt-4 text-2xl font-bold font-heading text-[var(--foreground)]">
+                    แผนมีการเปลี่ยนแปลง
+                  </h1>
+
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
+                    ผลประเมินเดิมสร้างจากข้อมูลก่อนแก้ไขทริป จึงไม่ควรใช้เป็นผลปัจจุบัน
+                    กรุณาอัปเดตข้อมูลสภาพอากาศ เส้นทาง และช่วงเวลา แล้วประเมินแผนใหม่อีกครั้ง
+                  </p>
+
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <EvaluateLiveTripButton
+                      tripId={trip.id}
+                      label="อัปเดตข้อมูลและประเมินใหม่"
+                    />
+
+                    <Link
+                      href={`/trips/${trip.id}/edit`}
+                      className="ghost-button inline-flex items-center rounded-full px-4 py-3 text-sm font-semibold"
+                    >
+                      แก้ไขแผน
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <details className="soft-card group rounded-[28px] p-4 sm:p-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-[var(--foreground)]">
+                    ดูประวัติการประเมินเดิม
+                  </p>
+
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    ผลเหล่านี้เป็นประวัติก่อนแก้ไขแผน
+                  </p>
+                </div>
+
+                <ChevronDown className="h-5 w-5 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" />
+              </summary>
+
+              <div className="mt-5">
+                <EvaluationHistoryList
+                  history={staleResultView.history}
+                />
+              </div>
+            </details>
+          </div>
+        </AppShell>
+      );
     }
 
-    const resultView = buildTripResultViewModel(trip);
-    const displayedWeatherCondition = trip.latestWeatherSnapshot?.weatherCondition ?? trip.weatherCondition;
-    const displayedTemperature = formatTemperature(trip.latestWeatherSnapshot?.temperatureC);
-    const displayedDistance = formatDistance(trip.latestRouteSnapshot?.distanceMeters);
-    const displayedTravelDuration =
-      formatTravelDuration(trip.latestRouteSnapshot?.durationSeconds) ?? `${trip.estimatedTravelMinutes} นาที`;
+    if (
+      trip.evaluations.length === 0
+    ) {
+      return (
+        <AppShell>
+          <div className="space-y-6">
+            <PageHeader
+              compact
+              eyebrow="ผลประเมินทริป"
+              title={`ทริป: ${trip.park.nameTh}`}
+              description="แผนถูกบันทึกแล้ว แต่ยังไม่มีผลประเมิน"
+              actions={
+                <Link
+                  href="/trips"
+                  className="ghost-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0" />
+                  <span>กลับไปทริปของฉัน</span>
+                </Link>
+              }
+            />
 
-    const transitInfo = getParkTransitInfo(trip.park.nameTh);
+            <section className="soft-card rounded-[32px] p-6 sm:p-8">
+              <span className="guide-chip">
+                รอประเมิน
+              </span>
+
+              <h1 className="mt-4 text-2xl font-bold font-heading text-[var(--foreground)]">
+                ทริปนี้ยังไม่มีผลประเมิน
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
+                อัปเดตข้อมูลสภาพอากาศ
+                เส้นทาง และช่วงเวลาล่าสุด
+                เพื่อให้ระบบประเมินแผนนี้
+              </p>
+
+              {trip.status !==
+              "CANCELLED" ? (
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <EvaluateLiveTripButton
+                    tripId={trip.id}
+                    label="อัปเดตข้อมูลและประเมิน"
+                  />
+
+                  <Link
+                    href={`/trips/${trip.id}/edit`}
+                    className="ghost-button inline-flex items-center rounded-full px-4 py-3 text-sm font-semibold"
+                  >
+                    แก้ไขแผน
+                  </Link>
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-[var(--muted)]">
+                  ทริปนี้ถูกยกเลิกแล้ว
+                </p>
+              )}
+            </section>
+          </div>
+        </AppShell>
+      );
+    }
+
+    const resultView =
+      buildTripResultViewModel(trip);
+
+    const latestEvaluation =
+      trip.evaluations[0];
+
+    const factors =
+      parseFactors(
+        latestEvaluation.factors,
+      );
+
+    const constraints =
+      parseConstraints(
+        latestEvaluation.constraints,
+      );
+
+    const canProceed =
+      latestEvaluation.canProceed ??
+      true;
+
+    const blockingConstraints =
+      constraints.filter(
+        (item) =>
+          item.severity === "BLOCKING",
+      );
+
+    const warningConstraints =
+      constraints.filter(
+        (item) =>
+          item.severity === "WARNING",
+      );
+
+    const attentionFactors =
+      factors
+        .filter(
+          (item) =>
+            item.status !== "GOOD",
+        )
+        .sort(
+          (a, b) =>
+            a.score - b.score,
+        );
+
+    const goodFactors =
+      factors
+        .filter(
+          (item) =>
+            item.status === "GOOD",
+        )
+        .sort(
+          (a, b) =>
+            b.score - a.score,
+        );
+
+    const snapshotData = getTripResultSnapshotData(trip, latestEvaluation);
+    const provenanceUnavailable =
+      !latestEvaluation.weatherSnapshotId ||
+      !latestEvaluation.routeSnapshotId ||
+      !latestEvaluation.sunsetSnapshotId;
+
+    const displayedWeatherCondition = snapshotData.weatherCondition;
+
+    const displayedTemperature =
+      formatTemperature(
+        snapshotData.temperatureC,
+      );
+
+    const displayedDistance =
+      formatDistance(
+        snapshotData.distanceMeters ?? undefined,
+      );
+
+    const displayedTravelDuration =
+      formatTravelDuration(
+        snapshotData.durationSeconds ?? undefined,
+      ) ??
+      (snapshotData.fallbackTravelMinutes === null
+        ? "ไม่มีข้อมูลเวลาเดินทางของผลประเมินนี้"
+        : `${snapshotData.fallbackTravelMinutes} นาที`);
+
+    const statusLabel =
+      getStatusLabel(
+        latestEvaluation.level,
+        canProceed,
+      );
+
+    const statusClasses =
+      getStatusClasses(
+        canProceed,
+        latestEvaluation.level,
+      );
+
+    const explanationHeadline =
+      latestEvaluation
+        .explanationHeadline ??
+      statusLabel;
+
+    const explanationText =
+      latestEvaluation
+        .explanationText ??
+      latestEvaluation.summary;
 
     return (
       <AppShell>
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           <PageHeader
             compact
-            eyebrow="ผลประเมินความปลอดภัย"
-            title={`ผลประเมิน: ${trip.park.nameTh}`}
-            description="สรุปคะแนนความพร้อม สภาพอากาศล่วงหน้า และคำแนะนำเพื่อการเดินทาง"
+            eyebrow="ผลประเมินทริป"
+            title={trip.park.nameTh}
+            description="ดูความพร้อม จุดที่ควรใส่ใจ และข้อมูลสำคัญก่อนเดินทาง"
             actions={
               <div className="flex flex-wrap items-center gap-2">
                 <Link
-                  href={`/trips/${trip.id}`}
-                  className="inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 dark:text-emerald-100 bg-slate-100/90 hover:bg-slate-200/90 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/70 border border-slate-300/80 dark:border-emerald-500/40 backdrop-blur-md shadow-2xs active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
+                  href="/trips"
+                  className="ghost-button inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold"
                 >
-                  <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m15 18-6-6 6-6" />
-                  </svg>
-                  <span>กลับหน้ารายละเอียด</span>
+                  <ArrowLeft className="h-4 w-4 shrink-0" />
+                  <span>ทริปของฉัน</span>
                 </Link>
+
                 <Link
                   href={`/trips/${trip.id}/edit`}
-                  className="inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 shadow-sm transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                  className="inline-flex h-10 items-center rounded-full bg-emerald-500 px-4 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
                 >
-                  <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                  </svg>
-                  <span>แก้ไขทริป</span>
+                  แก้ไขทริป
                 </Link>
-                <CancelTripButton tripId={trip.id} isCancelled={trip.status === "CANCELLED"} variant="compact" />
+
+                <CancelTripButton
+                  tripId={trip.id}
+                  isCancelled={
+                    trip.status ===
+                    "CANCELLED"
+                  }
+                  variant="compact"
+                />
               </div>
             }
           />
 
-          <ScoreHeroCard
-            parkName={resultView.parkName}
-            parkProvince={resultView.parkProvince}
-            evaluation={resultView.latestEvaluation}
-          />
+          {/* HERO — decision first */}
+          <section className="soft-card overflow-hidden rounded-[34px] p-5 sm:p-7 lg:p-8">
+            <div className="grid items-center gap-7 lg:grid-cols-[220px_minmax(0,1fr)]">
+              <div className="flex justify-center lg:justify-start">
+                <div
+                  className="flex h-44 w-44 items-center justify-center rounded-full p-[12px]"
+                  style={{
+                    background: `conic-gradient(
+                      currentColor ${latestEvaluation.totalScore}%,
+                      rgba(148,163,184,0.15) 0
+                    )`,
+                  }}
+                >
+                  <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-[var(--background)]">
+                    <span className="text-5xl font-black font-heading text-[var(--foreground)]">
+                      {
+                        latestEvaluation.totalScore
+                      }
+                    </span>
 
-          {/* Actionable Plan Adjustment & Reasoning Banner */}
-          <PlanAdjustmentBanner trip={trip} />
-
-          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-            {/* Left: Modern Trip Snapshot Cards */}
-            <div className="soft-card relative overflow-hidden rounded-[32px] sm:rounded-[34px] px-5 py-6 sm:px-7">
-              <div className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-500 text-sm">
-                  📋
-                </span>
-                <span className="guide-chip">Trip Snapshot</span>
+                    <span className="mt-1 text-xs font-medium text-[var(--muted)]">
+                      จาก 100 คะแนน
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <h2 className="mt-3.5 text-xl sm:text-2xl font-bold font-heading tracking-tight text-[var(--foreground)]">
-                ข้อมูลแผนที่ใช้ในการประเมิน
+              <div>
+                <span
+                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${statusClasses.badge}`}
+                >
+                  {statusLabel}
+                </span>
+
+                <h1 className="mt-4 max-w-3xl text-2xl font-bold leading-tight font-heading text-[var(--foreground)] sm:text-3xl">
+                  {explanationHeadline}
+                </h1>
+
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted)] sm:text-base">
+                  {explanationText}
+                </p>
+
+                <p className="mt-4 text-xs text-[var(--muted)]">
+                  ประเมินล่าสุด{" "}
+                  {formatEvaluationTime(
+                    latestEvaluation.evaluatedAt,
+                  )}
+                </p>
+
+                {trip.status !==
+                "CANCELLED" ? (
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <EvaluateLiveTripButton
+                      tripId={trip.id}
+                      label="อัปเดตข้อมูลและประเมินใหม่"
+                    />
+
+                    <Link
+                      href={`/trips/${trip.id}/edit`}
+                      className="ghost-button inline-flex items-center rounded-full px-4 py-3 text-sm font-semibold"
+                    >
+                      ปรับแผน
+                    </Link>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </section>
+
+          {/* WHAT USER NEEDS TO KNOW */}
+          <section className="soft-card rounded-[32px] p-5 sm:p-7">
+            <div>
+              <span className="guide-chip">
+                ก่อนออกเดินทาง
+              </span>
+
+              <h2 className="mt-3 text-xl font-bold font-heading text-[var(--foreground)] sm:text-2xl">
+                สิ่งที่ควรรู้จากผลประเมิน
               </h2>
-              <p className="mt-1 text-xs sm:text-sm leading-relaxed text-[var(--muted)]">
-                สรุปข้อมูลการเดินทางจริงและข้อมูลสภาพอากาศ ณ เวลาที่ทำการประเมิน
+
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                เน้นเฉพาะจุดที่มีผลต่อแผนนี้
+                ไม่ต้องไล่อ่านคะแนนทั้งหมด
               </p>
+            </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {/* 1. Date Tile */}
-                <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 transition-all duration-200 hover:border-emerald-500/30">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                    <span>🗓️</span>
-                    <span>วันออกเดินทาง</span>
-                  </div>
-                  <p className="mt-2 text-base font-bold font-heading text-[var(--foreground)]">
-                    {formatThaiDate(trip.tripDate)}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--muted)]">กำหนดการเดินทาง</p>
-                </div>
+            <div className="mt-5 grid gap-3">
+              {blockingConstraints.map(
+                (item) => (
+                  <div
+                    key={item.code}
+                    className="rounded-[24px] border border-rose-500/30 bg-rose-500/10 p-4"
+                  >
+                    <div className="flex gap-3">
+                      <CircleX className="mt-0.5 h-5 w-5 shrink-0 text-rose-400" />
 
-                {/* 2. Departure Time Tile */}
-                <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 transition-all duration-200 hover:border-emerald-500/30">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                    <span>⏰</span>
-                    <span>เวลาออกเดินทาง</span>
-                  </div>
-                  <p className="mt-2 text-base font-bold font-heading text-[var(--foreground)]">
-                    {trip.departAt} น.
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--muted)]">เวลาเริ่มออกจากต้นทาง</p>
-                </div>
-
-                {/* 3. Weather Tile */}
-                <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 transition-all duration-200 hover:border-emerald-500/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                      <span>🌤️</span>
-                      <span>สภาพอากาศอุทยาน</span>
-                    </div>
-                    {displayedTemperature ? (
-                      <span className="rounded-full bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold font-heading">
-                        {displayedTemperature}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 text-base font-bold font-heading text-[var(--foreground)] truncate">
-                    {getWeatherConditionLabel(displayedWeatherCondition)}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--muted)]">
-                    {displayedTemperature ? "พยากรณ์อากาศแบบ Live" : "สภาพอากาศที่ระบุ"}
-                  </p>
-                </div>
-
-                {/* 4. Travel Duration Tile */}
-                <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 transition-all duration-200 hover:border-emerald-500/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                      <span>🧭</span>
-                      <span>ระยะเวลาเดินทาง</span>
-                    </div>
-                    {displayedDistance ? (
-                      <span className="rounded-full bg-teal-500/15 text-teal-800 dark:text-teal-300 border border-teal-500/30 px-2 py-0.5 text-[10px] font-bold font-heading">
-                        {displayedDistance}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 text-base font-bold font-heading text-[var(--foreground)]">
-                    {displayedTravelDuration}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--muted)]">
-                    {displayedDistance ? "คำนวณจาก OSRM แผนที่จริง" : "เวลาประมาณการ"}
-                  </p>
-                </div>
-
-                {/* 5. Transport & Group Tile */}
-                <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 sm:col-span-2 transition-all duration-200 hover:border-emerald-500/30">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 dark:bg-white/5 border border-emerald-500/20 text-lg shrink-0">
-                        {trip.transportMode === "CAR" ? "🚗" : trip.transportMode === "MOTORCYCLE" ? "🏍️" : "🚌"}
-                      </span>
                       <div>
-                        <p className="text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                          ยานพาหนะ & คณะเดินทาง
+                        <p className="font-bold text-rose-200">
+                          ต้องปรับแผนก่อนเดินทาง
                         </p>
-                        <p className="mt-0.5 text-base font-bold font-heading text-[var(--foreground)]">
-                          {getTransportModeLabel(trip.transportMode)} • {trip.travelerCount} คน
+
+                        <p className="mt-1 text-sm leading-relaxed text-rose-100/80">
+                          {item.message}
                         </p>
                       </div>
                     </div>
-
-                    {trip.transportMode === "PUBLIC_TRANSPORT" ? (
-                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold font-heading ${transitInfo.hasDirectPublicTransit ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30" : "bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30"}`}>
-                        {transitInfo.hasDirectPublicTransit ? "✓ มีรถโดยสารตรง/สองแถว" : "⚠️ ไม่มีรถประจำทางตรง"}
-                      </span>
-                    ) : null}
                   </div>
-                  {transitInfo.transitDescription ? (
-                    <p className="mt-3 text-xs leading-relaxed text-[var(--muted)] border-t border-slate-200/50 dark:border-white/5 pt-2.5">
-                      {transitInfo.transitDescription}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            </div>
+                ),
+              )}
 
-            {/* Right: Recommendations */}
-            <RecommendationList items={resultView.recommendations} />
+              {warningConstraints.map(
+                (item) => (
+                  <div
+                    key={item.code}
+                    className="rounded-[24px] border border-amber-500/30 bg-amber-500/10 p-4"
+                  >
+                    <div className="flex gap-3">
+                      <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+
+                      <div>
+                        <p className="font-bold text-amber-200">
+                          จุดที่ควรตรวจสอบ
+                        </p>
+
+                        <p className="mt-1 text-sm leading-relaxed text-amber-100/80">
+                          {item.message}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              )}
+
+              {attentionFactors
+                .slice(0, 2)
+                .map((factor) => (
+                  <div
+                    key={factor.key}
+                    className="rounded-[24px] border border-amber-500/20 bg-amber-500/[0.06] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex gap-3">
+                        <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+
+                        <div>
+                          <p className="font-bold text-[var(--foreground)]">
+                            {factor.label}
+                          </p>
+
+                          <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
+                            {factor.reason}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-300">
+                        {factor.score}/100
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+              {goodFactors
+                .slice(0, 2)
+                .map((factor) => (
+                  <div
+                    key={factor.key}
+                    className="rounded-[24px] border border-emerald-500/20 bg-emerald-500/[0.05] p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+
+                      <div>
+                        <p className="font-bold text-[var(--foreground)]">
+                          {factor.label}
+                        </p>
+
+                        <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
+                          {factor.reason}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+              {constraints.length ===
+                0 && (
+                <div className="rounded-[24px] border border-emerald-500/20 bg-emerald-500/[0.05] p-4">
+                  <div className="flex items-start gap-3">
+                    <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+
+                    <div>
+                      <p className="font-bold text-[var(--foreground)]">
+                        ไม่มีข้อจำกัดที่ขัดขวางการเดินทาง
+                      </p>
+
+                      <p className="mt-1 text-sm text-[var(--muted)]">
+                        จากข้อมูลที่ใช้ประเมินในรอบล่าสุด
+                        ยังไม่พบเงื่อนไขที่ทำให้ต้องหยุดแผนการเดินทาง
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </section>
 
-          <FactorBreakdown factors={resultView.factorScores} />
+          {/* TRIP ESSENTIALS */}
+          <section className="soft-card rounded-[32px] p-5 sm:p-7">
+            <div>
+              <span className="guide-chip">
+                ข้อมูลทริป
+              </span>
 
-          <EvaluationHistoryList history={resultView.history} />
+              <h2 className="mt-3 text-xl font-bold font-heading text-[var(--foreground)]">
+                {provenanceUnavailable
+                  ? "ข้อมูลทริปที่บันทึกไว้"
+                  : "ข้อมูลสำคัญที่ใช้ประเมิน"}
+              </h2>
 
-          {/* Bottom Action Navigation */}
-          <section className="soft-card rounded-[28px] p-4 sm:p-5 border border-slate-200/80 dark:border-emerald-500/20 bg-white/90 dark:bg-[#071712]/90 backdrop-blur-xl">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
-                <Link
-                  href={`/trips/${trip.id}`}
-                  className="inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 dark:text-emerald-100 bg-slate-100/90 hover:bg-slate-200/90 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/70 border border-slate-300/80 dark:border-emerald-500/40 backdrop-blur-md shadow-2xs active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
-                >
-                  <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m15 18-6-6 6-6" />
-                  </svg>
-                  <span>กลับหน้ารายละเอียด</span>
-                </Link>
-                <Link
-                  href="/trips"
-                  className="inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 dark:text-emerald-100 bg-slate-100/90 hover:bg-slate-200/90 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/70 border border-slate-300/80 dark:border-emerald-500/40 backdrop-blur-md shadow-2xs active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
-                >
-                  <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z" />
-                  </svg>
-                  <span>กลับไปทริปของฉัน</span>
-                </Link>
+              {provenanceUnavailable ? (
+                <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
+                  ผลประเมินนี้ไม่มีข้อมูลอ้างอิง snapshot ครบทุกชนิด ค่าอากาศหรือเวลาเดินทางที่แสดงจากทริปอาจไม่ใช่ค่าที่ใช้คำนวณผลเดิม
+                </p>
+              ) : null}
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="dashboard-card rounded-[22px] p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted)]">
+                  <CalendarDays className="h-4 w-4 shrink-0" />
+                  <span>วันเดินทาง</span>
+                </div>
+
+                <p className="mt-2 font-bold text-[var(--foreground)]">
+                  {formatThaiDate(
+                    trip.tripDate,
+                  )}
+                </p>
+
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  ออก {trip.departAt} น.
+                </p>
               </div>
 
-              <div className="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
-                <Link
-                  href={`/trips/${trip.id}/edit`}
-                  className="inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 shadow-sm transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap"
-                >
-                  <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                  </svg>
-                  <span>แก้ไขทริป</span>
-                </Link>
-                <CancelTripButton tripId={trip.id} isCancelled={trip.status === "CANCELLED"} variant="compact" />
+              <div className="dashboard-card rounded-[22px] p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted)]">
+                  <Route className="h-4 w-4 shrink-0" />
+                  <span>เวลาเดินทาง</span>
+                </div>
+
+                <p className="mt-2 font-bold text-[var(--foreground)]">
+                  {
+                    displayedTravelDuration
+                  }
+                </p>
+
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  {displayedDistance ??
+                    "ระยะทางไม่มีข้อมูล"}
+                </p>
+              </div>
+
+              <div className="dashboard-card rounded-[22px] p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted)]">
+                  <CloudRain className="h-4 w-4 shrink-0" />
+                  <span>สภาพอากาศ</span>
+                </div>
+
+                <p className="mt-2 font-bold text-[var(--foreground)]">
+                  {displayedWeatherCondition
+                    ? getWeatherConditionLabel(displayedWeatherCondition)
+                    : "ไม่มีข้อมูลอากาศของผลประเมินนี้"}
+                </p>
+
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  {displayedTemperature ??
+                    "ไม่มีข้อมูลอุณหภูมิ"}
+                </p>
+              </div>
+
+              <div className="dashboard-card rounded-[22px] p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted)]">
+                  <Car className="h-4 w-4 shrink-0" />
+                  <span>การเดินทาง</span>
+                </div>
+
+                <p className="mt-2 font-bold text-[var(--foreground)]">
+                  {getTransportModeLabel(
+                    trip.transportMode,
+                  )}
+                </p>
+
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  {trip.travelerCount} คน
+                </p>
+              </div>
+
+              <div className="dashboard-card rounded-[22px] p-4 sm:col-span-2 lg:col-span-1">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted)]">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  <span>เวลาอุทยาน</span>
+                </div>
+
+                <p className="mt-2 font-bold text-[var(--foreground)]">
+                  {trip.park.openTime}–
+                  {trip.park.closeTime} น.
+                </p>
+
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  เวลาที่ใช้ในการประเมิน
+                </p>
               </div>
             </div>
+          </section>
+
+          {/* DETAILS — collapsed */}
+          <section className="space-y-3">
+            <details className="soft-card group rounded-[28px] p-4 sm:p-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-[var(--foreground)]">
+                    ดูรายละเอียดคะแนนทั้ง
+                    4 ปัจจัย
+                  </p>
+
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    เปิดดูคะแนนและเหตุผลของแต่ละปัจจัย
+                  </p>
+                </div>
+
+                <ChevronDown className="h-5 w-5 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" />
+              </summary>
+
+              <div className="mt-5">
+                <FactorBreakdown
+                  factors={
+                    resultView.factorScores
+                  }
+                />
+              </div>
+            </details>
+
+            <details className="soft-card group rounded-[28px] p-4 sm:p-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-[var(--foreground)]">
+                    ประวัติการประเมิน
+                  </p>
+
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    {
+                      resultView.history
+                        .length
+                    }{" "}
+                    ครั้ง
+                  </p>
+                </div>
+
+                <ChevronDown className="h-5 w-5 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" />
+              </summary>
+
+              <div className="mt-5">
+                <EvaluationHistoryList
+                  history={
+                    resultView.history
+                  }
+                />
+              </div>
+            </details>
           </section>
         </div>
       </AppShell>
     );
   } catch (error) {
-    if (error instanceof NotFoundError) {
+    if (
+      error instanceof NotFoundError
+    ) {
       notFound();
     }
 

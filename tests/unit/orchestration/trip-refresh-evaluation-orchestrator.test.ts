@@ -94,6 +94,7 @@ describe("refreshTripEvaluationForCurrentUser", () => {
     tripServiceMock.getTripForCurrentUser.mockResolvedValue({
       id: "trip_1",
       userId: "user_1",
+      status: "DRAFT",
       originLat: 18.7883,
       originLng: 98.9853,
       park: {
@@ -140,7 +141,11 @@ describe("refreshTripEvaluationForCurrentUser", () => {
     expect(weatherSnapshotServiceMock.syncWeatherSnapshotForCurrentUser).toHaveBeenCalledWith("trip_1");
     expect(sunsetSnapshotServiceMock.syncSunsetSnapshotForCurrentUser).toHaveBeenCalledWith("trip_1");
     expect(routeSnapshotServiceMock.syncRouteSnapshotForCurrentUser).toHaveBeenCalledWith("trip_1");
-    expect(liveEvaluationOrchestratorMock.evaluateLiveTripForCurrentUser).toHaveBeenCalledWith("trip_1");
+    expect(liveEvaluationOrchestratorMock.evaluateLiveTripForCurrentUser).toHaveBeenCalledWith("trip_1", {
+      weatherSnapshotId: "weather_1",
+      routeSnapshotId: "route_1",
+      sunsetSnapshotId: "sunset_1",
+    });
     expect(result).toEqual({
       tripId: "trip_1",
       snapshots: {
@@ -244,5 +249,22 @@ describe("refreshTripEvaluationForCurrentUser", () => {
     await expect(refreshTripEvaluationForCurrentUser("trip_1")).rejects.toBeInstanceOf(
       TripSnapshotContextError,
     );
+  });
+
+  it("rejects a cancelled trip before creating any snapshots or evaluation", async () => {
+    tripServiceMock.getTripForCurrentUser.mockResolvedValue({ id: "trip_1", status: "CANCELLED" });
+    await expect(refreshTripEvaluationForCurrentUser("trip_1")).rejects.toMatchObject({
+      name: "CancelledTripEvaluationError",
+    });
+    expect(weatherSnapshotServiceMock.syncWeatherSnapshotForCurrentUser).not.toHaveBeenCalled();
+    expect(sunsetSnapshotServiceMock.syncSunsetSnapshotForCurrentUser).not.toHaveBeenCalled();
+    expect(routeSnapshotServiceMock.syncRouteSnapshotForCurrentUser).not.toHaveBeenCalled();
+    expect(liveEvaluationOrchestratorMock.evaluateLiveTripForCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it("does not evaluate when required snapshot persistence fails", async () => {
+    weatherSnapshotServiceMock.syncWeatherSnapshotForCurrentUser.mockRejectedValue(new Error("insert failed"));
+    await expect(refreshTripEvaluationForCurrentUser("trip_1")).rejects.toThrow("insert failed");
+    expect(liveEvaluationOrchestratorMock.evaluateLiveTripForCurrentUser).not.toHaveBeenCalled();
   });
 });

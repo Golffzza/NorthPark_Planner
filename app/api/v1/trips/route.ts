@@ -1,3 +1,5 @@
+// ./app/api/v1/trips/route.ts
+
 import type { TripStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 

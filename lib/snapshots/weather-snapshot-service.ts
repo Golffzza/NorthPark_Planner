@@ -1,11 +1,13 @@
-import { Prisma } from "@prisma/client";
+// ./lib/snapshots/weather-snapshot-service.ts
+
 import { prisma } from "@/lib/db/prisma";
 import {
+  OpenMeteoForecastNotAvailableYetError,
+  OpenMeteoPastDateError,
   OpenMeteoServiceError,
   fetchOpenMeteoWeatherSnapshot,
 } from "@/lib/integrations/open-meteo/open-meteo-service";
-import { getTripForCurrentUser } from "@/lib/services/trip-service";
-import { saveWeatherSnapshotInMemory } from "./in-memory-snapshots";
+import { assertTripCanBeEvaluated, getTripForCurrentUser } from "@/lib/services/trip-service";
 
 export class TripSnapshotContextError extends Error {
   constructor(message: string) {
@@ -21,16 +23,45 @@ export class WeatherSyncUnavailableError extends Error {
   }
 }
 
+export class WeatherForecastNotAvailableYetError extends Error {
+  readonly tripDate: string;
+  readonly lastSupportedDate: string;
+
+  constructor(tripDate: string, lastSupportedDate: string) {
+    super(
+      "วันเดินทางยังอยู่นอกช่วงพยากรณ์อากาศ กรุณาประเมินอีกครั้งเมื่อใกล้วันเดินทาง",
+    );
+
+    this.name = "WeatherForecastNotAvailableYetError";
+
+    this.tripDate = tripDate;
+    this.lastSupportedDate = lastSupportedDate;
+  }
+}
+
+export class WeatherTripDateInPastError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "WeatherTripDateInPastError";
+  }
+}
+
 function getAppTimezone() {
   return process.env.APP_TIMEZONE || "Asia/Bangkok";
 }
 
-function toCoordinateNumber(value: { toNumber(): number } | number | null | undefined) {
+function toCoordinateNumber(
+  value: { toNumber(): number } | number | null | undefined,
+) {
   if (typeof value === "number") {
     return value;
   }
 
-  if (value && typeof value === "object" && typeof value.toNumber === "function") {
+  if (
+    value &&
+    typeof value === "object" &&
+    typeof value.toNumber === "function"
+  ) {
     return value.toNumber();
   }
 
@@ -39,6 +70,7 @@ function toCoordinateNumber(value: { toNumber(): number } | number | null | unde
 
 export async function syncWeatherSnapshotForCurrentUser(tripId: string) {
   const trip = await getTripForCurrentUser(tripId);
+  assertTripCanBeEvaluated(trip);
   const latitude = toCoordinateNumber(trip.park.latitude);
   const longitude = toCoordinateNumber(trip.park.longitude);
 
@@ -54,9 +86,7 @@ export async function syncWeatherSnapshotForCurrentUser(tripId: string) {
       timezone: getAppTimezone(),
     });
 
-    if (typeof prisma?.weatherSnapshot?.create === "function") {
-      try {
-        const created = await prisma.weatherSnapshot.create({
+    return await prisma.weatherSnapshot.create({
           data: {
             tripId: trip.id,
             source: snapshot.source,
@@ -71,31 +101,19 @@ export async function syncWeatherSnapshotForCurrentUser(tripId: string) {
             windSpeedKmh: snapshot.windSpeedKmh,
             raw: snapshot.raw,
           },
-        });
-        saveWeatherSnapshotInMemory(created);
-        return created;
-      } catch (dbError) {
-        console.warn("[weather-snapshot] Database create failed, saving in memory fallback:", dbError);
-      }
-    }
-
-    return saveWeatherSnapshotInMemory({
-      id: `weather-snap-${Date.now()}`,
-      tripId: trip.id,
-      source: snapshot.source,
-      timezone: snapshot.timezone,
-      latitude: new Prisma.Decimal(latitude),
-      longitude: new Prisma.Decimal(longitude),
-      forecastAt: snapshot.forecastAt,
-      weatherCode: snapshot.weatherCode,
-      precipitationMm: snapshot.precipitationMm,
-      weatherCondition: snapshot.weatherCondition,
-      temperatureC: snapshot.temperatureC,
-      windSpeedKmh: snapshot.windSpeedKmh,
-      raw: snapshot.raw as Prisma.JsonValue,
-      createdAt: new Date(),
     });
   } catch (error) {
+    if (error instanceof OpenMeteoForecastNotAvailableYetError) {
+      throw new WeatherForecastNotAvailableYetError(
+        error.tripDate,
+        error.lastSupportedDate,
+      );
+    }
+
+    if (error instanceof OpenMeteoPastDateError) {
+      throw new WeatherTripDateInPastError(error.message);
+    }
+
     if (error instanceof OpenMeteoServiceError) {
       throw new WeatherSyncUnavailableError(error.message);
     }

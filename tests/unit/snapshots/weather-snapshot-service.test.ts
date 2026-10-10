@@ -31,7 +31,10 @@ vi.mock("@/lib/services/trip-service", async () => {
   };
 });
 
-vi.mock("@/lib/integrations/open-meteo/open-meteo-service", () => openMeteoMock);
+vi.mock("@/lib/integrations/open-meteo/open-meteo-service", async () => ({
+  ...await vi.importActual<typeof import("@/lib/integrations/open-meteo/open-meteo-service")>("@/lib/integrations/open-meteo/open-meteo-service"),
+  ...openMeteoMock,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 
 describe("syncWeatherSnapshotForCurrentUser", () => {
@@ -128,5 +131,11 @@ describe("syncWeatherSnapshotForCurrentUser", () => {
       AuthorizationError,
     );
     expect(prismaMock.weatherSnapshot.create).not.toHaveBeenCalled();
+  });
+
+  it("surfaces database persistence failure instead of returning an in-memory snapshot", async () => {
+    const dbError = new Error("weather insert failed");
+    prismaMock.weatherSnapshot.create.mockRejectedValue(dbError);
+    await expect(syncWeatherSnapshotForCurrentUser("trip_1")).rejects.toBe(dbError);
   });
 });

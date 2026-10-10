@@ -1,7 +1,10 @@
+// ./lib/orchestration/live-evaluation-input-mapper.ts
+
 import { getParkTransitInfo } from "@/lib/data/park-transit-info";
 import type { TransportMode, TripEvaluationInput, WeatherCondition } from "@/lib/evaluation/types";
 
 type TripCoreForLiveEvaluation = {
+  tripDate: Date;
   departAt: string;
   travelerCount: number;
   transportMode: TransportMode;
@@ -68,6 +71,9 @@ export function mapLatestSnapshotsToEvaluationInput(
   return {
     weatherCondition: args.weatherSnapshot.weatherCondition,
     estimatedTravelMinutes,
+    tripDate: args.trip.tripDate,
+    timeZone: args.sunsetSnapshot.timezone,
+    sunsetAt: args.sunsetSnapshot.sunsetAt,
     departAt: args.trip.departAt,
     mockSunsetTime: formatLocalTime(args.sunsetSnapshot.sunsetAt, args.sunsetSnapshot.timezone),
     parkOpenTime: args.trip.park.openTime,

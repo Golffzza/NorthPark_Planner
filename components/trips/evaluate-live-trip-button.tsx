@@ -5,6 +5,7 @@ import { useState } from "react";
 
 type EvaluateLiveTripButtonProps = {
   tripId: string;
+  label?: string;
 };
 
 type ApiErrorPayload = {
@@ -33,7 +34,7 @@ async function runStep(url: string) {
   throw new Error(payload?.error?.message ?? "ไม่สามารถประมวลผลข้อมูล live สำหรับทริปนี้ได้");
 }
 
-export function EvaluateLiveTripButton({ tripId }: EvaluateLiveTripButtonProps) {
+export function EvaluateLiveTripButton({ tripId, label = "ประเมินใหม่ด้วยข้อมูลล่าสุด" }: EvaluateLiveTripButtonProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,10 +42,7 @@ export function EvaluateLiveTripButton({ tripId }: EvaluateLiveTripButtonProps) 
     setIsSubmitting(true);
 
     try {
-      await runStep(`/api/v1/trips/${tripId}/weather-sync`);
-      await runStep(`/api/v1/trips/${tripId}/route-sync`);
-      await runStep(`/api/v1/trips/${tripId}/sunset-sync`);
-      await runStep(`/api/v1/trips/${tripId}/evaluate-live`);
+      await runStep(`/api/v1/trips/${tripId}/refresh-evaluation`);
 
       router.push(`/trips/${tripId}/result`);
       router.refresh();
@@ -62,7 +60,7 @@ export function EvaluateLiveTripButton({ tripId }: EvaluateLiveTripButtonProps) 
       disabled={isSubmitting}
       className="glass-button inline-flex items-center justify-center rounded-full px-4 py-3 text-sm font-semibold disabled:opacity-60"
     >
-      {isSubmitting ? "กำลัง sync และประเมิน..." : "Sync ข้อมูลจริงและประเมิน"}
+      {isSubmitting ? "กำลังดึงข้อมูลและประเมิน..." : label}
     </button>
   );
 }

@@ -170,4 +170,10 @@ describe("syncRouteSnapshotForCurrentUser", () => {
       RouteSyncUnavailableError,
     );
   });
+
+  it("surfaces route snapshot persistence failure", async () => {
+    const dbError = new Error("route insert failed");
+    prismaMock.routeSnapshot.create.mockRejectedValue(dbError);
+    await expect(syncRouteSnapshotForCurrentUser("trip_1")).rejects.toBe(dbError);
+  });
 });

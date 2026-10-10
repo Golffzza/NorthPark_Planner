@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { POST } from "@/app/api/v1/trips/[id]/evaluate/route";
-import { AuthorizationError, NotFoundError } from "@/lib/services/trip-service";
+import { AuthorizationError, CancelledTripEvaluationError, NotFoundError } from "@/lib/services/trip-service";
 
 const evaluationServiceMock = vi.hoisted(() => ({
   evaluateTripForCurrentUser: vi.fn(),
@@ -10,6 +10,14 @@ const evaluationServiceMock = vi.hoisted(() => ({
 vi.mock("@/lib/services/evaluation-service", () => evaluationServiceMock);
 
 describe("POST /api/v1/trips/[id]/evaluate", () => {
+  it("returns 409 for cancelled trips", async () => {
+    evaluationServiceMock.evaluateTripForCurrentUser.mockRejectedValue(new CancelledTripEvaluationError());
+    const response = await POST(new Request("http://localhost/api/v1/trips/trip_1/evaluate"), {
+      params: Promise.resolve({ id: "trip_1" }),
+    });
+    expect(response.status).toBe(409);
+    expect((await response.json()).error.code).toBe("trip_cancelled");
+  });
   it("returns the evaluation result as JSON", async () => {
     evaluationServiceMock.evaluateTripForCurrentUser.mockResolvedValue({
       tripId: "trip_1",

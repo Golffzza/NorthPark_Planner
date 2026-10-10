@@ -1,6 +1,20 @@
-import type { TransportMode, WeatherCondition } from "./types";
+//* ./lib/evaluation/score-user-profile.ts
 
-function scoreTransportMode(
+import type {
+  TransportMode,
+  WeatherCondition,
+} from "./types";
+
+/**
+ * ชื่อ function เดิมถูกเก็บไว้เพื่อ compatibility
+ *
+ * Logic ใหม่ใช้ประเมินความเหมาะสมในการเข้าถึงด้วยพาหนะ
+ * ไม่ใช้จำนวนผู้เดินทางเป็นส่วนหนึ่งของคะแนนอีก
+ *
+ * WeatherCondition ยังอยู่ใน options เพื่อไม่ให้ call site เดิมพัง
+ * แต่ไม่ถูกนำมาหักคะแนนซ้ำ เนื่องจากมี Weather Score แยกอยู่แล้ว
+ */
+function scoreTransportAccessibility(
   transportMode: TransportMode,
   options?: {
     hasDirectPublicTransit?: boolean;
@@ -10,37 +24,52 @@ function scoreTransportMode(
   switch (transportMode) {
     case "CAR":
       return 90;
-    case "PUBLIC_TRANSPORT":
-      // If park has no direct public transit, accessibility is difficult (requires chartered transport)
-      return options?.hasDirectPublicTransit === false ? 40 : 75;
-    case "OTHER":
-      return 65;
+
     case "MOTORCYCLE":
-      if (options?.weatherCondition === "HEAVY_RAIN" || options?.weatherCondition === "STORM") {
-        return 35;
+      /**
+       * ไม่ลดคะแนนเพียงเพราะผู้ใช้เลือกมอเตอร์ไซค์
+       * เรื่องสภาพอากาศจะถูกประเมินใน Weather Score
+       */
+      return 90;
+
+    case "PUBLIC_TRANSPORT":
+      if (options?.hasDirectPublicTransit === true) {
+        return 90;
       }
-      return 50;
+
+      if (options?.hasDirectPublicTransit === false) {
+        /**
+         * ยังมีความเป็นไปได้ในการเดินทาง
+         * แต่ต้องต่อรถหรือจัดหาพาหนะเพิ่มเติม
+         */
+        return 55;
+      }
+
+      /**
+       * ไม่มีข้อมูลยืนยันเรื่องรถตรง
+       * จึงไม่ควรให้คะแนนสูงหรือต่ำเกินไป
+       */
+      return 70;
+
+    case "OTHER":
+    default:
+      /**
+       * ไม่มีข้อมูลเพียงพอเกี่ยวกับวิธีเดินทาง
+       */
+      return 70;
   }
 }
 
-function scoreTravelerCount(travelerCount: number): number {
-  if (travelerCount <= 1) return 55;
-  if (travelerCount === 2) return 75;
-  if (travelerCount <= 4) return 90;
-  return 85;
-}
-
 export function scoreUserProfile(
-  travelerCount: number,
+  _travelerCount: number,
   transportMode: TransportMode,
   options?: {
     hasDirectPublicTransit?: boolean;
     weatherCondition?: WeatherCondition;
   },
 ): number {
-  const transportScore = scoreTransportMode(transportMode, options);
-  const travelerScore = scoreTravelerCount(travelerCount);
-
-  return Math.round((transportScore + travelerScore) / 2);
+  return scoreTransportAccessibility(
+    transportMode,
+    options,
+  );
 }
-

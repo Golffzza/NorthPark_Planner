@@ -1,3 +1,5 @@
+// ./components/trips/trips-list-view.tsx
+
 "use client";
 
 import { useMemo, useState } from "react";

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { AuthorizationError, NotFoundError } from "@/lib/services/trip-service";
+import { AuthorizationError, CancelledTripEvaluationError, NotFoundError } from "@/lib/services/trip-service";
 import {
   TripSnapshotContextError,
   WeatherSyncUnavailableError,
@@ -35,6 +35,9 @@ export async function POST(_request: Request, context: RouteContext) {
       data: snapshot,
     });
   } catch (error) {
+    if (error instanceof CancelledTripEvaluationError) {
+      return NextResponse.json({ error: { code: "trip_cancelled", message: error.message } }, { status: 409 });
+    }
     if (error instanceof NotFoundError) {
       return NextResponse.json(
         {

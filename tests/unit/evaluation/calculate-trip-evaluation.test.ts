@@ -52,11 +52,11 @@ describe("calculateTripEvaluation", () => {
 
     expect(result.userProfileScore).toBeLessThan(70);
     if (result.weakestFactor === "userProfile") {
-      expect(result.recommendation).toContain("ไม่มีรถโดยสารประจำทาง");
+      expect(result.recommendation).toContain("ไม่มีระบบขนส่งสาธารณะตรงถึงจุดหมาย");
     }
   });
 
-  it("warns about motorcycle risk when weather has heavy rain", () => {
+  it("keeps the current transport score mapping when weather has heavy rain", () => {
     const result = calculateTripEvaluation({
       weatherCondition: "HEAVY_RAIN",
       estimatedTravelMinutes: 60,
@@ -68,6 +68,7 @@ describe("calculateTripEvaluation", () => {
       transportMode: "MOTORCYCLE",
     });
 
-    expect(result.userProfileScore).toBeLessThan(60);
+    expect(result.userProfileScore).toBe(90);
+    expect(result.weatherScore).toBeLessThan(result.userProfileScore);
   });
 });

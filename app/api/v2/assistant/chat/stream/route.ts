@@ -1,3 +1,5 @@
+// ./app/api/v2/assistant/chat/stream/route.ts
+
 import { NextResponse } from "next/server";
 import { z } from "zod";
 

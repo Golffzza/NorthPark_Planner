@@ -2,29 +2,38 @@ import { describe, expect, it, vi } from "vitest";
 
 import { POST } from "@/app/api/v1/trips/[id]/evaluate-live/route";
 import {
-  evaluateLiveTripForCurrentUser,
   MissingLiveSnapshotError,
 } from "@/lib/orchestration/trip-live-evaluation-orchestrator";
-import { AuthorizationError, NotFoundError } from "@/lib/services/trip-service";
+import { refreshTripEvaluationForCurrentUser } from "@/lib/orchestration/trip-refresh-evaluation-orchestrator";
+import { AuthorizationError, CancelledTripEvaluationError, NotFoundError } from "@/lib/services/trip-service";
 
-vi.mock("@/lib/orchestration/trip-live-evaluation-orchestrator", async () => {
+vi.mock("@/lib/orchestration/trip-refresh-evaluation-orchestrator", async () => {
   const actual = await vi.importActual<
-    typeof import("@/lib/orchestration/trip-live-evaluation-orchestrator")
-  >("@/lib/orchestration/trip-live-evaluation-orchestrator");
+    typeof import("@/lib/orchestration/trip-refresh-evaluation-orchestrator")
+  >("@/lib/orchestration/trip-refresh-evaluation-orchestrator");
 
   return {
     ...actual,
-    evaluateLiveTripForCurrentUser: vi.fn(),
+    refreshTripEvaluationForCurrentUser: vi.fn(),
   };
 });
 
-const evaluationOrchestratorMock = vi.mocked(evaluateLiveTripForCurrentUser);
+const evaluationOrchestratorMock = vi.mocked(refreshTripEvaluationForCurrentUser);
 
 describe("POST /api/v1/trips/[id]/evaluate-live", () => {
+  it("returns 409 for cancelled trips", async () => {
+    evaluationOrchestratorMock.mockRejectedValue(new CancelledTripEvaluationError());
+    const response = await POST(new Request("http://localhost/api/v1/trips/trip_1/evaluate-live"), {
+      params: Promise.resolve({ id: "trip_1" }),
+    });
+    expect(response.status).toBe(409);
+    expect((await response.json()).error.code).toBe("trip_cancelled");
+  });
   it("returns the live evaluation result as JSON", async () => {
     evaluationOrchestratorMock.mockResolvedValue({
       tripId: "trip_1",
-      data: {
+      snapshots: {} as never,
+      evaluation: {
         id: "eval_2",
         totalScore: 87,
         level: "EXCELLENT",
@@ -36,6 +45,7 @@ describe("POST /api/v1/trips/[id]/evaluate-live", () => {
     });
 
     expect(response.status).toBe(200);
+    expect(evaluationOrchestratorMock).toHaveBeenCalledWith("trip_1");
     await expect(response.json()).resolves.toEqual({
       data: {
         tripId: "trip_1",

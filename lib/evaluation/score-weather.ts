@@ -1,3 +1,5 @@
+//* ./lib/evaluation/score-weather.ts
+
 import { WEATHER_SCORES } from "./constants";
 import type { WeatherCondition } from "./types";
 

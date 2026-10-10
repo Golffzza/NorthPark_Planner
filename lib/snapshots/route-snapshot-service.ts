@@ -1,8 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { fetchOsrmRouteSnapshot, OsrmServiceError } from "@/lib/integrations/osrm/osrm-service";
-import { getTripForCurrentUser } from "@/lib/services/trip-service";
-import { saveRouteSnapshotInMemory } from "./in-memory-snapshots";
+import { assertTripCanBeEvaluated, getTripForCurrentUser } from "@/lib/services/trip-service";
 
 export class TripRouteContextError extends Error {
   code: "missing_origin_coordinates" | "missing_destination_coordinates";
@@ -46,6 +45,7 @@ function toCoordinateNumber(value: { toNumber(): number } | number | null | unde
 
 export async function syncRouteSnapshotForCurrentUser(tripId: string) {
   const trip = await getTripForCurrentUser(tripId);
+  assertTripCanBeEvaluated(trip);
   const originLat = toCoordinateNumber(trip.originLat);
   const originLng = toCoordinateNumber(trip.originLng);
   const destinationLat = toCoordinateNumber(trip.park.latitude);
@@ -73,9 +73,7 @@ export async function syncRouteSnapshotForCurrentUser(tripId: string) {
       destinationLng,
     });
 
-    if (typeof prisma?.routeSnapshot?.create === "function") {
-      try {
-        const created = await prisma.routeSnapshot.create({
+    return await prisma.routeSnapshot.create({
           data: {
             tripId: trip.id,
             source: snapshot.source,
@@ -88,27 +86,6 @@ export async function syncRouteSnapshotForCurrentUser(tripId: string) {
             geometryJson: toJsonValue(snapshot.geometryJson),
             rawJson: toJsonValue(snapshot.rawJson),
           },
-        });
-        saveRouteSnapshotInMemory(created);
-        return created;
-      } catch (dbError) {
-        console.warn("[route-snapshot] Database create failed, saving in memory fallback:", dbError);
-      }
-    }
-
-    return saveRouteSnapshotInMemory({
-      id: `route-snap-${Date.now()}`,
-      tripId: trip.id,
-      source: snapshot.source,
-      originLat: new Prisma.Decimal(originLat),
-      originLng: new Prisma.Decimal(originLng),
-      destinationLat: new Prisma.Decimal(destinationLat),
-      destinationLng: new Prisma.Decimal(destinationLng),
-      distanceMeters: snapshot.distanceMeters,
-      durationSeconds: snapshot.durationSeconds,
-      geometryJson: snapshot.geometryJson as Prisma.JsonValue,
-      rawJson: snapshot.rawJson as Prisma.JsonValue,
-      createdAt: new Date(),
     });
   } catch (error) {
     if (error instanceof OsrmServiceError) {

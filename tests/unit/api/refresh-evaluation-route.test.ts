@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { POST } from "@/app/api/v1/trips/[id]/refresh-evaluation/route";
-import { AuthorizationError, NotFoundError } from "@/lib/services/trip-service";
+import { AuthorizationError, CancelledTripEvaluationError, NotFoundError } from "@/lib/services/trip-service";
 import {
   RouteSyncUnavailableError,
   TripRouteContextError,
@@ -27,6 +27,14 @@ vi.mock("@/lib/orchestration/trip-refresh-evaluation-orchestrator", async () => 
 const refreshEvaluationOrchestratorMock = vi.mocked(refreshTripEvaluationForCurrentUser);
 
 describe("POST /api/v1/trips/[id]/refresh-evaluation", () => {
+  it("returns 409 for cancelled trips", async () => {
+    refreshEvaluationOrchestratorMock.mockRejectedValue(new CancelledTripEvaluationError());
+    const response = await POST(new Request("http://localhost/api/v1/trips/trip_1/refresh-evaluation"), {
+      params: Promise.resolve({ id: "trip_1" }),
+    });
+    expect(response.status).toBe(409);
+    expect((await response.json()).error.code).toBe("trip_cancelled");
+  });
   it("returns the refreshed evaluation and snapshot summary as JSON", async () => {
     refreshEvaluationOrchestratorMock.mockResolvedValue({
       tripId: "trip_1",

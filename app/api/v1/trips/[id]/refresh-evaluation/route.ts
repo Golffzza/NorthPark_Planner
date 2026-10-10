@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { MissingLiveSnapshotError } from "@/lib/orchestration/trip-live-evaluation-orchestrator";
+import {
+  MissingLiveSnapshotError,
+  StaleLiveSnapshotError,
+} from "@/lib/orchestration/trip-live-evaluation-orchestrator";
 import { refreshTripEvaluationForCurrentUser } from "@/lib/orchestration/trip-refresh-evaluation-orchestrator";
-import { AuthorizationError, NotFoundError } from "@/lib/services/trip-service";
+import { AuthorizationError, CancelledTripEvaluationError, NotFoundError } from "@/lib/services/trip-service";
 import {
   RouteSyncUnavailableError,
   TripRouteContextError,
@@ -13,7 +16,9 @@ import {
 } from "@/lib/snapshots/sunset-snapshot-service";
 import {
   TripSnapshotContextError as WeatherTripSnapshotContextError,
+  WeatherForecastNotAvailableYetError,
   WeatherSyncUnavailableError,
+  WeatherTripDateInPastError,
 } from "@/lib/snapshots/weather-snapshot-service";
 
 type RouteContext = {
@@ -44,6 +49,9 @@ export async function POST(_request: Request, context: RouteContext) {
       data: result,
     });
   } catch (error) {
+    if (error instanceof CancelledTripEvaluationError) {
+      return NextResponse.json({ error: { code: "trip_cancelled", message: error.message } }, { status: 409 });
+    }
     if (error instanceof NotFoundError) {
       return NextResponse.json(
         {
@@ -95,6 +103,35 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
+    if (error instanceof WeatherForecastNotAvailableYetError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "weather_forecast_not_available_yet",
+            message: error.message,
+            details: {
+              tripDate: error.tripDate,
+              lastSupportedDate: error.lastSupportedDate,
+            },
+          },
+        },
+        { status: 422 },
+      );
+    }
+
+    if (error instanceof WeatherTripDateInPastError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "trip_date_in_past",
+            message:
+              "ไม่สามารถประเมินพยากรณ์อากาศสำหรับวันเดินทางที่ผ่านมาแล้ว",
+          },
+        },
+        { status: 422 },
+      );
+    }
+
     if (error instanceof WeatherSyncUnavailableError) {
       return NextResponse.json(
         {
@@ -131,6 +168,19 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
+    if (error instanceof StaleLiveSnapshotError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: error.code,
+            message:
+              "ข้อมูลที่ใช้ประเมินไม่ตรงกับแผนการเดินทางปัจจุบัน กรุณาอัปเดตข้อมูลและประเมินใหม่",
+          },
+        },
+        { status: 422 },
+      );
+    }
+
     if (error instanceof MissingLiveSnapshotError) {
       return NextResponse.json(
         {
@@ -149,7 +199,8 @@ export async function POST(_request: Request, context: RouteContext) {
       {
         error: {
           code: "internal_error",
-          message: error instanceof Error ? error.message : "Internal server error",
+          message:
+            error instanceof Error ? error.message : "Internal server error",
         },
       },
       { status: 500 },

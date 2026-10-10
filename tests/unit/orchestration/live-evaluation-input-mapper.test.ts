@@ -6,6 +6,7 @@ describe("mapLatestSnapshotsToEvaluationInput", () => {
   it("maps latest snapshots into the existing evaluation engine input shape", () => {
     const input = mapLatestSnapshotsToEvaluationInput({
       trip: {
+        tripDate: new Date("2026-06-12T00:00:00.000Z"),
         departAt: "08:15",
         travelerCount: 3,
         transportMode: "CAR",
@@ -30,6 +31,9 @@ describe("mapLatestSnapshotsToEvaluationInput", () => {
     expect(input).toEqual({
       weatherCondition: "LIGHT_RAIN",
       estimatedTravelMinutes: 121,
+      tripDate: new Date("2026-06-12T00:00:00.000Z"),
+      timeZone: "Asia/Bangkok",
+      sunsetAt: new Date("2026-06-12T11:43:00.000Z"),
       departAt: "08:15",
       mockSunsetTime: "18:43",
       parkOpenTime: "06:00",
@@ -44,6 +48,7 @@ describe("mapLatestSnapshotsToEvaluationInput", () => {
   it("applies public transport duration multiplier correctly", () => {
     const input = mapLatestSnapshotsToEvaluationInput({
       trip: {
+        tripDate: new Date("2026-06-12T00:00:00.000Z"),
         departAt: "08:00",
         travelerCount: 1,
         transportMode: "PUBLIC_TRANSPORT",
