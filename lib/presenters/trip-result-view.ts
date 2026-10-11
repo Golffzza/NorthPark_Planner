@@ -8,6 +8,8 @@ export type FactorScoreViewModel = {
   weightLabel: string;
   description: string;
   score: number;
+  status?: "GOOD" | "CAUTION" | "RISK";
+  reason?: string;
 };
 
 export type EvaluationHistoryItem = {
@@ -120,6 +122,29 @@ export function buildTripResultViewModel(trip: TripDetailDto): TripResultViewMod
     userProfile: latestEvaluation.userProfileScore,
   };
 
+  const parsedFactors: Record<string, { status?: "GOOD" | "CAUTION" | "RISK"; reason?: string }> = {};
+  if (
+    typeof latestEvaluation.factors === "object" &&
+    latestEvaluation.factors !== null &&
+    !Array.isArray(latestEvaluation.factors)
+  ) {
+    const rawFactors = latestEvaluation.factors as Record<string, unknown>;
+    for (const key of ["weather", "duration", "time", "userProfile"]) {
+      const item = rawFactors[key];
+      if (typeof item === "object" && item !== null && !Array.isArray(item)) {
+        const factorObj = item as Record<string, unknown>;
+        const status =
+          factorObj.status === "GOOD" ||
+          factorObj.status === "CAUTION" ||
+          factorObj.status === "RISK"
+            ? factorObj.status
+            : undefined;
+        const reason = typeof factorObj.reason === "string" ? factorObj.reason : undefined;
+        parsedFactors[key] = { status, reason };
+      }
+    }
+  }
+
   return {
     tripId: trip.id,
     parkName: trip.park.nameTh,
@@ -129,10 +154,19 @@ export function buildTripResultViewModel(trip: TripDetailDto): TripResultViewMod
       summary: localizeEvaluationSummary(latestEvaluation.summary, latestEvaluation.level),
       recommendation: localizeRecommendation(latestEvaluation.recommendation),
     },
-    factorScores: FACTOR_METADATA.map((factor) => ({
-      ...factor,
-      score: factorScoreMap[factor.key],
-    })),
+    factorScores: FACTOR_METADATA.map((factor) => {
+      const score = factorScoreMap[factor.key];
+      const parsed = parsedFactors[factor.key];
+      const status =
+        parsed?.status ??
+        (score >= 75 ? "GOOD" : score >= 50 ? "CAUTION" : "RISK");
+      return {
+        ...factor,
+        score,
+        status,
+        reason: parsed?.reason,
+      };
+    }),
     recommendations: extractRecommendations(latestEvaluation.recommendation),
     history: trip.evaluations.map((evaluation, index) => ({
       id: evaluation.id,

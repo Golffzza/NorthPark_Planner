@@ -4,6 +4,24 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Sparkles,
+  Lightbulb,
+  Compass,
+  RefreshCw,
+  Mountain,
+  BookOpen,
+  Volume2,
+  Copy,
+  Check,
+  X,
+  MapPin,
+  Car,
+  Tent,
+  CloudSun,
+  Trees,
+} from "lucide-react";
 
 import { DEFAULT_CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/shared/limits";
 import { findMentionedParks } from "@/lib/chat/core/park-catalog";
@@ -15,15 +33,6 @@ import {
   type ChatMessage,
 } from "./chat-messages";
 
-/*
- * ต้องตรงกับ backend:
- *
- * ChatRequest
- * {
- *   message: string;
- *   conversationId?: string;
- * }
- */
 type ChatRequest = {
   message: string;
   conversationId?: string;
@@ -49,94 +58,230 @@ type StarterCategory = {
   tags: string[];
 };
 
-const CATEGORY_TABS: { key: CategoryTab; label: string; icon: string }[] = [
-  { key: "all", label: "ทั้งหมด", icon: "✨" },
-  { key: "beginner", label: "มือใหม่เที่ยวง่าย", icon: "🌲" },
-  { key: "camping", label: "แคมป์ปิ้ง & หมอก", icon: "⛺" },
-  { key: "daytrip", label: "วันเดย์ทริป", icon: "🚗" },
-  { key: "province", label: "ตามจังหวัด", icon: "📍" },
+const CATEGORY_TABS: { key: CategoryTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { key: "all", label: "ทั้งหมด", icon: Sparkles },
+  { key: "beginner", label: "มือใหม่เที่ยวง่าย", icon: Trees },
+  { key: "camping", label: "แคมป์ปิ้ง & หมอก", icon: Tent },
+  { key: "daytrip", label: "วันเดย์ทริป", icon: Car },
+  { key: "province", label: "ตามจังหวัด", icon: MapPin },
 ];
 
 const STARTER_PROMPTS: StarterCategory[] = [
   {
     id: "beg-1",
     category: "beginner",
-    icon: "🌲",
-    badge: "มีอุทยานน่าเที่ยว",
+    icon: "trees",
+    badge: "กิ่วแม่ปาน",
     title: "อุทยานเดินทางสะดวก ไม่ต้องเดินไกล",
     prompt: "มีอุทยานแห่งชาติในเชียงใหม่ที่เที่ยวง่าย ขับรถเก๋งถึง และทางเดินสะดวกสำหรับมือใหม่ไหมครับ?",
     imageUrl: "/images/attractions/kew-mae-pan-viewpoint.jpg",
-    tags: ["📍 เชียงใหม่", "🚶 เดินง่าย", "🚗 ขับรถเก๋งได้", "⭐ เหมาะมือใหม่"],
+    tags: ["เชียงใหม่", "เดินง่าย", "ขับรถเก๋งได้", "เหมาะมือใหม่"],
   },
   {
     id: "camp-1",
     category: "camping",
-    icon: "⛺",
-    badge: "ชมทะเลหมอก",
+    icon: "tent",
+    badge: "ดอยเสมอดาว",
     title: "จุดกางเต็นท์ชมวิวทะเลหมอกชิลๆ",
     prompt: "อยากกางเต็นท์ดูทะเลหมอกแบบชิลๆ ในภาคเหนือ มีสิ่งอำนวยความสะดวกครบ แนะนำที่ไหนดี?",
     imageUrl: "/images/attractions/doi-samer-dao-sea-of-mist.jpg",
-    tags: ["📍 น่าน/เชียงใหม่", "⛺ กางเต็นท์", "☁️ ทะเลหมอก", "🚿 มีห้องน้ำ"],
+    tags: ["น่าน", "กางเต็นท์", "ทะเลหมอก", "มีห้องน้ำ"],
   },
   {
     id: "day-1",
     category: "daytrip",
-    icon: "🚗",
-    badge: "วันเดย์ทริป",
+    icon: "car",
+    badge: "มณฑาธาร",
     title: "ทริปสั้นไปเช้า-เย็นกลับจากตัวเมือง",
     prompt: "มีเวลา 1 วันจากตัวเมืองเชียงใหม่ สามารถไปเที่ยวอุทยานไหนได้บ้างที่ไม่เหนื่อยเกินไป?",
     imageUrl: "/images/attractions/mon-tha-than.jpg",
-    tags: ["📍 เชียงใหม่", "⏱️ 1 วัน", "🚗 ใกล้เมือง", "🌿 พักผ่อนสบาย"],
+    tags: ["เชียงใหม่", "1 วัน", "ใกล้เมือง", "พักผ่อนสบาย"],
   },
   {
     id: "beg-2",
     category: "beginner",
-    icon: "🌊",
-    badge: "น้ำตกธรรมชาติ",
+    icon: "waves",
+    badge: "วชิรธาร",
     title: "น้ำตกสวย บรรยากาศร่มรื่น ถ่ายรูปสวย",
     prompt: "อยากเที่ยวน้ำตกสวยๆ ในภาคเหนือ บรรยากาศร่มรื่น ถ่ายรูปสวย และเดินเข้าถึงง่าย",
     imageUrl: "/images/attractions/wachirathan-waterfall.jpg",
-    tags: ["📍 ดอยอินทนนท์", "🌊 น้ำตกสวย", "📸 ถ่ายรูปเด่น", "🚶 เดินไม่ไกล"],
+    tags: ["ดอยอินทนนท์", "น้ำตกสวย", "ถ่ายรูปเด่น", "เดินไม่ไกล"],
   },
   {
     id: "camp-2",
     category: "camping",
-    icon: "🌌",
-    badge: "ลานดูดาว & แคมป์",
+    icon: "moon",
+    badge: "ลานดูดาวภูคา",
     title: "ดอยเสมอดาวและลานดูดาวภาคเหนือ",
     prompt: "แนะนำจุดกางเต็นท์ชมดาวสวยๆ เช่น ดอยเสมอดาว และสิ่งที่ต้องเตรียมตัวสำหรับมือใหม่",
     imageUrl: "/images/attractions/phu-kha-stargazing-camp.jpg",
-    tags: ["📍 น่าน", "🌌 ดูดาว", "⛺ บรรยากาศสงบ", "🎒 เตรียมเต็นท์"],
+    tags: ["น่าน", "ดูดาว", "บรรยากาศสงบ", "เตรียมเต็นท์"],
   },
   {
     id: "day-2",
     category: "daytrip",
-    icon: "♨️",
-    badge: "พักผ่อนเพื่อสุขภาพ",
+    icon: "coffee",
+    badge: "แจ้ซ้อน ลำปาง",
     title: "น้ำพุร้อนแจ้ซ้อนและธรรมชาติลำปาง",
     prompt: "แนะนำกิจกรรมเที่ยวอุทยานแห่งชาติแจ้ซ้อน ต้มไข่น้ำแร่ และแช่น้ำแร่ ควรจัดเวลายังไง?",
     imageUrl: "/images/attractions/chae-son-hotsprings.jpg",
-    tags: ["📍 ลำปาง", "♨️ น้ำพุร้อน", "🥚 ต้มไข่", "🛀 แช่น้ำแร่"],
+    tags: ["ลำปาง", "น้ำพุร้อน", "ต้มไข่", "แช่น้ำแร่"],
+  },
+  {
+    id: "beg-3",
+    category: "beginner",
+    icon: "train",
+    badge: "ดอยขุนตาล",
+    title: "อุทยานแห่งชาติดอยขุนตาล นั่งรถไฟเที่ยว",
+    prompt: "อยากนั่งรถไฟไปเที่ยวดอยขุนตาล ลอดอุโมงค์รถไฟ ควรวางแผนเดินทางอย่างไรบ้าง?",
+    imageUrl: "/images/attractions/khun-tan-tunnel.jpg",
+    tags: ["ลำปาง/ลำพูน", "นั่งรถไฟ", "ธรรมชาติดี", "เดินป่าเบาๆ"],
+  },
+  {
+    id: "camp-3",
+    category: "camping",
+    icon: "cloud",
+    badge: "ห้วยน้ำดัง",
+    title: "ห้วยน้ำดัง ทะเลหมอกและจุดกางเต็นท์ยอดฮิต",
+    prompt: "แนะนำจุดกางเต็นท์และจุดชมทะเลหมอกที่อุทยานแห่งชาติห้วยน้ำดัง ช่วงไหนสวยที่สุด?",
+    imageUrl: "/images/attractions/huai-nam-dang-viewpoint.jpg",
+    tags: ["เชียงใหม่-แม่ฮ่องสอน", "กางเต็นท์", "ทะเลหมอก", "พระอาทิตย์ขึ้น"],
+  },
+  {
+    id: "day-3",
+    category: "daytrip",
+    icon: "mountain",
+    badge: "ผาช่อ แม่วาง",
+    title: "ผาช่อ แกรนด์แคนยอนเมืองไทย ใกล้เชียงใหม่",
+    prompt: "ผาช่อ อุทยานแห่งชาติแม่วาง เดินยากไหม ขับรถไปจากตัวเมืองเชียงใหม่กี่ชั่วโมง?",
+    imageUrl: "/images/attractions/pha-chor.jpg",
+    tags: ["เชียงใหม่", "ถ่ายรูปสวย", "ขับรถ 1 ชม.", "หน้าผาดินตะกอน"],
+  },
+  {
+    id: "beg-4",
+    category: "beginner",
+    icon: "flower",
+    badge: "ดอยแม่อูคอ",
+    title: "ทุ่งบัวตองดอยแม่อูคอและน้ำตกแม่สุรินทร์",
+    prompt: "แนะนำช่วงเวลาเที่ยวทุ่งบัวตองดอยแม่อูคอ และน้ำตกแม่สุรินทร์ จังหวัดแม่ฮ่องสอน",
+    imageUrl: "/images/attractions/bua-tong-doi-mae-u-kho.jpg",
+    tags: ["แม่ฮ่องสอน", "ทุ่งบัวตอง", "น้ำตกสูง", "วิวอลังการ"],
+  },
+  {
+    id: "camp-4",
+    category: "camping",
+    icon: "tent",
+    badge: "ภูสอยดาว",
+    title: "ภูสอยดาว ทุ่งดอกไม้และลานสนสามใบ",
+    prompt: "แนะนำการเตรียมตัวเดินป่าและกางเต็นท์ลานสนภูสอยดาว ต้องจองล่วงหน้าอย่างไร?",
+    imageUrl: "/images/attractions/lan-son-phu-soi-dao.jpg",
+    tags: ["อุตรดิตถ์", "ลานสน", "ดอกหงอนนาค", "สายลุย"],
+  },
+  {
+    id: "day-4",
+    category: "daytrip",
+    icon: "compass",
+    badge: "สกายวอล์กแม่งัด",
+    title: "สกายวอล์กเขื่อนแม่งัด & ศรีลานนา",
+    prompt: "แนะนำที่เที่ยววันเดย์ทริปเขื่อนแม่งัดสมบูรณ์ชล และจุดชมวิวสกายวอล์ก อุทยานแห่งชาติศรีลานนา",
+    imageUrl: "/images/attractions/skywalk-mae-ngat.jpg",
+    tags: ["เชียงใหม่", "ล่องเรือ", "สกายวอล์ก", "ทานอาหารแพ"],
   },
 ];
 
-const PROVINCES = [
-  { name: "เชียงใหม่", prompt: "แนะนำอุทยานแห่งชาติน่าเที่ยวในเชียงใหม่สำหรับมือใหม่ 3 แห่ง" },
-  { name: "น่าน", prompt: "แนะนำอุทยานแห่งชาติในน่าน วิวสวย เดินทางง่าย เหมาะกับพักผ่อน" },
-  { name: "เชียงราย", prompt: "มีอุทยานแห่งชาติอะไรน่าสนใจในเชียงรายบ้างครับ?" },
-  { name: "ลำปาง", prompt: "แนะนำอุทยานในลำปาง เช่น แจ้ซ้อน หรือ ดอยขุนตาล เหมาะกับทริปแบบไหน?" },
-  { name: "แม่ฮ่องสอน", prompt: "อุทยานในแม่ฮ่องสอนที่น่าแวะเที่ยว และช่วงเวลาที่เหมาะกับการไป" },
-  { name: "เพชรบูรณ์", prompt: "แนะนำอุทยานในเพชรบูรณ์ เช่น น้ำหนาว หรือ ตาดหมอก สำหรับสายชิล" },
+const PROVINCE_ITEMS: StarterCategory[] = [
+  {
+    id: "prov-cm",
+    category: "province",
+    icon: "pin",
+    badge: "เชียงใหม่",
+    title: "อุทยานยอดฮิตในเชียงใหม่",
+    prompt: "แนะนำอุทยานแห่งชาติน่าเที่ยวในเชียงใหม่สำหรับมือใหม่ 3 แห่ง พร้อมจุดเด่นและเส้นทาง",
+    imageUrl: "/images/attractions/kew-mae-pan-viewpoint.jpg",
+    tags: ["เชียงใหม่", "ดอยอินทนนท์", "ออบขาน", "ดอยสุเทพ-ปุย"],
+  },
+  {
+    id: "prov-nan",
+    category: "province",
+    icon: "pin",
+    badge: "น่าน",
+    title: "อุทยานเมืองน่าน สายธรรมชาติและหมอก",
+    prompt: "แนะนำอุทยานแห่งชาติในน่าน วิวสวย เดินทางง่าย เหมาะกับพักผ่อน เช่น ศรีน่าน หรือ ขุนสถาน",
+    imageUrl: "/images/attractions/doi-samer-dao-campsite.jpg",
+    tags: ["น่าน", "ดอยเสมอดาว", "ขุนน่าน", "ดอยภูคา"],
+  },
+  {
+    id: "prov-mhs",
+    category: "province",
+    icon: "pin",
+    badge: "แม่ฮ่องสอน",
+    title: "อุทยานแม่ฮ่องสอน ดินแดนสามหมอก",
+    prompt: "อุทยานในแม่ฮ่องสอนที่น่าแวะเที่ยว เช่น น้ำตกแม่สุรินทร์ ถ้ำปลา-ผาเสื่อ และช่วงเวลาที่ควรไป",
+    imageUrl: "/images/attractions/namtok-mae-surin.jpg",
+    tags: ["แม่ฮ่องสอน", "แม่สุรินทร์", "สาละวิน", "ถ้ำปลา"],
+  },
+  {
+    id: "prov-lp",
+    category: "province",
+    icon: "pin",
+    badge: "ลำปาง / ลำพูน",
+    title: "อุทยานลำปาง-ลำพูน บ่อน้ำพุร้อน & ขุนตาล",
+    prompt: "แนะนำอุทยานในลำปางและลำพูน เช่น แจ้ซ้อน ต้มไข่น้ำแร่ หรือ ขุนตาล เหมาะกับทริปแบบไหน?",
+    imageUrl: "/images/attractions/chae-son-hotsprings.jpg",
+    tags: ["ลำปาง/ลำพูน", "แจ้ซ้อน", "ดอยขุนตาล", "ดอยฟ้างาม"],
+  },
+  {
+    id: "prov-cr",
+    category: "province",
+    icon: "pin",
+    badge: "เชียงราย",
+    title: "อุทยานเชียงราย ป่าเขาและน้ำตกชุ่มฉ่ำ",
+    prompt: "มีอุทยานแห่งชาติอะไรน่าสนใจในเชียงรายบ้างครับ เช่น ดอยหลวง หรือ ลำน้ำกก?",
+    imageUrl: "/images/attractions/pu-kaeng-waterfall.jpg",
+    tags: ["เชียงราย", "ดอยหลวง", "ลำน้ำกก", "ภูชี้ฟ้า"],
+  },
+  {
+    id: "prov-tak",
+    category: "province",
+    icon: "pin",
+    badge: "ตาก",
+    title: "อุทยานเมืองตาก ป่าดึกดำบรรพ์และต้นไม้ใหญ่",
+    prompt: "แนะนำอุทยานแห่งชาติในตาก เช่น ตากสินมหาราช หรือ ลานสาง เหมาะกับแวะพักหรือกางเต็นท์ไหม?",
+    imageUrl: "/images/attractions/taksin-maharat-krabak-tree.jpg",
+    tags: ["ตาก", "ต้นกระบากใหญ่", "ลานสาง", "ดอยสอยมาลัย"],
+  },
+  {
+    id: "prov-pb",
+    category: "province",
+    icon: "pin",
+    badge: "เพชรบูรณ์ / พิษณุโลก",
+    title: "อุทยานเพชรบูรณ์-พิษณุโลก ป่าสนและลมหนาว",
+    prompt: "แนะนำอุทยานในเพชรบูรณ์และพิษณุโลก เช่น น้ำหนาว หรือ ภูหินร่องกล้า สำหรับสายชิล",
+    imageUrl: "/images/attractions/nam-nao-campground.jpg",
+    tags: ["เพชรบูรณ์", "น้ำหนาว", "ภูหินร่องกล้า", "ทุ่งแสลงหลวง"],
+  },
+  {
+    id: "prov-ut",
+    category: "province",
+    icon: "pin",
+    badge: "อุตรดิตถ์ / แพร่",
+    title: "อุทยานอุตรดิตถ์-แพร่ ผจญภัยลานสน",
+    prompt: "แนะนำอุทยานในอุตรดิตถ์และแพร่ เช่น ภูสอยดาว หรือ เวียงโกศัย บรรยากาศเป็นอย่างไร?",
+    imageUrl: "/images/attractions/phu-soi-dao-waterfall.jpg",
+    tags: ["อุตรดิตถ์/แพร่", "ภูสอยดาว", "เวียงโกศัย", "ลำน้ำน่าน"],
+  },
 ];
 
 const SUGGESTED_FOLLOW_UPS = [
-  "🚗 เส้นทางและข้อควรระวัง",
-  "⛺ จุดกางเต็นท์และที่พัก",
-  "💵 ค่าธรรมเนียมและเวลาเปิด",
-  "🌤️ สภาพอากาศและการเตรียมตัว",
+  "เส้นทางและข้อควรระวัง",
+  "จุดกางเต็นท์และที่พัก",
+  "ค่าธรรมเนียมและเวลาเปิด",
+  "สภาพอากาศและการเตรียมตัว",
 ];
 
 export function AssistantChat() {
+  const router = useRouter();
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string>();
   const [input, setInput] = useState("");
@@ -147,10 +292,22 @@ export function AssistantChat() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [showQuickSheet, setShowQuickSheet] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   const busy = useRef(false);
   const log = useRef<HTMLDivElement>(null);
   const controller = useRef<AbortController | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-grow textarea height when typing long text
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.min(Math.max(scrollHeight, 24), 120)}px`;
+    }
+  }, [input]);
 
   // Stop any ongoing speech synthesis
   const stopSpeech = () => {
@@ -204,7 +361,7 @@ export function AssistantChat() {
         v.name.toLowerCase().includes("thai") ||
         v.name.includes("Kanya") ||
         v.name.includes("Premwadee") ||
-        v.name.includes("Niwat")
+        v.name.includes("Niwat"),
     );
 
     if (thaiVoice) {
@@ -226,8 +383,60 @@ export function AssistantChat() {
     window.speechSynthesis.speak(utterance);
   };
 
+  // Web Speech API Voice Input
+  const startVoiceInput = () => {
+    if (typeof window === "undefined") return;
+
+    interface IWindowWithSpeech extends Window {
+      SpeechRecognition?: unknown;
+      webkitSpeechRecognition?: unknown;
+    }
+
+    const win = window as unknown as IWindowWithSpeech;
+    const SpeechRecClass = win.SpeechRecognition || win.webkitSpeechRecognition;
+
+    if (!SpeechRecClass) {
+      alert("เบราว์เซอร์หรืออุปกรณ์นี้ยังไม่รองรับระบบรับเสียงพูด กรุณาพิมพ์ข้อความแทนครับ");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const recognition = new (SpeechRecClass as any)();
+      recognition.lang = "th-TH";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript;
+        if (transcript) {
+          setInput(transcript);
+        }
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
+
   useEffect(() => {
     if (!log.current) {
+      return;
+    }
+
+    if (messages.length === 0) {
+      log.current.scrollTop = 0;
       return;
     }
 
@@ -254,6 +463,7 @@ export function AssistantChat() {
     setError("");
     setInput("");
     setShowQuickSheet(false);
+    setShowMenu(false);
 
     setMessages((current) => appendUserMessage(current, text));
 
@@ -267,23 +477,15 @@ export function AssistantChat() {
     try {
       const body: ChatRequest = {
         message: text,
-
-        ...(conversationId
-          ? {
-              conversationId,
-            }
-          : {}),
+        ...(conversationId ? { conversationId } : {}),
       };
 
       const response = await fetch("/api/v2/assistant/chat/stream", {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify(body),
-
         signal: abort.signal,
       });
 
@@ -293,7 +495,7 @@ export function AssistantChat() {
         try {
           errorResult = (await response.json()) as ChatErrorResponse;
         } catch {
-          // response body อาจไม่ใช่ JSON
+          // ignore non-json error
         }
 
         const message =
@@ -432,7 +634,6 @@ export function AssistantChat() {
 
   function send(event: FormEvent) {
     event.preventDefault();
-
     void sendText(input);
   }
 
@@ -445,9 +646,9 @@ export function AssistantChat() {
     setInput("");
     setError("");
     setExpired(false);
+    setShowMenu(false);
 
     busy.current = false;
-
     setLoading(false);
   }
 
@@ -461,249 +662,433 @@ export function AssistantChat() {
     }
   };
 
-  const filteredPrompts =
+  const allPrompts = [...STARTER_PROMPTS, ...PROVINCE_ITEMS];
+
+  const displayedPrompts =
     selectedTab === "all"
-      ? STARTER_PROMPTS
+      ? allPrompts
+      : selectedTab === "province"
+      ? PROVINCE_ITEMS
       : STARTER_PROMPTS.filter((p) => p.category === selectedTab);
 
   return (
     <section
-      className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden min-h-0"
+      className="relative flex flex-col w-full h-full max-w-md sm:max-w-xl mx-auto overflow-hidden bg-[#03140e] text-white"
       aria-labelledby="assistant-title"
     >
-      {/* Header - Seamless and Borderless */}
-      <header className="relative px-1 py-1 sm:px-2 sm:py-2 shrink-0">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            {/* 3D-styled Glowing Compass Badge */}
-            <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-600 to-[#07241b] p-0.5 shadow-sm ring-1 ring-emerald-400/30">
-              <div className="relative flex h-full w-full items-center justify-center rounded-[14px] bg-gradient-to-br from-emerald-400/20 via-[#0a271e] to-[#041712] overflow-hidden">
-                <span className="text-xl sm:text-2xl drop-shadow-md">🧭</span>
-                <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-[#071913]"></span>
-                </span>
-              </div>
-            </div>
+      {/* Ambient Radial Spotlight Backdrop */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_25%,_rgba(16,185,129,0.18)_0%,_rgba(6,30,22,0.85)_55%,_#020d08_100%)]"
+        aria-hidden="true"
+      />
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-emerald-400 text-xs sm:text-sm">▲</span>
-                <h1
-                  id="assistant-title"
-                  className="text-base sm:text-lg font-extrabold tracking-tight text-white truncate"
-                >
-                  NorthPark <span className="text-emerald-400">Assistant</span>
-                </h1>
-              </div>
-              <p className="text-[11px] sm:text-xs text-emerald-200/70 truncate max-w-[210px] sm:max-w-md mt-0.5">
-                ตอบคำถาม แนะนำอุทยาน และจัดทริปภาคเหนือสำหรับมือใหม่
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Status Pill Badge */}
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-950/60 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold text-emerald-300 border border-emerald-500/25 shadow-sm">
-              <span>✨</span>
-              <span className="hidden xs:inline">AI พร้อมใช้งาน</span>
-              <span className="xs:hidden">AI พร้อม</span>
-              <span className="h-2 w-2 rounded-full bg-emerald-400 ml-0.5" />
-            </div>
-
-            {messages.length > 0 && (
+      {showQuickSheet ? (
+        /* ==============================================================
+           RECOMMENDATIONS FULL VIEW (Matches Reference Mobile Card List)
+           - Keeps mobile bottom navigation bar 100% visible
+           - No clipping / cut-off cards
+           - Clean thumbnail + title + tags + chevron
+           ============================================================== */
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden animate-in fade-in duration-150">
+          {/* Header matching mobile top bar */}
+          <header className="relative flex items-center justify-between px-4 pt-3 pb-2 z-30 shrink-0 border-b border-emerald-500/20">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
-                disabled={loading}
-                onClick={startNewConversation}
-                className="flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-950/50 px-2.5 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20 hover:text-white transition disabled:opacity-50"
-                title="เริ่มบทสนทนาใหม่"
+                onClick={() => setShowQuickSheet(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white shadow-sm backdrop-blur-md active:scale-95 transition cursor-pointer"
+                title="ย้อนกลับไปหน้าแชท"
+                aria-label="ย้อนกลับไปหน้าแชท"
               >
-                <span>🔄</span>
-                <span className="hidden sm:inline">เริ่มใหม่</span>
+                <svg
+                  className="w-5 h-5 -ml-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2.5"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
-            )}
+              <div>
+                <h1 className="text-base sm:text-lg font-bold text-white flex items-center gap-1.5 leading-tight font-heading">
+                  <Lightbulb className="h-4 w-4 text-amber-400" />
+                  <span>คำถามและหัวข้อแนะนำ</span>
+                </h1>
+                <p className="text-[11px] text-emerald-300/70">
+                  แตะที่การ์ดเพื่อเริ่มคุยกับ NorthPark AI ทันที
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowQuickSheet(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white transition active:scale-95 cursor-pointer text-sm"
+              title="ปิด"
+              aria-label="ปิด"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </header>
+
+          {/* Category Tabs (Horizontal Scrollable Pills) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-2.5 no-scrollbar shrink-0">
+            {CATEGORY_TABS.map((tab) => {
+              const active = selectedTab === tab.key;
+              const TabIcon = tab.icon;
+              const count =
+                tab.key === "all"
+                  ? allPrompts.length
+                  : tab.key === "province"
+                  ? PROVINCE_ITEMS.length
+                  : STARTER_PROMPTS.filter((p) => p.category === tab.key).length;
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setSelectedTab(tab.key)}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold shrink-0 transition active:scale-95 flex items-center gap-1.5 cursor-pointer ${
+                    active
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-950/40"
+                      : "bg-[#062118]/80 border border-emerald-500/25 text-emerald-200/80 hover:bg-emerald-900/40 hover:text-white"
+                  }`}
+                >
+                  <TabIcon className="h-3.5 w-3.5" />
+                  <span>{tab.label}</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                      active ? "bg-white/25 text-white" : "bg-emerald-950/80 text-emerald-300/80"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* Prompt Cards List matching Reference Image 2 Style */}
+          <div className="flex-1 overflow-y-auto px-3.5 py-2 space-y-2.5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] overscroll-contain no-scrollbar">
+            {displayedPrompts.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setShowQuickSheet(false);
+                  void sendText(item.prompt);
+                }}
+                className="group w-full rounded-2xl border border-emerald-500/20 bg-[#061d16]/90 hover:bg-[#092b21] hover:border-emerald-400/50 p-2.5 sm:p-3 text-left transition active:scale-[0.99] flex items-center gap-3 shadow-lg shadow-black/40 cursor-pointer"
+              >
+                {/* Image Thumbnail with Overlay Badge like Reference Image 2 */}
+                <div className="relative h-20 w-20 sm:h-22 sm:w-22 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 border border-emerald-500/30 bg-emerald-950">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <div className="absolute bottom-1 left-1 max-w-[calc(100%-8px)] truncate rounded bg-black/75 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-200 backdrop-blur-xs">
+                    {item.badge}
+                  </div>
+                </div>
+
+                {/* Card Title & Content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-xs sm:text-sm text-white group-hover:text-emerald-300 transition-colors truncate">
+                    {item.title}
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-emerald-200/75 line-clamp-2 mt-1 leading-relaxed">
+                    &ldquo;{item.prompt}&rdquo;
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {item.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-300/90 font-medium"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right Arrow Chevron */}
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 text-emerald-400 group-hover:text-emerald-200 group-hover:bg-white/10 shrink-0 transition">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2.5"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Top Bar matching Lumi header layout: [ < ] [ Talking to NorthPark ] [ ... ] */}
+          <header className="relative flex items-center justify-between px-4 pt-3 pb-2 z-30 shrink-0">
+        {/* Back Button */}
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white shadow-sm backdrop-blur-md active:scale-95 transition cursor-pointer"
+          title="ย้อนกลับ"
+          aria-label="ย้อนกลับ"
+        >
+          <svg
+            className="w-5 h-5 -ml-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2.5"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Center Pill: สนทนากับ NorthPark AI */}
+        <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500/25 via-teal-600/30 to-emerald-700/25 border border-emerald-400/35 px-4 py-1.5 shadow-md shadow-emerald-950/40 backdrop-blur-md">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 ring-2 ring-emerald-300/40"></span>
+          </span>
+          <span className="text-xs sm:text-sm font-semibold tracking-wide text-white drop-shadow-xs">
+            คุยกับ NorthPark AI
+          </span>
+        </div>
+
+        {/* Right More Button (...) */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowMenu((prev) => !prev)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white shadow-sm backdrop-blur-md active:scale-95 transition cursor-pointer"
+            title="ตัวเลือกเพิ่มเติม"
+            aria-label="ตัวเลือกเพิ่มเติม"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="5" cy="12" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="19" cy="12" r="2" />
+            </svg>
+          </button>
+
+          {/* More Dropdown Menu */}
+          {showMenu && (
+            <div className="absolute right-0 top-12 z-50 w-48 rounded-2xl border border-emerald-500/30 bg-[#07241b]/95 p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+              <button
+                type="button"
+                onClick={startNewConversation}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20 transition text-left cursor-pointer"
+              >
+                <RefreshCw className="h-3.5 w-3.5 text-emerald-300" />
+                <span>เริ่มบทสนทนาใหม่</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMenu(false);
+                  setShowQuickSheet(true);
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20 transition text-left cursor-pointer"
+              >
+                <Lightbulb className="h-3.5 w-3.5 text-amber-400" />
+                <span>หัวข้อแนะนำ</span>
+              </button>
+              <Link
+                href="/parks"
+                onClick={() => setShowMenu(false)}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20 transition text-left"
+              >
+                <Mountain className="h-3.5 w-3.5 text-emerald-400" />
+                <span>ดูอุทยานทั้งหมด</span>
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Message & Content Area */}
+      {/* Main Screen Content */}
       <div
         ref={log}
         role="log"
         aria-label="บทสนทนา"
-        aria-live="polite"
-        aria-relevant="additions"
-        tabIndex={0}
-        className="relative flex-1 overflow-y-auto overscroll-contain p-2 sm:p-3 min-h-0 space-y-4"
+        className="relative flex-1 flex flex-col overflow-y-auto overscroll-contain min-h-0 no-scrollbar"
       >
-        {!messages.length ? (
-          <div className="flex flex-col gap-3 py-1">
-            {/* Friendly Nature Greeting Hero Card */}
-            <div className="relative overflow-hidden rounded-3xl border border-emerald-500/15 bg-gradient-to-r from-emerald-950/30 via-[#0a231b]/40 to-transparent p-4 sm:p-5 shadow-none text-white">
-              {/* Mountain/Pine nature backdrop glow */}
-              <div
-                className="pointer-events-none absolute right-0 top-0 bottom-0 w-2/3 opacity-25 bg-cover bg-right"
-                style={{
-                  backgroundImage: `radial-gradient(circle at 80% 50%, rgba(52, 211, 153, 0.25), transparent 70%)`,
-                }}
-              />
+        {messages.length === 0 ? (
+          /* ==============================================================
+             HERO STATE (100% THAI & MOBILE-FIRST)
+             ============================================================== */
+          <div className="flex-1 flex flex-col justify-between items-center px-4 py-3 sm:py-6 text-center">
+            <div className="my-auto flex flex-col items-center w-full max-w-sm sm:max-w-md">
+              {/* Central Glowing AI Voice Wave Orb */}
+              <div className="relative my-2 sm:my-4 flex items-center justify-center">
+                {/* Radiant GPU-accelerated aura behind orb */}
+                <div
+                  className={`absolute h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-gradient-to-tr from-emerald-500/30 via-teal-400/20 to-emerald-300/15 blur-xl pointer-events-none ${
+                    loading ? "lumi-aura-active" : "lumi-aura"
+                  }`}
+                />
 
-              <div className="relative z-10 flex items-start gap-3.5">
-                <div className="text-3xl sm:text-4xl shrink-0">
-                  👋
+                {/* The 3D Glass Sphere */}
+                <div
+                  onClick={() =>
+                    void sendText("แนะนำอุทยานแห่งชาติภาคเหนือยอดนิยมช่วงนี้ให้หน่อย")
+                  }
+                  className={`relative flex h-28 w-28 sm:h-36 sm:w-36 items-center justify-center rounded-full border border-emerald-300/40 cursor-pointer active:scale-95 transition-transform ${
+                    loading ? "lumi-orb-active" : "lumi-orb"
+                  }`}
+                  style={{
+                    background:
+                      "radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45) 0%, rgba(52, 211, 153, 0.25) 25%, rgba(6, 40, 30, 0.9) 70%, rgba(2, 18, 13, 0.98) 100%)",
+                  }}
+                  title="แตะเพื่อคุยกับ NorthPark"
+                >
+                  {/* Specular glass reflection shine */}
+                  <div className="pointer-events-none absolute top-2.5 left-5 h-4 w-10 rounded-[50%] bg-gradient-to-r from-white/60 to-white/10 blur-[1px] rotate-[-25deg]" />
+
+                  {/* Inside Glowing Voice Waveform */}
+                  <svg
+                    className="w-20 h-16 sm:w-24 sm:h-18 text-emerald-300"
+                    viewBox="0 0 100 40"
+                    fill="none"
+                  >
+                    <path
+                      d="M5 20 Q 20 6, 35 20 T 65 20 T 95 20"
+                      stroke="url(#orbWaveGradient)"
+                      strokeWidth="3.2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M10 20 Q 30 34, 50 20 T 90 20"
+                      stroke="rgba(255,255,255,0.75)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <defs>
+                      <linearGradient
+                        id="orbWaveGradient"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="0%"
+                      >
+                        <stop offset="0%" stopColor="#6ee7b7" />
+                        <stop offset="50%" stopColor="#ffffff" />
+                        <stop offset="100%" stopColor="#2dd4bf" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
                 </div>
-                <div className="space-y-1">
-                  <h2 className="text-base sm:text-lg font-extrabold text-white leading-snug tracking-tight">
-                    สวัสดีครับ! ให้ <span className="text-emerald-400 font-extrabold">NorthPark</span> ช่วยคุณวางแผนเที่ยวดอย
-                  </h2>
-                  <p className="text-xs sm:text-sm text-emerald-100/75 leading-relaxed font-normal">
-                    สำหรับมือใหม่ คลิกเลือกคำถามตัวอย่างที่สนใจด้านล่างเพื่อเริ่มคุยได้ทันทีครับ
-                  </p>
+              </div>
+
+              {/* Greeting Headline & Subtitle in Thai */}
+              <div className="mt-1 space-y-1">
+                <h1
+                  id="assistant-title"
+                  className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm font-heading"
+                >
+                  สวัสดี! ฉันคือ NorthPark
+                </h1>
+                <p className="text-xs sm:text-sm text-emerald-200/80 font-normal max-w-xs mx-auto leading-relaxed">
+                  ผู้ช่วยอัจฉริยะ วางแผนเที่ยวอุทยานแห่งชาติภาคเหนือ
+                </p>
+                <p className="text-[11px] text-emerald-300/60">
+                  พร้อมแนะนำเส้นทาง จุดกางเต็นท์ และจัดทริปเที่ยวดอย
+                </p>
+              </div>
+
+              {/* Quick Prompt Chips (Pill Bubbles in Thai) */}
+              <div className="mt-5 w-full flex flex-col items-center gap-2">
+                {/* Row 1 */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void sendText(
+                        "คุณทำอะไรได้บ้าง แนะนำฟังก์ชันของ NorthPark ให้หน่อย",
+                      )
+                    }
+                    className="rounded-full px-4 py-2 text-xs font-semibold text-emerald-100 bg-[#08221a]/85 border border-emerald-500/25 hover:border-emerald-400/60 hover:bg-emerald-900/40 active:scale-95 transition shadow-xs cursor-pointer"
+                  >
+                    ทำอะไรได้บ้าง?
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void sendText(
+                        "อุทยานแห่งชาติภาคเหนือยอดนิยมที่คนชอบไปช่วงนี้มีที่ไหนบ้าง",
+                      )
+                    }
+                    className="rounded-full px-4 py-2 text-xs font-semibold text-emerald-100 bg-[#08221a]/85 border border-emerald-500/25 hover:border-emerald-400/60 hover:bg-emerald-900/40 active:scale-95 transition shadow-xs cursor-pointer"
+                  >
+                    อุทยานยอดนิยม
+                  </button>
+                </div>
+
+                {/* Row 2 */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void sendText(
+                        "ดอยอินทนนท์ตอนนี้เปิดไหม และช่วงนี้สภาพอากาศเป็นอย่างไร",
+                      )
+                    }
+                    className="rounded-full px-4 py-2 text-xs font-semibold text-emerald-100 bg-[#08221a]/85 border border-emerald-500/25 hover:border-emerald-400/60 hover:bg-emerald-900/40 active:scale-95 transition shadow-xs cursor-pointer"
+                  >
+                    ดอยอินทนนท์เปิดไหม?
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void sendText(
+                        "ช่วยจัดทริปเที่ยวอุทยาน 2 วัน 1 คืน สำหรับมือใหม่ในเชียงใหม่",
+                      )
+                    }
+                    className="rounded-full px-4 py-2 text-xs font-semibold text-emerald-100 bg-[#08221a]/85 border border-emerald-500/25 hover:border-emerald-400/60 hover:bg-emerald-900/40 active:scale-95 transition shadow-xs cursor-pointer"
+                  >
+                    จัดทริป 2 วัน 1 คืน
+                  </button>
+                </div>
+
+                {/* Row 3 */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void sendText(
+                        "แนะนำเส้นทางขับรถเที่ยวอุทยานที่ขับง่าย ไม่ชันมาก สำหรับมือใหม่",
+                      )
+                    }
+                    className="rounded-full px-4 py-2 text-xs font-semibold text-emerald-100 bg-[#08221a]/85 border border-emerald-500/25 hover:border-emerald-400/60 hover:bg-emerald-900/40 active:scale-95 transition shadow-xs cursor-pointer"
+                  >
+                    เส้นทางขับรถง่ายๆ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickSheet(true)}
+                    className="rounded-full px-4 py-2 text-xs font-semibold text-emerald-300 bg-[#061e16]/85 border border-emerald-400/35 hover:bg-emerald-800/40 active:scale-95 transition shadow-xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>ดูเพิ่มเติม</span>
+                    <Sparkles className="h-3 w-3 text-emerald-300" />
+                  </button>
                 </div>
               </div>
             </div>
-
-            {/* Category Filter Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
-              {CATEGORY_TABS.map((tab) => {
-                const active = selectedTab === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setSelectedTab(tab.key)}
-                    className={`group relative flex items-center gap-1.5 shrink-0 rounded-full px-3.5 py-2 text-xs font-medium transition-all duration-200 active:scale-95 ${
-                      active
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold shadow-md shadow-emerald-950/40 border border-emerald-400/40"
-                        : "bg-emerald-950/30 border border-emerald-500/15 text-emerald-100/80 hover:bg-emerald-900/30 hover:text-white"
-                    }`}
-                  >
-                    <span>{tab.icon}</span>
-                    <span>{tab.label}</span>
-                    <span className="text-[11px] opacity-70 group-hover:translate-x-0.5 transition-transform">›</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Province Specific Grid if Province Tab Selected */}
-            {selectedTab === "province" ? (
-              <div className="space-y-3 pt-1">
-                <p className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
-                  <span>📍</span>
-                  <span>เลือกจังหวัดที่ต้องการค้นหา:</span>
-                </p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {PROVINCES.map((prov) => (
-                    <button
-                      key={prov.name}
-                      type="button"
-                      disabled={loading}
-                      onClick={() => void sendText(prov.prompt)}
-                      className="group flex items-center justify-between rounded-2xl border border-emerald-500/15 bg-emerald-950/25 p-3 text-left transition hover:border-emerald-400/40 hover:bg-emerald-900/30 disabled:opacity-50 active:scale-95"
-                    >
-                      <span className="text-sm font-medium text-white group-hover:text-emerald-300">
-                        🏞️ {prov.name}
-                      </span>
-                      <span className="text-xs text-emerald-400 group-hover:translate-x-1 transition-transform">›</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Starter Prompt Cards (Seamless Aesthetic Design) */
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                {filteredPrompts.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => void sendText(item.prompt)}
-                    className="group relative flex flex-col justify-between rounded-2xl border border-emerald-500/15 bg-emerald-950/20 p-3.5 sm:p-4 text-left transition hover:border-emerald-400/35 hover:bg-emerald-900/30 active:scale-[0.99] disabled:opacity-50"
-                  >
-                    {/* Top micro bar */}
-                    <div className="flex w-full items-center justify-between gap-2 pb-2">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-xs">
-                          {item.icon}
-                        </span>
-                        <span className="text-[12px] font-medium text-emerald-200/90">คำถามแนะนำ</span>
-                      </div>
-
-                      <span className="rounded-full bg-emerald-950/50 border border-emerald-500/25 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 flex items-center gap-1">
-                        <span>🍃</span>
-                        <span>{item.badge}</span>
-                      </span>
-                    </div>
-
-                    {/* Main Content: Image + Text */}
-                    <div className="flex items-center gap-3 my-1">
-                      <div className="relative h-18 w-18 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-xl border border-emerald-500/20 shadow-sm">
-                        <img
-                          src={item.imageUrl}
-                          alt={item.title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-emerald-300 transition-colors leading-snug">
-                            {item.title}
-                          </h3>
-                          <span className="text-emerald-400 group-hover:translate-x-1 transition-transform text-sm shrink-0">
-                            ›
-                          </span>
-                        </div>
-
-                        <p className="mt-1 text-xs text-emerald-200/70 line-clamp-2 leading-relaxed font-normal">
-                          &ldquo;{item.prompt}&rdquo;
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Bottom Tag Chips */}
-                    <div className="mt-2 flex flex-wrap gap-1.5 pt-2 border-t border-emerald-500/10">
-                      {item.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center rounded-lg bg-emerald-950/40 border border-emerald-500/15 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Quick Province Shortcut Bar when not in province tab - Seamless */}
-            {selectedTab !== "province" && (
-              <div className="space-y-2 pt-1">
-                <p className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
-                  <span>📍</span>
-                  <span>หรือเลือกถามตามจังหวัด:</span>
-                </p>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {PROVINCES.slice(0, 4).map((prov) => (
-                    <button
-                      key={prov.name}
-                      type="button"
-                      disabled={loading}
-                      onClick={() => void sendText(prov.prompt)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/15 bg-emerald-950/30 px-3.5 py-1.5 text-xs font-medium text-emerald-200 transition hover:border-emerald-400/40 hover:bg-emerald-500/15 hover:text-white disabled:opacity-50 active:scale-95"
-                    >
-                      <span>🌲</span>
-                      <span>{prov.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
-          <div className="space-y-4">
+          /* ==============================================================
+             CONVERSATION MESSAGES STREAM
+             ============================================================== */
+          <div className="px-4 py-3 space-y-4">
             {messages.map((message, index) => (
               <div
                 key={`${message.role}-${index}`}
@@ -712,27 +1097,28 @@ export function AssistantChat() {
                 }`}
               >
                 {message.role === "assistant" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-950/50 border border-emerald-500/25 text-base shadow-sm">
-                    🧭
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-800 border border-emerald-400/30 text-xs shadow-md shadow-emerald-950/40">
+                    <Compass className="h-4 w-4 text-white" />
                   </div>
                 )}
 
                 <div
-                  className={`group relative max-w-[90%] rounded-2xl px-4 py-3.5 text-sm leading-relaxed sm:max-w-[84%] sm:text-base ${
+                  className={`group relative max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed sm:max-w-[82%] sm:text-base ${
                     message.role === "user"
-                      ? "rounded-tr-xs bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md border border-emerald-400/20"
-                      : "rounded-tl-xs border border-emerald-500/15 bg-emerald-950/40 text-white shadow-sm"
+                      ? "rounded-tr-xs bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 text-white shadow-md border border-emerald-400/30"
+                      : "rounded-tl-xs border border-emerald-500/20 bg-[#08231b]/90 text-white shadow-sm backdrop-blur-md"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap break-words leading-7">
+                  <p className="whitespace-pre-wrap break-words leading-7 font-normal">
                     {message.content}
                   </p>
 
                   {/* Sources List */}
                   {message.role === "assistant" && message.sources?.length ? (
                     <div className="mt-3.5 border-t border-emerald-500/15 pt-2.5">
-                      <p className="text-xs font-semibold text-emerald-300">
-                        📚 แหล่งข้อมูลอ้างอิง
+                      <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-300">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        <span>แหล่งข้อมูลอ้างอิง</span>
                       </p>
                       <ul className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
                         {message.sources.map((source) => (
@@ -770,7 +1156,7 @@ export function AssistantChat() {
                     return (
                       <div className="mt-3 space-y-1.5 border-t border-emerald-500/15 pt-2.5 animate-in fade-in duration-300">
                         <p className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-emerald-300">
-                          <span>📘</span>
+                          <BookOpen className="h-3.5 w-3.5 text-emerald-400" />
                           <span>เพจ Facebook ทางการและข้อมูลอุทยานที่กล่าวถึง:</span>
                         </p>
                         <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -808,7 +1194,7 @@ export function AssistantChat() {
                                   className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] sm:text-xs font-medium text-emerald-300 hover:bg-emerald-900/40 hover:text-white transition"
                                   title={`ดูข้อมูลอุทยาน ${p.name} บน NorthPark`}
                                 >
-                                  <span>🏞️</span>
+                                  <Mountain className="h-3 w-3" />
                                   <span>ดูข้อมูล</span>
                                 </Link>
                               </div>
@@ -819,82 +1205,95 @@ export function AssistantChat() {
                     );
                   })()}
 
-                  {/* Assistant Message Actions: Speak & Copy Buttons (Appears only after message finishes streaming) */}
-                  {message.role === "assistant" && (!loading || index < messages.length - 1) && (
-                    <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-emerald-500/15 pt-2 text-xs animate-in fade-in duration-300">
-                      {/* Audio Read-Aloud Button */}
-                      <button
-                        type="button"
-                        onClick={() => toggleSpeak(message.content, index)}
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
-                          speakingIndex === index
-                            ? "bg-emerald-500/25 text-emerald-200 border border-emerald-400/40 shadow-sm"
-                            : "bg-emerald-950/40 text-emerald-300/90 border border-emerald-500/20 hover:bg-emerald-900/40 hover:text-white hover:border-emerald-400/30"
-                        }`}
-                        title={speakingIndex === index ? "แตะเพื่อหยุดอ่าน" : "ฟังเสียงตอบกลับภาษาไทย"}
-                      >
-                        {speakingIndex === index ? (
-                          <>
-                            <span className="flex items-center gap-0.5">
-                              <span className="h-2 w-0.5 animate-bounce bg-emerald-300 [animation-delay:-0.3s]"></span>
-                              <span className="h-3 w-0.5 animate-bounce bg-emerald-300 [animation-delay:-0.15s]"></span>
-                              <span className="h-2 w-0.5 animate-bounce bg-emerald-300"></span>
-                            </span>
-                            <span className="font-semibold text-emerald-200">กำลังอ่าน... (แตะหยุด)</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-sm">🔊</span>
-                            <span>ฟังเสียง</span>
-                          </>
-                        )}
-                      </button>
+                  {/* Actions: Speak & Copy Buttons */}
+                  {message.role === "assistant" &&
+                    (!loading || index < messages.length - 1) && (
+                      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-emerald-500/15 pt-2 text-xs animate-in fade-in duration-300">
+                        <button
+                          type="button"
+                          onClick={() => toggleSpeak(message.content, index)}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                            speakingIndex === index
+                              ? "bg-emerald-500/25 text-emerald-200 border border-emerald-400/40 shadow-sm"
+                              : "bg-emerald-950/40 text-emerald-300/90 border border-emerald-500/20 hover:bg-emerald-900/40 hover:text-white hover:border-emerald-400/30"
+                          }`}
+                          title={
+                            speakingIndex === index
+                              ? "แตะเพื่อหยุดอ่าน"
+                              : "ฟังเสียงตอบกลับภาษาไทย"
+                          }
+                        >
+                          {speakingIndex === index ? (
+                            <>
+                              <span className="flex items-center gap-0.5">
+                                <span className="h-2 w-0.5 animate-bounce bg-emerald-300 [animation-delay:-0.3s]"></span>
+                                <span className="h-3 w-0.5 animate-bounce bg-emerald-300 [animation-delay:-0.15s]"></span>
+                                <span className="h-2 w-0.5 animate-bounce bg-emerald-300"></span>
+                              </span>
+                              <span className="font-semibold text-emerald-200">
+                                กำลังอ่าน... (แตะหยุด)
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="h-3 w-3" />
+                              <span>ฟังเสียง</span>
+                            </>
+                          )}
+                        </button>
 
-                      {/* Copy Button */}
-                      <button
-                        type="button"
-                        onClick={() => void copyToClipboard(message.content, index)}
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-emerald-300/80 hover:bg-white/10 hover:text-white transition"
-                        title="คัดลอกข้อความนี้"
-                      >
-                        {copiedIndex === index ? (
-                          <>
-                            <span className="text-emerald-400 font-bold">✓</span>
-                            <span className="text-emerald-400 font-medium">คัดลอกแล้ว</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>📋</span>
-                            <span>คัดลอก</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  )}
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(message.content, index)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-950/40 border border-emerald-500/20 px-2.5 py-1 text-xs text-emerald-300/90 hover:bg-emerald-900/40 hover:text-white transition"
+                          title="คัดลอกข้อความ"
+                        >
+                          {copiedIndex === index ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                          <span>{copiedIndex === index ? "คัดลอกแล้ว" : "คัดลอก"}</span>
+                        </button>
+                      </div>
+                    )}
                 </div>
-
-                {message.role === "user" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-950 border border-emerald-500/25 text-xs font-bold text-emerald-200">
-                    คุณ
-                  </div>
-                )}
               </div>
             ))}
 
-            {/* Suggested Follow-up Prompts on the last Assistant message */}
-            {!loading && messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && (
-              <div className="pl-10 pt-2">
-                <p className="mb-2 text-[11px] font-medium text-emerald-300">💡 ถามต่อยอด:</p>
-                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                  {SUGGESTED_FOLLOW_UPS.map((prompt) => (
+            {/* Loading Indicator */}
+            {loading && (
+              <div className="flex gap-2.5 justify-start animate-in fade-in duration-300">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/80 border border-emerald-400/30 text-xs shadow-md">
+                  <Compass className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-xs border border-emerald-500/20 bg-[#08231b]/90 px-4 py-3 text-xs text-emerald-200 shadow-sm backdrop-blur-md">
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse [animation-delay:-0.3s]"></span>
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse [animation-delay:-0.15s]"></span>
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  </span>
+                  <span>NorthPark กำลังคิดคำตอบ...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Follow-up Suggestions at bottom of chat */}
+            {!loading && messages.length > 0 && (
+              <div className="pt-2 pb-1 space-y-1.5">
+                <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300/80">
+                  <Lightbulb className="h-3.5 w-3.5 text-amber-400" />
+                  <span>ถามต่อยอดจากบทสนทนา:</span>
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {SUGGESTED_FOLLOW_UPS.map((followUp) => (
                     <button
-                      key={prompt}
+                      key={followUp}
                       type="button"
-                      disabled={loading}
-                      onClick={() => void sendText(prompt)}
-                      className="shrink-0 rounded-full border border-emerald-500/15 bg-emerald-950/30 px-3 py-1.5 text-xs text-emerald-200 whitespace-nowrap transition hover:border-emerald-400/40 hover:bg-emerald-500/20 hover:text-white disabled:opacity-50"
+                      onClick={() => void sendText(followUp)}
+                      className="rounded-full px-3 py-1 text-xs font-medium text-emerald-200 bg-[#09261d]/80 border border-emerald-500/25 hover:border-emerald-400/50 hover:bg-emerald-900/50 backdrop-blur-md active:scale-95 transition"
                     >
-                      {prompt}
+                      {followUp}
                     </button>
                   ))}
                 </div>
@@ -902,173 +1301,234 @@ export function AssistantChat() {
             )}
           </div>
         )}
-
-        {loading ? (
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-950/50 border border-emerald-500/25 text-base">
-              🧭
-            </div>
-            <div className="flex items-center gap-2 rounded-2xl rounded-tl-xs border border-emerald-500/15 bg-emerald-950/40 px-4 py-3 text-xs text-emerald-200 sm:text-sm shadow-sm">
-              <span className="flex gap-1">
-                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.3s]"></span>
-                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.15s]"></span>
-                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400"></span>
-              </span>
-              <span>NorthPark กำลังคิดและค้นหาข้อมูลให้คุณ…</span>
-            </div>
-          </div>
-        ) : null}
       </div>
 
-      {/* Quick Prompts Collapsible Sheet / Drawer (For mobile and active chat) */}
-      {showQuickSheet && (
-        <div className="border-t border-emerald-500/15 bg-[#061510]/98 p-3.5 transition-all">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-300">
-              💡 ตัวอย่างคำถามยอดนิยม
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowQuickSheet(false)}
-              className="text-xs text-emerald-400 hover:text-white"
-            >
-              ✕ ปิด
-            </button>
-          </div>
-          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-            {STARTER_PROMPTS.slice(0, 4).map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setInput(item.prompt);
-                  setShowQuickSheet(false);
-                }}
-                className="rounded-xl border border-emerald-500/15 bg-emerald-950/30 p-2.5 text-left text-xs text-emerald-100 transition hover:border-emerald-400/40 hover:bg-emerald-500/15"
-              >
-                <div className="font-medium text-emerald-300">{item.icon} {item.title}</div>
-                <div className="truncate text-[11px] text-emerald-200/70">{item.prompt}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Footer / Input Form - Seamless and floating */}
-      <footer className="shrink-0 bg-transparent p-1.5 sm:p-2 z-10">
-        {error ? (
-          <div
-            role="alert"
-            className="mb-2 flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400"
+      {/* Quick Category Action Row - 4 columns fitting 100% on mobile without scroll cutoff */}
+      <div className="px-3 sm:px-4 py-1.5 w-full shrink-0 z-20">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 w-full max-w-md sm:max-w-xl mx-auto">
+          <button
+            type="button"
+            onClick={() =>
+              void sendText("แนะนำอุทยานแห่งชาติภาคเหนือยอดนิยมที่น่าไป")
+            }
+            className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-2xl py-2 px-1 text-center bg-[#08261e]/90 border border-emerald-500/25 hover:border-emerald-400/50 hover:bg-emerald-900/40 text-emerald-100 transition active:scale-95 shadow-xs cursor-pointer"
+            title="อุทยานแนะนำ"
           >
-            <div className="flex items-center gap-2">
-              <span>⚠️</span>
-              <span>{error}</span>
-            </div>
+            <Mountain className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="text-[11px] sm:text-xs font-semibold leading-tight tracking-tight">
+              อุทยานเด่น
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void sendText("ช่วยวางแผนทริปขับรถเที่ยวอุทยานภาคเหนือ 2 วัน 1 คืน")
+            }
+            className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-2xl py-2 px-1 text-center bg-[#08261e]/90 border border-emerald-500/25 hover:border-emerald-400/50 hover:bg-emerald-900/40 text-emerald-100 transition active:scale-95 shadow-xs cursor-pointer"
+            title="แผนเดินทาง"
+          >
+            <Car className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="text-[11px] sm:text-xs font-semibold leading-tight tracking-tight">
+              แผนเดินทาง
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void sendText("แนะนำจุดกางเต็นท์ดูดาวและทะเลหมอกในอุทยานแห่งชาติภาคเหนือ")
+            }
+            className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-2xl py-2 px-1 text-center bg-[#08261e]/90 border border-emerald-500/25 hover:border-emerald-400/50 hover:bg-emerald-900/40 text-emerald-100 transition active:scale-95 shadow-xs cursor-pointer"
+            title="จุดกางเต็นท์"
+          >
+            <Tent className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="text-[11px] sm:text-xs font-semibold leading-tight tracking-tight">
+              จุดกางเต็นท์
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void sendText("เช็คสภาพอากาศและข้อควรระวังในการเที่ยวดอยช่วงนี้")
+            }
+            className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-2xl py-2 px-1 text-center bg-[#08261e]/90 border border-emerald-500/25 hover:border-emerald-400/50 hover:bg-emerald-900/40 text-emerald-100 transition active:scale-95 shadow-xs cursor-pointer"
+            title="สภาพอากาศ"
+          >
+            <CloudSun className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="text-[11px] sm:text-xs font-semibold leading-tight tracking-tight">
+              สภาพอากาศ
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Bottom Input Capsule (Elevated cleanly above mobile bottom navigation bar) */}
+      <footer className="p-3 pb-[calc(5.25rem+env(safe-area-inset-bottom))] sm:pb-3 shrink-0 w-full z-30">
+        {/* Error Alert */}
+        {error ? (
+          <div className="mb-2 flex items-center justify-between rounded-2xl border border-red-500/30 bg-red-500/15 p-2.5 text-xs text-red-200 backdrop-blur-md">
+            <span>{error}</span>
             <button
               type="button"
               onClick={() => setError("")}
-              className="text-xs underline hover:no-underline"
+              className="rounded-full px-2 py-0.5 text-xs font-bold text-red-300 hover:bg-white/10"
             >
-              ปิด
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         ) : null}
 
+        {/* Expired Alert */}
         {expired ? (
-          <div className="mb-2 flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/10 p-2.5 text-xs text-amber-300">
+          <div className="mb-2 flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/15 p-2.5 text-xs text-amber-200 backdrop-blur-md">
             <span>บทสนทนาหมดอายุแล้ว กรุณาเริ่มใหม่ครับ</span>
             <button
               type="button"
               onClick={startNewConversation}
-              className="rounded-xl bg-amber-500 px-3 py-1 font-medium text-xs text-black"
+              className="rounded-xl bg-amber-400 px-3 py-1 font-semibold text-xs text-black"
             >
               เริ่มใหม่
             </button>
           </div>
         ) : null}
 
-        <form onSubmit={send} className="flex flex-col gap-1.5">
+        <form onSubmit={send} className="relative">
           <label htmlFor="assistant-message" className="sr-only">
-            ข้อความถึง NorthPark Assistant
+            พิมพ์ข้อความถึง NorthPark Assistant
           </label>
 
-          <div className="relative flex items-center gap-2.5">
-            {/* Rounded Pill Capsule Input Container */}
-            <div className="relative flex-1 flex items-center rounded-full bg-emerald-950/40 border border-emerald-500/25 px-4 py-1 shadow-inner backdrop-blur-md focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-              <span className="text-emerald-400/70 text-base shrink-0 mr-2">
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
-                  <path d="M8 9h8M8 13h5" />
-                </svg>
-              </span>
-
-              <textarea
-                id="assistant-message"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-
-                    if (!loading && !expired && input.trim()) {
-                      void sendText(input);
-                    }
-                  }
-                }}
-                maxLength={DEFAULT_CHAT_MESSAGE_MAX_LENGTH}
-                rows={1}
-                placeholder="พิมพ์คำถามของคุณ..."
-                disabled={loading || expired}
-                className="w-full bg-transparent border-0 outline-none text-white text-sm placeholder:text-emerald-200/40 resize-none py-2.5 max-h-[100px] leading-normal"
-              />
-
-              {/* Clear Input Button */}
-              {input && !loading && (
-                <button
-                  type="button"
-                  onClick={() => setInput("")}
-                  className="rounded-full p-1 text-xs text-emerald-400/60 hover:bg-white/10 hover:text-white shrink-0 ml-1"
-                  title="ล้างข้อความที่พิมพ์"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Vibrant Green Circular Send Button */}
-            <button
-              type="submit"
-              disabled={loading || expired || !input.trim()}
-              className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-500 via-teal-400 to-emerald-300 text-[#041a14] shadow-lg shadow-emerald-500/25 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-40"
-              aria-label="ส่งข้อความ"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-5 w-5 rotate-45 -mr-0.5"
-              >
-                <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between px-2 pt-1 text-[11px] text-emerald-200/60">
+          {/* The Rounded Capsule Bar - expands vertically when typing multi-line messages */}
+          <div className="relative flex items-end rounded-[26px] bg-gradient-to-r from-[#062118]/95 via-[#092b21]/95 to-[#051c14]/95 border border-emerald-500/35 shadow-2xl backdrop-blur-2xl p-1.5 gap-2 transition-all">
+            {/* Plus Button (+) with explicit SVG */}
             <button
               type="button"
               onClick={() => setShowQuickSheet((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 font-medium text-emerald-300 hover:text-emerald-200 transition-colors"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 hover:bg-white/15 text-emerald-300 border border-white/10 transition active:scale-95 cursor-pointer mb-0.5"
+              title="หัวข้อและคำถามแนะนำ"
+              aria-label="หัวข้อและคำถามแนะนำ"
             >
-              <span>💡</span>
-              <span>คำถามแนะนำ</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <svg
+                className="w-4 h-4 text-emerald-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth="2.5"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
             </button>
-            <span>{input.length}/{DEFAULT_CHAT_MESSAGE_MAX_LENGTH}</span>
+
+            {/* Auto-growing Textarea: wraps and expands lines so all typed text is visible */}
+            <textarea
+              ref={textareaRef}
+              id="assistant-message"
+              rows={1}
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  if (!loading && !expired && input.trim()) {
+                    void sendText(input);
+                  }
+                }
+              }}
+              maxLength={DEFAULT_CHAT_MESSAGE_MAX_LENGTH}
+              placeholder="พิมพ์ข้อความของคุณ..."
+              disabled={loading || expired}
+              className="flex-1 bg-transparent text-sm text-white placeholder:text-emerald-200/40 outline-none px-2 min-w-0 resize-none leading-relaxed py-1.5 max-h-[120px] overflow-y-auto no-scrollbar"
+            />
+
+            {/* Right Action Buttons */}
+            <div className="flex items-center gap-1.5 shrink-0 pr-1 mb-0.5">
+              {input.trim() ? (
+                /* Send Button (when input has text) */
+                <button
+                  type="submit"
+                  disabled={loading || expired}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-bold shadow-lg shadow-emerald-500/30 transition hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
+                  aria-label="ส่งข้อความ"
+                >
+                  <svg
+                    className="h-4 w-4 rotate-45 -mr-0.5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+                  </svg>
+                </button>
+              ) : (
+                /* Voice Mic + Waveform Button (when input empty) */
+                <>
+                  {/* Mic Button */}
+                  <button
+                    type="button"
+                    onClick={startVoiceInput}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95 cursor-pointer ${
+                      isListening
+                        ? "bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse"
+                        : "text-emerald-200/75 hover:text-white hover:bg-white/10"
+                    }`}
+                    title={
+                      isListening
+                        ? "กำลังฟังเสียงพูด..."
+                        : "แตะเพื่อพูดด้วยเสียง (Web Speech API)"
+                    }
+                    aria-label="สั่งการด้วยเสียง"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Sound Waveform Pill Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const lastAssistant = [...messages]
+                        .reverse()
+                        .find((m) => m.role === "assistant");
+                      if (lastAssistant) {
+                        toggleSpeak(
+                          lastAssistant.content,
+                          messages.lastIndexOf(lastAssistant),
+                        );
+                      } else {
+                        void sendText("สวัสดี แนะนำตัวเองให้ฟังหน่อย");
+                      }
+                    }}
+                    className={`flex h-8 w-9 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/35 text-emerald-300 transition active:scale-95 cursor-pointer ${
+                      speakingIndex !== null
+                        ? "bg-emerald-500/35 text-white animate-pulse"
+                        : "hover:bg-emerald-500/30 hover:text-white"
+                    }`}
+                    title="เปิดเสียงอ่าน / จำลองคำพูด"
+                    aria-label="เปิดเสียงอ่าน"
+                  >
+                    <div className="flex items-center gap-0.5 h-3">
+                      <span className="w-0.5 h-3 bg-current rounded-full" />
+                      <span className="w-0.5 h-2 bg-current rounded-full" />
+                      <span className="w-0.5 h-4 bg-current rounded-full" />
+                      <span className="w-0.5 h-1.5 bg-current rounded-full" />
+                    </div>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </form>
-      </footer>
+          </footer>
+        </>
+      )}
     </section>
   );
 }
-

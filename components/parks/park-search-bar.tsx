@@ -3,6 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  Search,
+  X,
+  Trees,
+  MapPin,
+  Clock,
+  Zap,
+  Sparkles,
+  Droplets,
+  Flower2,
+  Mountain,
+  Compass,
+  Sunrise,
+  Tent,
+} from "lucide-react";
 import { getParkEvCharging } from "@/lib/data/park-ev-charging";
 import type { ParkOption } from "@/lib/services/park-service";
 
@@ -14,13 +29,13 @@ type ParkSearchBarProps = {
 };
 
 const popularSuggestions = [
-  { label: "💦 น้ำตกแม่เกิ๋งหลวง", query: "น้ำตกแม่เกิ๋งหลวง" },
-  { label: "🌼 ทุ่งดอกบัวตอง", query: "ทุ่งดอกบัวตอง" },
-  { label: "🌲 ลานสนภูสอยดาว", query: "ลานสนสามใบ" },
-  { label: "⛰️ ยอดภูเมี่ยง", query: "ยอดภูเมี่ยง" },
-  { label: "🚤 ล่องเรือสาละวิน", query: "ล่องเรือ" },
-  { label: "🌅 กิ่วแม่ปาน", query: "กิ่วแม่ปาน" },
-  { label: "⛺ ลานกางเต็นท์", query: "ลานกางเต็นท์" },
+  { label: "น้ำตกแม่เกิ๋งหลวง", query: "น้ำตกแม่เกิ๋งหลวง", icon: Droplets },
+  { label: "ทุ่งดอกบัวตอง", query: "ทุ่งดอกบัวตอง", icon: Flower2 },
+  { label: "ลานสนภูสอยดาว", query: "ลานสนสามใบ", icon: Trees },
+  { label: "ยอดภูเมี่ยง", query: "ยอดภูเมี่ยง", icon: Mountain },
+  { label: "ล่องเรือสาละวิน", query: "ล่องเรือ", icon: Compass },
+  { label: "กิ่วแม่ปาน", query: "กิ่วแม่ปาน", icon: Sunrise },
+  { label: "ลานกางเต็นท์", query: "ลานกางเต็นท์", icon: Tent },
 ];
 
 export function ParkSearchBar({
@@ -140,7 +155,7 @@ export function ParkSearchBar({
       {/* Header Info */}
       <div className="relative z-10 mb-4 sm:mb-5">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 dark:bg-emerald-400/20 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-600/20 dark:ring-emerald-400/30">
-          <span>🔍</span>
+          <Search className="w-3.5 h-3.5" />
           <span>ค้นหาสถานที่ & ไฮไลท์อุทยาน</span>
         </div>
         <h2 className="mt-2.5 text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-white leading-snug font-heading">
@@ -199,9 +214,10 @@ export function ParkSearchBar({
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
                 >
-                  ปิด ✕
+                  <span>ปิด</span>
+                  <X className="w-3 h-3" />
                 </button>
               </div>
 
@@ -228,7 +244,7 @@ export function ParkSearchBar({
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-sm">
-                            🌲
+                            <Trees className="h-5 w-5 text-emerald-400" />
                           </div>
                         )}
                       </div>
@@ -240,16 +256,24 @@ export function ParkSearchBar({
                         </span>
 
                         <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-emerald-200/70">
-                          <span>📍 {park.province}</span>
+                          <span className="inline-flex items-center gap-0.5">
+                            <MapPin className="w-3 h-3 text-emerald-500" />
+                            <span>{park.province}</span>
+                          </span>
                           {park.openTime && park.closeTime ? (
-                            <span className="text-[10px] opacity-75">· ⏰ {park.openTime}-{park.closeTime}</span>
+                            <span className="text-[10px] opacity-75 inline-flex items-center gap-0.5">
+                              <span>·</span>
+                              <Clock className="w-2.5 h-2.5" />
+                              <span>{park.openTime}-{park.closeTime}</span>
+                            </span>
                           ) : null}
                         </div>
 
                         {evCharging.hasEvCharger ? (
                           <div className="mt-1 flex items-center">
-                            <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 dark:bg-emerald-400/20 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                              ⚡ มีจุดชาร์จ EV
+                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 dark:bg-emerald-400/20 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                              <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                              <span>มีจุดชาร์จ EV</span>
                             </span>
                           </div>
                         ) : null}
@@ -307,9 +331,10 @@ export function ParkSearchBar({
                 <button
                   type="button"
                   onClick={() => setIsProvinceOpen(false)}
-                  className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
                 >
-                  ปิด ✕
+                  <span>ปิด</span>
+                  <X className="w-3 h-3" />
                 </button>
               </div>
 
@@ -328,7 +353,7 @@ export function ParkSearchBar({
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
-                    <span>🌲</span>
+                    <Trees className="w-3.5 h-3.5 text-emerald-500" />
                     <span>ทุกจังหวัด (ภาคเหนือ)</span>
                   </span>
                   <span className="text-[10px] opacity-75 font-normal">
@@ -355,7 +380,7 @@ export function ParkSearchBar({
                       }`}
                     >
                       <span className="flex items-center gap-1.5">
-                        <span>📍</span>
+                        <MapPin className="w-3.5 h-3.5 text-emerald-500" />
                         <span>{province}</span>
                       </span>
                       {parkCount > 0 ? (
@@ -405,18 +430,23 @@ export function ParkSearchBar({
       <div className="relative z-10 mt-3 pt-3 border-t border-slate-100 dark:border-white/5">
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-emerald-300/80 mr-0.5">
-            <span>✨</span> ไฮไลท์แนะนำ:
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>ไฮไลท์แนะนำ:</span>
           </span>
-          {popularSuggestions.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => handleSuggestionClick(item.query)}
-              className="inline-flex items-center rounded-full bg-slate-100/90 dark:bg-emerald-950/60 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/50 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-700 dark:text-emerald-200 border border-slate-200/70 dark:border-emerald-800/40 shadow-2xs transition-colors active:scale-95 cursor-pointer"
-            >
-              {item.label}
-            </button>
-          ))}
+          {popularSuggestions.map((item) => {
+            const IconComp = item.icon;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => handleSuggestionClick(item.query)}
+                className="inline-flex items-center gap-1 rounded-full bg-slate-100/90 dark:bg-emerald-950/60 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/50 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-700 dark:text-emerald-200 border border-slate-200/70 dark:border-emerald-800/40 shadow-2xs transition-colors active:scale-95 cursor-pointer"
+              >
+                <IconComp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </form>

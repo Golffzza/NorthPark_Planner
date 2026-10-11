@@ -1,3 +1,4 @@
+import { Trees, Lightbulb, Star } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { ParkCard } from "@/components/parks/park-card";
@@ -57,7 +58,7 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
           description="เลือกดูอุทยาน เช็กจุดไฮไลท์ แล้วเริ่มวางแผนทริปได้ทันที"
           actions={
             <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-900/40 px-3 py-1.5 border border-emerald-500/20 text-xs font-semibold text-slate-700 dark:text-emerald-200">
-              <span>🌲</span>
+              <Trees className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>
                 ทั้งหมด{" "}
                 <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
@@ -153,7 +154,11 @@ export default async function ParksPage({ searchParams }: ParksPageProps) {
                   <div className="flex items-center justify-between gap-3 px-1">
                     <div>
                       <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 dark:bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-600/20 dark:ring-emerald-400/30">
-                        <span>{suggestions.type === "didYouMean" ? "💡" : "🌟"}</span>
+                        {suggestions.type === "didYouMean" ? (
+                          <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
+                        ) : (
+                          <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                        )}
                         <span>
                           {suggestions.type === "didYouMean"
                             ? `หรือคุณกำลังมองหา "${suggestions.matchedKeyword}"?`

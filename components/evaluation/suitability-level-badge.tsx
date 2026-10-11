@@ -29,7 +29,7 @@ const LEVEL_CONFIGS: Record<
     badgeClass:
       "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40 shadow-amber-500/10",
     dotClass: "bg-amber-400 animate-pulse",
-    icon: "⚠️",
+    icon: "!",
   },
   NEEDS_ADJUSTMENT: {
     badgeClass:

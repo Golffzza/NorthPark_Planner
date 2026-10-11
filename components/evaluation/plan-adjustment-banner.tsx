@@ -1,4 +1,15 @@
 import Link from "next/link";
+import {
+  CloudLightning,
+  Bike,
+  Bus,
+  Clock,
+  Coffee,
+  ClipboardList,
+  Sparkles,
+  Lightbulb,
+  ArrowRight,
+} from "lucide-react";
 import { getParkTransitInfo } from "@/lib/data/park-transit-info";
 import { getTransportModeLabel, getWeatherConditionLabel } from "@/lib/constants/trip-form-options";
 import type { TripDetailDto } from "@/lib/mappers/trip-dto";
@@ -142,6 +153,18 @@ export function analyzePlanAdjustment(trip: TripDetailDto): AdjustmentReason {
   };
 }
 
+function renderAdjustmentIcon(reason: AdjustmentReason) {
+  if (reason.type === "WEATHER") return <CloudLightning className="w-4 h-4 text-rose-300" />;
+  if (reason.type === "TRANSPORT") {
+    if (reason.icon === "🏍️") return <Bike className="w-4 h-4 text-rose-300" />;
+    return <Bus className="w-4 h-4 text-amber-300" />;
+  }
+  if (reason.type === "TIME") return <Clock className="w-4 h-4 text-amber-300" />;
+  if (reason.type === "DURATION") return <Coffee className="w-4 h-4 text-cyan-300" />;
+  if (reason.severity === "SUCCESS") return <Sparkles className="w-4 h-4 text-emerald-300" />;
+  return <ClipboardList className="w-4 h-4 text-amber-300" />;
+}
+
 export function PlanAdjustmentBanner({ trip }: PlanAdjustmentBannerProps) {
   const reason = analyzePlanAdjustment(trip);
 
@@ -204,8 +227,8 @@ export function PlanAdjustmentBanner({ trip }: PlanAdjustmentBannerProps) {
         {/* Header Row: Badge & Impact */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-black/40 text-lg border border-white/10 shadow-xs">
-              {reason.icon}
+            <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-black/40 border border-white/10 shadow-xs">
+              {renderAdjustmentIcon(reason)}
             </span>
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold font-heading uppercase tracking-wider backdrop-blur-md ${styleConfigs.badgeBg}`}
@@ -226,14 +249,14 @@ export function PlanAdjustmentBanner({ trip }: PlanAdjustmentBannerProps) {
             {reason.headline}
           </h2>
           <p className={`mt-1.5 text-xs sm:text-sm leading-relaxed font-medium ${styleConfigs.textSecondary}`}>
-            👉 <strong>ข้อแนะนำ:</strong> {reason.recommendedAction}
+            <ArrowRight className="w-3.5 h-3.5 inline mr-1 text-current opacity-80" /> <strong>ข้อแนะนำ:</strong> {reason.recommendedAction}
           </p>
         </div>
 
         {/* Reason Box (กล่องให้เหตุผลที่ชัดเจน) */}
         <div className={`rounded-2xl border p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed backdrop-blur-md ${styleConfigs.reasonBoxBg}`}>
           <div className="flex items-start gap-2.5">
-            <span className="text-sm shrink-0 mt-0.5">💡</span>
+            <Lightbulb className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
             <div>
               <p className={`font-bold font-heading mb-1 ${styleConfigs.accentTitle}`}>
                 เหตุผลที่ควรปรับปรุงแผน:

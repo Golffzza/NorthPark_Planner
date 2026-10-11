@@ -7,7 +7,7 @@ describe("park contact info", () => {
     const info = getParkContactInfo("khun-chae", "อุทยานแห่งชาติขุนแจ", "เชียงราย");
     expect(info.address).toContain("เวียงป่าเป้า");
     expect(info.address).toContain("เชียงราย");
-    expect(info.phone).toBe("053-711-402, 084-366-6210");
+    expect(info.phone).toBe("053-727-569, 084-366-5213");
     expect(info.facebookUrl).toBe("https://www.facebook.com/KhunChaeNationalPark");
     expect(info.facebookName).toContain("ขุนแจ");
   });
@@ -16,7 +16,7 @@ describe("park contact info", () => {
     const info = getParkContactInfo("namtok-pha-charoen", "อุทยานแห่งชาติน้ำตกพาเจริญ", "ตาก");
     expect(info.address).toContain("พบพระ");
     expect(info.address).toContain("ตาก");
-    expect(info.phone).toBe("055-508-922");
+    expect(info.phone).toBe("055-508-922, 055-030-178");
     expect(info.facebookUrl).toBe("https://www.facebook.com/pacharoenwaterfall/?locale=th_TH");
   });
 
@@ -28,7 +28,7 @@ describe("park contact info", () => {
 
     const namNao = getParkContactInfo("nam-nao", "อุทยานแห่งชาติน้ำหนาว", "เพชรบูรณ์");
     expect(namNao.address).toContain("น้ำหนาว");
-    expect(namNao.phone).toContain("056-810-724");
+    expect(namNao.phone).toContain("061-042-8234");
     expect(namNao.facebookUrl).toBe("https://www.facebook.com/NamnaoNP5/?locale=th_TH");
   });
 

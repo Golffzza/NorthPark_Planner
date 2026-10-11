@@ -89,83 +89,87 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div
-      className={`app-backdrop relative overflow-x-hidden selection:bg-emerald-500/20 ${
-        isAssistant ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh]"
-      } flex flex-col`}
+      className={
+        isAssistant
+          ? "relative h-[100dvh] overflow-hidden bg-[#03140e] text-white flex flex-col selection:bg-emerald-500/20"
+          : "app-backdrop relative overflow-x-hidden selection:bg-emerald-500/20 min-h-[100dvh] flex flex-col"
+      }
     >
       {/* Ambient Background - Lightweight SVG/Gradient fallback */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true" />
 
-      {/* Top Header — identical on all pages */}
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-3 pt-4 sm:px-5 sm:pt-5 shrink-0">
-        <header className="glass-nav safe-top-offset sticky z-30 mb-4 rounded-2xl sm:rounded-full px-3.5 py-2.5 sm:mb-5 sm:px-5 sm:py-3 border border-white/60 dark:border-emerald-700/30 shadow-md shadow-emerald-950/5 bg-white/95 dark:bg-[#0c1e18]/95">
-          <div className="flex items-center justify-between gap-3">
-            <Link href="/" className="group flex items-center gap-2.5 sm:gap-3 transition-transform active:scale-[0.98] min-w-0">
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 p-2 shadow-md shadow-emerald-950/20 ring-1 ring-white/40 dark:ring-emerald-400/20">
-                <svg width="20" height="20" className="h-5 w-5 text-emerald-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
-                  <path d="M4.14 15.08 7 11l4.5 6" />
-                </svg>
-                <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#0c1e18]"></span>
-                </span>
-              </div>
-
-              <div className="min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <span className="font-extrabold tracking-tight text-base sm:text-lg leading-tight bg-gradient-to-r from-slate-900 via-emerald-900 to-teal-800 dark:from-white dark:via-emerald-200 dark:to-teal-300 bg-clip-text text-transparent">
-                    NorthPark
-                  </span>
-                  <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-300 ring-1 ring-emerald-600/20 dark:ring-emerald-400/30">
-                    PLANNER
+      {/* Top Header — identical on all pages (hidden on assistant for dedicated Lumi-style UI) */}
+      {!isAssistant && (
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-3 pt-4 sm:px-5 sm:pt-5 shrink-0">
+          <header className="glass-nav safe-top-offset sticky z-30 mb-4 rounded-2xl sm:rounded-full px-3.5 py-2.5 sm:mb-5 sm:px-5 sm:py-3 border border-white/60 dark:border-emerald-700/30 shadow-md shadow-emerald-950/5 bg-white/95 dark:bg-[#0c1e18]/95">
+            <div className="flex items-center justify-between gap-3">
+              <Link href="/" className="group flex items-center gap-2.5 sm:gap-3 transition-transform active:scale-[0.98] min-w-0">
+                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 p-2 shadow-md shadow-emerald-950/20 ring-1 ring-white/40 dark:ring-emerald-400/20">
+                  <svg width="20" height="20" className="h-5 w-5 text-emerald-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
+                    <path d="M4.14 15.08 7 11l4.5 6" />
+                  </svg>
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#0c1e18]"></span>
                   </span>
                 </div>
-                <p className="text-[11px] sm:text-xs leading-tight text-slate-500 dark:text-emerald-200/70 font-medium truncate max-w-[210px] sm:max-w-md mt-0.5">
-                  ระบบวางแผนท่องเที่ยวอุทยานแห่งชาติภาคเหนือ
-                </p>
+
+                <div className="min-w-0 flex flex-col justify-center">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="font-extrabold tracking-tight text-base sm:text-lg leading-tight bg-gradient-to-r from-slate-900 via-emerald-900 to-teal-800 dark:from-white dark:via-emerald-200 dark:to-teal-300 bg-clip-text text-transparent">
+                      NorthPark
+                    </span>
+                    <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-300 ring-1 ring-emerald-600/20 dark:ring-emerald-400/30">
+                      PLANNER
+                    </span>
+                  </div>
+                  <p className="text-[11px] sm:text-xs leading-tight text-slate-500 dark:text-emerald-200/70 font-medium truncate max-w-[210px] sm:max-w-md mt-0.5">
+                    ระบบวางแผนท่องเที่ยวอุทยานแห่งชาติภาคเหนือ
+                  </p>
+                </div>
+              </Link>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <nav className="hidden items-center gap-2 sm:flex">
+                  {navItems.map((item) => {
+                    const active = isActive(pathname, item.href);
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-95 ${
+                          active
+                            ? "bg-gradient-to-b from-[var(--brand)] to-[var(--brand-strong)] text-white shadow-md dark:from-emerald-500 dark:to-teal-600 dark:text-white font-extrabold"
+                            : "text-[var(--foreground)] hover:bg-white/70 dark:hover:bg-slate-800/60"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </nav>
               </div>
-            </Link>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <nav className="hidden items-center gap-2 sm:flex">
-                {navItems.map((item) => {
-                  const active = isActive(pathname, item.href);
-                  const Icon = item.icon;
-
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-95 ${
-                        active
-                          ? "bg-gradient-to-b from-[var(--brand)] to-[var(--brand-strong)] text-white shadow-md dark:from-emerald-500 dark:to-teal-600 dark:text-white font-extrabold"
-                          : "text-[var(--foreground)] hover:bg-white/70 dark:hover:bg-slate-800/60"
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
             </div>
-          </div>
-        </header>
-      </div>
+          </header>
+        </div>
+      )}
 
       {/* Main Content */}
       <main
-        className={`relative z-10 flex-1 flex flex-col min-h-0 mx-auto w-full max-w-6xl px-3 sm:px-5 ${
+        className={`relative z-10 flex-1 flex flex-col min-h-0 mx-auto w-full ${
           isAssistant
-            ? "overflow-hidden pt-1 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pt-2 sm:pb-5"
-            : "pb-[calc(8.5rem+env(safe-area-inset-bottom))] sm:pb-12"
+            ? "max-w-md sm:max-w-xl h-full p-0 overflow-hidden"
+            : "max-w-6xl px-3 sm:px-5 pb-[calc(8.5rem+env(safe-area-inset-bottom))] sm:pb-12"
         }`}
       >
         {children}
       </main>
 
       {/* Bottom Tab Bar (mobile only) */}
-      <nav className="safe-bottom-nav fixed inset-x-4 z-40 rounded-[32px] px-2.5 py-2 sm:hidden border border-emerald-500/20 bg-[#061712]/95 backdrop-blur-2xl shadow-2xl shadow-black/90">
+      <nav className="safe-bottom-nav fixed inset-x-3.5 sm:inset-x-4 bottom-4 z-40 rounded-[28px] sm:rounded-[32px] px-2 py-1.5 sm:px-2.5 sm:py-2 sm:hidden border border-emerald-500/20 bg-[#061712]/95 backdrop-blur-2xl shadow-2xl shadow-black/90">
         <div className="grid grid-cols-5 gap-1">
           {navItems.map((item) => {
             const active = isActive(pathname, item.href);
@@ -178,16 +182,13 @@ export function AppShell({ children }: AppShellProps) {
                 className={`flex flex-col items-center justify-center gap-0.5 rounded-2xl py-1.5 px-1 text-center transition-all duration-200 active:scale-95 ${
                   active
                     ? "bg-gradient-to-b from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 font-bold"
-                    : "text-emerald-200/60 hover:text-emerald-100"
+                    : "text-slate-400 dark:text-emerald-100/70 hover:text-white"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${active ? "scale-105" : "opacity-75"}`} />
-                <span className="text-[11px] font-medium leading-tight tracking-tight">
+                <Icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium tracking-tight truncate max-w-full">
                   {item.label}
                 </span>
-                {active && (
-                  <span className="mt-0.5 h-1 w-4 rounded-full bg-emerald-300 shadow-sm" />
-                )}
               </Link>
             );
           })}

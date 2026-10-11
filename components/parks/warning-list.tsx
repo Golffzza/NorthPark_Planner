@@ -1,3 +1,4 @@
+import { ShieldAlert, AlertTriangle, Zap, Info } from "lucide-react";
 import type { ParkDetailDto } from "@/lib/mappers/park-dto";
 
 type WarningListProps = {
@@ -21,8 +22,8 @@ export function WarningList({ warnings }: WarningListProps) {
     return (
       <section className="glass-panel space-y-3 rounded-[30px] p-6 border border-slate-200/80 dark:border-emerald-800/40 shadow-sm">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 dark:bg-emerald-400/20 text-emerald-700 dark:text-emerald-300 text-base">
-            🛡️
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 dark:bg-emerald-400/20 text-emerald-700 dark:text-emerald-300">
+            <ShieldAlert className="h-4 w-4" />
           </span>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             ข้อควรระวังความปลอดภัย
@@ -39,15 +40,15 @@ export function WarningList({ warnings }: WarningListProps) {
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-2 px-0.5">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 dark:bg-amber-400/20 text-amber-700 dark:text-amber-300 text-sm sm:text-base shadow-2xs">
-            🛡️
+          <span className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 dark:bg-amber-400/20 text-amber-700 dark:text-amber-300 shadow-2xs">
+            <ShieldAlert className="h-4 w-4" />
           </span>
           <h2 className="text-base sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
             ข้อควรระวัง
           </h2>
         </div>
-        <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 rounded-full bg-slate-100/90 dark:bg-emerald-950/60 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-emerald-300 border border-slate-200/80 dark:border-emerald-800/40 shadow-2xs">
-          <span>⚠️</span>
+        <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-slate-100/90 dark:bg-emerald-950/60 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-emerald-300 border border-slate-200/80 dark:border-emerald-800/40 shadow-2xs">
+          <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
           <span>{warnings.length} ข้อความระวัง</span>
         </span>
       </div>
@@ -60,8 +61,14 @@ export function WarningList({ warnings }: WarningListProps) {
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-start gap-3 min-w-0">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-emerald-950/70 text-sm font-bold shadow-2xs mt-0.5 sm:mt-0">
-                  {warning.severity === "HIGH" ? "⚠️" : warning.severity === "MEDIUM" ? "⚡" : "ℹ️"}
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-emerald-950/70 shadow-2xs mt-0.5 sm:mt-0">
+                  {warning.severity === "HIGH" ? (
+                    <AlertTriangle className="h-4 w-4 text-rose-500" />
+                  ) : warning.severity === "MEDIUM" ? (
+                    <Zap className="h-4 w-4 text-amber-500" />
+                  ) : (
+                    <Info className="h-4 w-4 text-sky-500" />
+                  )}
                 </span>
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug">
                   {warning.title}

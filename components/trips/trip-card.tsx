@@ -1,5 +1,6 @@
-//* ./components/trips/trip-card.tsx
+"use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { CancelTripButton } from "@/components/trips/cancel-trip-button";
@@ -18,6 +19,7 @@ import {
   CircleCheck,
   Clock3,
   MapPin,
+  MoreVertical,
   PencilLine,
   Users,
 } from "lucide-react";
@@ -114,6 +116,73 @@ function formatEvaluatedAt(value: string | undefined) {
   }).format(date);
 }
 
+function TripCardMenu({
+  tripId,
+  parkName,
+}: {
+  tripId: string;
+  parkName: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  return (
+    <div
+      className="relative"
+      ref={menuRef}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-emerald-300/70 dark:hover:bg-white/10 dark:hover:text-white transition-colors cursor-pointer active:scale-95"
+        title="ตัวเลือกทริป"
+        aria-label="ตัวเลือกทริป"
+        aria-expanded={isOpen}
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1.5 w-40 rounded-2xl border border-slate-200/90 bg-white/98 p-1.5 shadow-xl shadow-black/10 backdrop-blur-xl z-30 dark:border-emerald-500/30 dark:bg-[#0c2018]/98 dark:shadow-black/50 animate-in fade-in zoom-in-95 duration-150">
+          <Link
+            href={`/trips/${tripId}/edit`}
+            onClick={() => setIsOpen(false)}
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-bold font-heading text-slate-700 hover:bg-slate-100 rounded-xl transition-colors dark:text-emerald-100 dark:hover:bg-white/10 cursor-pointer"
+          >
+            <PencilLine className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-xs font-bold font-heading leading-normal">แก้ไขทริป</span>
+          </Link>
+
+          <div className="my-1 border-t border-slate-100 dark:border-white/5" />
+
+          <CancelTripButton
+            tripId={tripId}
+            parkName={parkName}
+            variant="menuItem"
+            onBeforeOpen={() => setIsOpen(false)}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TripCard({ trip }: TripCardProps) {
   const evaluation = trip.latestEvaluation;
   const theme = getEvaluationTheme(evaluation?.level);
@@ -130,7 +199,7 @@ export function TripCard({ trip }: TripCardProps) {
       {/* Header */}
       <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-white p-4 sm:p-5 dark:border-white/5 dark:from-emerald-950/60 dark:via-teal-950/25 dark:to-[#071712]">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
               <MapPin className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">
@@ -146,7 +215,13 @@ export function TripCard({ trip }: TripCardProps) {
             </h2>
           </div>
 
-          <TripStatusBadge status={trip.status} />
+          <div className="flex items-center gap-1.5 shrink-0">
+            <TripStatusBadge status={trip.status} />
+
+            {!isCancelled && (
+              <TripCardMenu tripId={trip.id} parkName={trip.park.nameTh} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -288,41 +363,25 @@ export function TripCard({ trip }: TripCardProps) {
       </div>
 
       {/* Actions */}
-      <div className="space-y-2.5 border-t border-slate-100 bg-slate-50/60 p-4 dark:border-white/5 dark:bg-black/20 sm:p-5">
-        <Link
-          href={`/trips/${trip.id}/result`}
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#00cf8a] px-4 text-xs font-bold font-heading text-white shadow-sm shadow-emerald-950/20 transition-all hover:bg-[#00be7e] active:scale-[0.98] sm:text-sm"
-        >
-          <span>
-            {hasStaleEvaluation
-              ? "ประเมินใหม่"
-              : hasCurrentEvaluation
-                ? "ดูผลประเมิน"
-                : "ประเมินทริป"}
-          </span>
-          <ArrowRight className="h-4 w-4 shrink-0" />
-        </Link>
-
-        {!isCancelled ? (
-          <div className="grid grid-cols-2 gap-2.5">
-            <Link
-              href={`/trips/${trip.id}/edit`}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-emerald-700/40 bg-emerald-950/5 px-3 text-xs font-bold font-heading text-emerald-800 transition-all hover:bg-emerald-500/10 active:scale-[0.98] dark:border-[#00a86b] dark:bg-[#03231a] dark:text-white dark:hover:bg-[#063326] sm:text-sm"
-              title="แก้ไขทริป"
-            >
-              <PencilLine className="h-4 w-4 shrink-0" />
-              <span>แก้ไขทริป</span>
-            </Link>
-
-            <CancelTripButton
-              tripId={trip.id}
-              variant="full"
-            />
-          </div>
-        ) : (
+      <div className="border-t border-slate-100 bg-slate-50/60 p-4 dark:border-white/5 dark:bg-black/20 sm:p-5">
+        {isCancelled ? (
           <div className="flex h-11 w-full items-center justify-center rounded-full border border-rose-300/60 bg-rose-50 text-xs font-bold font-heading text-rose-700 dark:border-rose-800/40 dark:bg-rose-950/60 dark:text-rose-300 sm:text-sm">
             ทริปนี้ถูกยกเลิกแล้ว
           </div>
+        ) : (
+          <Link
+            href={`/trips/${trip.id}/result`}
+            className="group/btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 px-5 text-sm font-bold font-heading text-white shadow-md shadow-emerald-950/20 transition-all hover:brightness-105 active:scale-[0.98]"
+          >
+            <span>
+              {hasStaleEvaluation
+                ? "ประเมินใหม่"
+                : hasCurrentEvaluation
+                  ? "ดูผลประเมิน"
+                  : "ประเมินทริป"}
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover/btn:translate-x-1" />
+          </Link>
         )}
       </div>
     </article>

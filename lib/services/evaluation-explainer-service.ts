@@ -140,11 +140,17 @@ const SYSTEM_INSTRUCTIONS = `
 ให้ละเรื่องนั้นไป
 ห้ามเติมเหตุผลเองเพื่อให้ข้อความดูสมบูรณ์
 
-13. ห้ามใช้คำศัพท์ภายในระบบกับผู้ใช้ เช่น:
-- factor
-- constraint
+13. ห้ามใช้คำศัพท์ภายในระบบหรือคำภาษาอังกฤษกับผู้ใช้เด็ดขาด เช่น:
+- RISK (ห้ามเขียนว่า "อยู่ในระดับ RISK" ให้ใช้ภาษาไทยธรรมชาติ เช่น "เป็นจุดที่ต้องระวังเป็นพิเศษ" หรือ "มีความเสี่ยง")
+- CAUTION (ห้ามเขียนว่า "ระดับ CAUTION" ให้ใช้ว่า "ควรระมัดระวัง" หรือ "ควรสังเกต")
+- OK, GOOD, EXCELLENT (ให้ใช้ภาษาไทย เช่น "อยู่ในเกณฑ์ดี", "มีความพร้อมสูง")
+- MODERATE, NEEDS_ADJUSTMENT (ให้ใช้ภาษาไทย เช่น "อยู่ในระดับปานกลาง", "ควรปรับแผนก่อนเดินทาง")
+- factor / factors (ให้ใช้คำว่า "ปัจจัย" หรือ "เรื่องที่ควรใส่ใจ")
+- constraint / constraints (ให้ใช้คำว่า "เงื่อนไขสำคัญ")
 - canProceed
-- userProfile
+- userProfile / userProfileScore
+- snapshot / weatherSnapshot / routeSnapshot / sunsetSnapshot
+- engine / engineRecommendation
 
 14. คำว่า accessibility
 ให้สื่อกับผู้ใช้ว่า:
@@ -618,7 +624,57 @@ export async function explainTripEvaluation(
       result.text,
     );
 
-  return explanationSchema.parse(
+  const validated = explanationSchema.parse(
     parsed,
   );
+
+  return {
+    headline: sanitizeExplanationText(validated.headline),
+    explanation: sanitizeExplanationText(validated.explanation),
+  };
+}
+
+/**
+ * ดักจับและแปลงคำศัพท์ทางเทคนิค/ระบบให้ออกมาเป็นภาษาไทยที่เป็นมิตรกับผู้ใช้
+ */
+export function sanitizeExplanationText(text: string): string {
+  if (!text) return "";
+
+  let cleaned = text;
+
+  // 1. ดักจับและแปลงคำศัพท์สถานะเชิงเทคนิค (RISK, CAUTION, etc.)
+  cleaned = cleaned.replace(/(?:และ)?อยู่ในระดับ\s*RISK\s*(?:ซึ่ง)?/gi, "โดยมีจุดที่ต้องระวังเป็นพิเศษคือ");
+  cleaned = cleaned.replace(/อยู่ในระดับ\s*RISK\b/gi, "เป็นจุดที่ต้องระวังเป็นพิเศษ");
+  cleaned = cleaned.replace(/ระดับ\s*RISK\b/gi, "จุดที่มีความเสี่ยง");
+  cleaned = cleaned.replace(/\bRISK\b/gi, "ความเสี่ยงที่ควรระวัง");
+
+  cleaned = cleaned.replace(/(?:และ)?อยู่ในระดับ\s*CAUTION\s*(?:ซึ่ง)?/gi, "โดยมีจุดที่ควรสังเกตคือ");
+  cleaned = cleaned.replace(/อยู่ในระดับ\s*CAUTION\b/gi, "อยู่ในเกณฑ์ที่ควรสังเกต");
+  cleaned = cleaned.replace(/ระดับ\s*CAUTION\b/gi, "จุดที่ควรระวัง");
+  cleaned = cleaned.replace(/\bCAUTION\b/gi, "ข้อควรระวัง");
+
+  cleaned = cleaned.replace(/อยู่ในระดับ\s*EXCELLENT\b/gi, "อยู่ในเกณฑ์ดีเยี่ยม");
+  cleaned = cleaned.replace(/อยู่ในระดับ\s*GOOD\b/gi, "อยู่ในเกณฑ์ดี");
+  cleaned = cleaned.replace(/อยู่ในระดับ\s*OK\b/gi, "อยู่ในเกณฑ์ปกติ");
+
+  cleaned = cleaned.replace(/อยู่ในระดับ\s*NEEDS_ADJUSTMENT\b/gi, "ควรปรับแผนก่อนเดินทาง");
+  cleaned = cleaned.replace(/อยู่ในระดับ\s*MODERATE\b/gi, "อยู่ในระดับปานกลาง");
+
+  // 2. ดักจับคำศัพท์ระบบภายใน
+  cleaned = cleaned.replace(/\buserProfile(?:Score)?\b/gi, "ความพร้อมของผู้เดินทางและยานพาหนะ");
+  cleaned = cleaned.replace(/\baccessibility(?:Score)?\b/gi, "การเข้าถึงและยานพาหนะ");
+  cleaned = cleaned.replace(/\b(?:weather|route|sunset)?snapshot(?:Id)?\b/gi, "ข้อมูล");
+  cleaned = cleaned.replace(/\bblocking\s*constraints?\b/gi, "เงื่อนไขสำคัญที่ต้องปรับ");
+  cleaned = cleaned.replace(/\bconstraints?\b/gi, "เงื่อนไข");
+  cleaned = cleaned.replace(/\bfactors?\b/gi, "ปัจจัย");
+  cleaned = cleaned.replace(/\bengineRecommendations?\b/gi, "คำแนะนำ");
+  cleaned = cleaned.replace(/\bcanProceed\b/gi, "ความพร้อมเดินทาง");
+
+  // 3. จัดช่องไฟให้อ่านง่าย: เคาะบรรทัดใหม่ก่อนส่วนคำแนะนำหรือข้อควรระวัง
+  cleaned = cleaned.replace(/(\s*)(ก่อนออกเดินทาง[^\n]+)/g, "\n\n💡 $2");
+
+  // จัดการช่องว่างซ้ำซ้อน
+  cleaned = cleaned.replace(/[ ]{2,}/g, " ").trim();
+
+  return cleaned;
 }

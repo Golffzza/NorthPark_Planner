@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AlertTriangle, CloudSun, Target } from "lucide-react";
 
 import { CancelTripButton } from "@/components/trips/cancel-trip-button";
 import { EvaluateLiveTripButton } from "@/components/trips/evaluate-live-trip-button";
@@ -23,8 +24,10 @@ import {
   getTripDetailForCurrentUser,
   NotFoundError,
 } from "@/lib/services/trip-service";
+import { sanitizeExplanationText } from "@/lib/services/evaluation-explainer-service";
 
 import { formatThaiDate } from "@/lib/utils/date";
+import { generateOneSentenceVerdict } from "@/lib/evaluation/one-sentence-verdict";
 
 import {
   ArrowLeft,
@@ -561,15 +564,23 @@ export default async function TripResultPage({
         latestEvaluation.level,
       );
 
-    const explanationHeadline =
-      latestEvaluation
-        .explanationHeadline ??
-      statusLabel;
+    const explanationHeadline = sanitizeExplanationText(
+      latestEvaluation.explanationHeadline ?? statusLabel,
+    );
 
-    const explanationText =
-      latestEvaluation
-        .explanationText ??
-      latestEvaluation.summary;
+    const explanationText = sanitizeExplanationText(
+      latestEvaluation.explanationText ?? latestEvaluation.summary,
+    );
+
+    const oneSentenceVerdict = generateOneSentenceVerdict({
+      totalScore: latestEvaluation.totalScore,
+      canProceed,
+      weatherScore: latestEvaluation.weatherScore,
+      durationScore: latestEvaluation.durationScore,
+      timeScore: latestEvaluation.timeScore,
+      userProfileScore: latestEvaluation.userProfileScore,
+      constraints,
+    });
 
     return (
       <AppShell>
@@ -598,6 +609,7 @@ export default async function TripResultPage({
 
                 <CancelTripButton
                   tripId={trip.id}
+                  parkName={trip.park.nameTh}
                   isCancelled={
                     trip.status ===
                     "CANCELLED"
@@ -607,6 +619,60 @@ export default async function TripResultPage({
               </div>
             }
           />
+
+          {/* ONE-SENTENCE VERDICT BANNER (สรุปภาษาคนใน 1 บรรทัด — จุดขายหลักของแอป) */}
+          <section
+            className={`relative overflow-hidden rounded-[28px] border p-4.5 sm:p-6 shadow-md transition-all ${
+              oneSentenceVerdict.tone === "warning"
+                ? "border-rose-500/35 bg-gradient-to-r from-rose-950/40 via-red-950/25 to-slate-900/60 shadow-rose-950/20"
+                : oneSentenceVerdict.tone === "caution"
+                  ? "border-amber-500/35 bg-gradient-to-r from-amber-950/40 via-orange-950/25 to-slate-900/60 shadow-amber-950/20"
+                  : "border-emerald-500/35 bg-gradient-to-r from-emerald-950/40 via-teal-950/25 to-slate-900/60 shadow-emerald-950/20"
+            }`}
+          >
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-xl shadow-xs ${
+                  oneSentenceVerdict.tone === "warning"
+                    ? "border-rose-500/40 bg-rose-500/15"
+                    : oneSentenceVerdict.tone === "caution"
+                      ? "border-amber-500/40 bg-amber-500/15"
+                      : "border-emerald-500/40 bg-emerald-500/15"
+                }`}
+              >
+                {oneSentenceVerdict.tone === "warning" ? (
+                  <AlertTriangle className="h-5 w-5 text-rose-400" />
+                ) : oneSentenceVerdict.tone === "caution" ? (
+                  <CloudSun className="h-5 w-5 text-amber-400" />
+                ) : (
+                  <Target className="h-5 w-5 text-emerald-400" />
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`text-[11px] font-black tracking-wider uppercase ${
+                      oneSentenceVerdict.tone === "warning"
+                        ? "text-rose-400"
+                        : oneSentenceVerdict.tone === "caution"
+                          ? "text-amber-400"
+                          : "text-emerald-400"
+                    }`}
+                  >
+                    สรุปความพร้อมใน 1 บรรทัด
+                  </span>
+                  <span className="hidden sm:inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                    One-Sentence Verdict
+                  </span>
+                </div>
+
+                <p className="mt-1 text-base sm:text-lg font-bold leading-snug font-heading text-[var(--foreground)]">
+                  &ldquo;{oneSentenceVerdict.verdict}&rdquo;
+                </p>
+              </div>
+            </div>
+          </section>
 
           {/* HERO — decision first */}
           <section className="soft-card overflow-hidden rounded-[34px] p-5 sm:p-7 lg:p-8">
@@ -646,7 +712,7 @@ export default async function TripResultPage({
                   {explanationHeadline}
                 </h1>
 
-                <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted)] sm:text-base">
+                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--muted)] sm:text-base whitespace-pre-line">
                   {explanationText}
                 </p>
 
@@ -676,6 +742,11 @@ export default async function TripResultPage({
               </div>
             </div>
           </section>
+
+          {/* 4 FACTORS BREAKDOWN — การ์ดปัจจัย 4 ด้าน (Weather, Duration, Time, Profile) */}
+          <FactorBreakdown
+            factors={resultView.factorScores}
+          />
 
           {/* WHAT USER NEEDS TO KNOW */}
           <section className="soft-card rounded-[32px] p-5 sm:p-7">
@@ -926,31 +997,6 @@ export default async function TripResultPage({
 
           {/* DETAILS — collapsed */}
           <section className="space-y-3">
-            <details className="soft-card group rounded-[28px] p-4 sm:p-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
-                <div>
-                  <p className="font-bold text-[var(--foreground)]">
-                    ดูรายละเอียดคะแนนทั้ง
-                    4 ปัจจัย
-                  </p>
-
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    เปิดดูคะแนนและเหตุผลของแต่ละปัจจัย
-                  </p>
-                </div>
-
-                <ChevronDown className="h-5 w-5 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" />
-              </summary>
-
-              <div className="mt-5">
-                <FactorBreakdown
-                  factors={
-                    resultView.factorScores
-                  }
-                />
-              </div>
-            </details>
-
             <details className="soft-card group rounded-[28px] p-4 sm:p-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
                 <div>
