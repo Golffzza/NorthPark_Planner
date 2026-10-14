@@ -32,7 +32,7 @@ export function CancelTripButton({
     return null;
   }
 
-  async function handleConfirmDelete() {
+  async function handleConfirmCancel() {
     setIsSubmitting(true);
 
     try {
@@ -45,10 +45,10 @@ export function CancelTripButton({
       }
 
       setIsModalOpen(false);
-      toast.success("ลบทริปเรียบร้อยแล้ว");
+      toast.success("ยกเลิกทริปเรียบร้อยแล้ว");
       router.refresh();
     } catch {
-      toast.error("ไม่สามารถลบทริปได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง");
+      toast.error("ไม่สามารถยกเลิกทริปได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsSubmitting(false);
     }
@@ -60,18 +60,18 @@ export function CancelTripButton({
       onClose={() => {
         if (!isSubmitting) setIsModalOpen(false);
       }}
-      onConfirm={handleConfirmDelete}
+      onConfirm={handleConfirmCancel}
       isConfirming={isSubmitting}
-      title={parkName ? `ต้องการลบทริปไป "${parkName}"?` : "คุณแน่ใจหรือไม่ที่จะลบทริปนี้?"}
-      description="ข้อมูลแผนการเดินทางและการประเมินทั้งหมดของทริปนี้จะถูกลบออก และไม่สามารถกู้คืนได้"
-      confirmLabel="ยืนยันการลบ"
+      title={parkName ? `ต้องการยกเลิกทริปไป "${parkName}"?` : "คุณแน่ใจหรือไม่ที่จะยกเลิกทริปนี้?"}
+      description="ทริปนี้จะถูกยกเลิกและไม่สามารถแก้ไขหรือประเมินใหม่ได้ แต่ข้อมูลและผลประเมินเดิมยังอยู่ในประวัติ"
+      confirmLabel="ยืนยันการยกเลิก"
       cancelLabel="ยกเลิก"
       icon="trash"
     />
   );
 
   if (variant === "menuItem") {
-    const text = label ?? (isSubmitting ? "กำลังลบ..." : "ลบทริปนี้");
+    const text = label ?? (isSubmitting ? "กำลังยกเลิก..." : "ยกเลิกทริปนี้");
     return (
       <>
         <button
@@ -99,7 +99,7 @@ export function CancelTripButton({
           type="button"
           onClick={() => setIsModalOpen(true)}
           disabled={isSubmitting}
-          title="ลบทริป"
+          title="ยกเลิกทริป"
           className="group inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-rose-600/80 bg-[#280811] hover:bg-[#3a0c1a] text-white shadow-sm transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
         >
           <Trash2 className="h-4 w-4 transition-transform group-hover:scale-110" />
@@ -110,14 +110,14 @@ export function CancelTripButton({
   }
 
   if (variant === "full") {
-    const text = label ?? (isSubmitting ? "กำลังลบ..." : "ลบทริป");
+    const text = label ?? (isSubmitting ? "กำลังยกเลิก..." : "ยกเลิกทริป");
     return (
       <>
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
           disabled={isSubmitting}
-          title="ลบทริป"
+          title="ยกเลิกทริป"
           className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-full border border-rose-600/40 bg-rose-950/5 px-3 text-xs font-bold font-heading text-rose-700 transition-all hover:bg-rose-500/10 active:scale-[0.98] dark:border-rose-500/60 dark:bg-[#280811] dark:text-rose-200 dark:hover:bg-[#3a0c1a] sm:text-sm whitespace-nowrap disabled:opacity-60 cursor-pointer"
         >
           <Trash2 className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
@@ -129,14 +129,14 @@ export function CancelTripButton({
   }
 
   if (variant === "compact") {
-    const text = label ?? (isSubmitting ? "กำลังลบ..." : "ลบทริป");
+    const text = label ?? (isSubmitting ? "กำลังยกเลิก..." : "ยกเลิกทริป");
     return (
       <>
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
           disabled={isSubmitting}
-          title="ลบทริป"
+          title="ยกเลิกทริป"
           className="group inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-rose-200 bg-rose-950/70 hover:bg-rose-900/80 border border-rose-500/50 shadow-2xs transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer whitespace-nowrap"
         >
           <Trash2 className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
@@ -147,14 +147,14 @@ export function CancelTripButton({
     );
   }
 
-  const text = label ?? (isSubmitting ? "กำลังลบ..." : "ลบทริป");
+  const text = label ?? (isSubmitting ? "กำลังยกเลิก..." : "ยกเลิกทริป");
   return (
     <>
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
         disabled={isSubmitting}
-        title="ลบทริป"
+        title="ยกเลิกทริป"
         className="group inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-4 sm:px-5 text-xs sm:text-sm font-semibold text-rose-200 bg-rose-950/70 hover:bg-rose-900/80 border border-rose-500/50 shadow-2xs transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer whitespace-nowrap"
       >
         <Trash2 className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
