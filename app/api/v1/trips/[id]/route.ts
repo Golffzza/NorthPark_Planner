@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import {
   AuthorizationError,
   NotFoundError,
+  TripCancelledError,
   cancelTripForCurrentUser,
   getTripDetailForCurrentUser,
   updateTripForCurrentUser,
@@ -106,6 +107,13 @@ export async function PATCH(request: Request, context: RouteContext) {
   } catch (error) {
     if (error instanceof RequestValidationError) {
       return validationErrorResponse(error);
+    }
+
+    if (error instanceof TripCancelledError) {
+      return NextResponse.json(
+        { error: { code: "trip_cancelled", message: error.message } },
+        { status: 409 },
+      );
     }
 
     if (error instanceof AuthorizationError) {

@@ -19,6 +19,13 @@ import type { TripUpdateInput } from "@/lib/validations/trip-update";
 
 export { NotFoundError };
 
+export class TripCancelledError extends Error {
+  constructor() {
+    super("ไม่สามารถแก้ไขทริปที่ยกเลิกแล้วได้");
+    this.name = "TripCancelledError";
+  }
+}
+
 export class AuthorizationError extends Error {
   constructor(message: string) {
     super(message);
@@ -462,15 +469,23 @@ export async function updateTripForCurrentUser(
 ): Promise<TripDetailDto> {
   const trip = await getTripDetailRecordForCurrentUser(tripId);
 
+  if (trip.status === "CANCELLED") {
+    throw new TripCancelledError();
+  }
+
   if (input.parkId) {
     await ensureActivePark(input.parkId);
   }
 
   const resetToDraft = shouldResetTripStatus(trip, input);
 
-  const updatedTrip = await prisma.trip.update({
+  // The status condition also protects against a concurrent cancellation.
+  let updatedTrip;
+  try {
+    updatedTrip = await prisma.trip.update({
     where: {
       id: tripId,
+      status: { not: "CANCELLED" },
     },
 
     data: {
@@ -555,7 +570,18 @@ export async function updateTripForCurrentUser(
     },
 
     include: detailTripInclude,
-  });
+    });
+  } catch (error) {
+    if (
+      error !== null &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      throw new TripCancelledError();
+    }
+    throw error;
+  }
 
   return mapTripToDetailDto(updatedTrip);
 }
