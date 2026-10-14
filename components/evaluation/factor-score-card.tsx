@@ -12,6 +12,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import type { FactorScoreViewModel } from "@/lib/presenters/trip-result-view";
+import { getFactorStatus } from "@/lib/evaluation/constants";
 
 type FactorScoreCardProps = {
   factor: FactorScoreViewModel;
@@ -31,11 +32,10 @@ function getFactorStatusTheme(
   score: number,
   explicitStatus?: "GOOD" | "CAUTION" | "RISK",
 ): FactorStatusTheme {
-  // สีเขียว = ปลอดภัย (score >= 75 หรือ status === GOOD)
-  // สีส้ม = ควรระวัง (score 50..74 หรือ status === CAUTION)
-  // สีแดง/ชมพู = ควรปรับแผน (score < 50 หรือ status === RISK)
-  const isSafe = explicitStatus === "GOOD" || (!explicitStatus && score >= 75);
-  const isRisk = explicitStatus === "RISK" || (!explicitStatus && score < 50);
+  // Respect saved factor status; otherwise use the same thresholds as the evaluator.
+  const status = explicitStatus ?? getFactorStatus(score);
+  const isSafe = status === "GOOD";
+  const isRisk = status === "RISK";
 
   if (isSafe) {
     return {
@@ -104,47 +104,26 @@ function renderFactorIcon(key: string) {
 }
 
 function getActionableTip(factorKey: string, score: number): string {
-  if (factorKey === "weather") {
-    if (score >= 75) {
-      return "สภาพอากาศเปิด ฟ้าโปร่ง เดินทางและท่องเที่ยวกลางแจ้งได้อย่างสบายใจ";
-    }
-    if (score >= 50) {
-      return "เช็กเรดาร์ฝนล่วงหน้า 2 ชม. และเตรียมเสื้อกันฝนหรือร่มติดตัวไว้";
-    }
-    return "มีโอกาสเจอฝนตกชุกหรือสภาพอากาศปิด ควรตรวจสอบประกาศอุทยานหรือเลื่อนวันเดินทาง";
+  const status = getFactorStatus(score);
+  switch (factorKey) {
+    case "weather":
+      return status === "GOOD"
+        ? "ตรวจสอบพยากรณ์อากาศล่าสุดก่อนเดินทาง เนื่องจากคะแนนไม่ใช่การยืนยันสภาพอากาศขณะนี้"
+        : "ตรวจสอบพยากรณ์อากาศและประกาศอุทยานใกล้วันเดินทาง และเตรียมอุปกรณ์รับมือฝน";
+    case "duration":
+      return status === "GOOD"
+        ? "ตรวจสอบสภาพการจราจรและเผื่อเวลาพักระหว่างทางตามความเหมาะสม"
+        : "พิจารณาเพิ่มเวลาพักหรือปรับเวลาออกเดินทาง โดยตรวจสอบระยะทางจริงอีกครั้ง";
+    case "time":
+      return status === "GOOD"
+        ? "ตรวจสอบเวลาเปิด–ปิดและเวลาพระอาทิตย์ตกของวันที่เดินทางอีกครั้ง"
+        : "ตรวจสอบเวลาถึงโดยประมาณ เทียบกับเวลาปิดและพระอาทิตย์ตก แล้วปรับเวลาออกเดินทางตามข้อมูลจริง";
+    case "userProfile":
+    case "profile":
+      return "ตรวจสอบความเหมาะสมของพาหนะและการเข้าถึงอุทยานจากข้อมูลเส้นทางที่ยืนยันได้";
+    default:
+      return "ตรวจสอบข้อมูลการเดินทางเพิ่มเติมก่อนตัดสินใจ";
   }
-
-  if (factorKey === "duration") {
-    if (score >= 75) {
-      return "ระยะทางและเวลาขับขี่พอเหมาะ ไม่เหนื่อยล้าจนเกินไป เดินทางสะดวก";
-    }
-    if (score >= 50) {
-      return "ระยะทางค่อนข้างไกล แนะนำวางแผนแวะจุดพักรถทุก 1.5–2 ชม. เพื่อพักสายตา";
-    }
-    return "การขับขี่ใช้เวลานานมาก ควรออกเดินทางแต่เช้าตรู่ หรือแบ่งทริปแวะพักค้างแรมระหว่างทาง";
-  }
-
-  if (factorKey === "time") {
-    if (score >= 75) {
-      return "เวลาถึงอุทยานอยู่ในช่วงกลางวัน มีเวลาเที่ยวชมและกลับก่อนพระอาทิตย์ตกดิน";
-    }
-    if (score >= 50) {
-      return "แนะนำออกเดินทางเร็วขึ้น 30–60 นาที เพื่อให้ถึงอุทยานก่อนพระอาทิตย์ตก";
-    }
-    return "เวลาเดินทางเสี่ยงถึงใกล้ค่ำหรือหลังเวลาปิดอุทยาน แนะนำปรับเวลาออกเดินทางให้เช้าขึ้นทันที";
-  }
-
-  if (factorKey === "userProfile" || factorKey === "profile") {
-    if (score >= 75) {
-      return "ยานพาหนะและจำนวนผู้ร่วมทริปเหมาะสมกับเส้นทางขึ้นอุทยาน";
-    }
-    if (score >= 50) {
-      return "เส้นทางขึ้นเขาคดเคี้ยว ควรตรวจสภาพเบรก ยางรถ และระบบระบายความร้อนก่อนออกเดินทาง";
-    }
-    return "ยานพาหนะอาจไม่เหมาะกับเส้นทางลาดชันสูง แนะนำเปลี่ยนประเภทรถหรือเดินทางร่วมกับผู้ชำนาญทาง";
-  }
-
-  return "ตรวจสอบข้อมูลการเดินทางและปรับแผนให้เหมาะสมกับสภาพพื้นที่จริง";
 }
 
 export function FactorScoreCard({ factor }: FactorScoreCardProps) {
