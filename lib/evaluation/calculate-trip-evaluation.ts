@@ -1,6 +1,7 @@
 //* ./lib/evaluation/calculate-trip-evaluation.ts
 
 import { EVALUATION_WEIGHTS } from "./constants";
+import { getFactorStatus } from "./factor-status";
 
 import { buildFactorReasons } from "./build-factor-reasons";
 import { buildRecommendations } from "./build-recommendations";
@@ -13,7 +14,6 @@ import { scoreUserProfile } from "./score-user-profile";
 import { scoreWeather } from "./score-weather";
 
 import type {
-  FactorStatus,
   TripEvaluationInput,
   TripEvaluationResult,
 } from "./types";
@@ -23,20 +23,6 @@ function clampScore(score: number): number {
     0,
     Math.min(100, Math.round(score)),
   );
-}
-
-function getFactorStatus(
-  score: number,
-): FactorStatus {
-  if (score >= 80) {
-    return "GOOD";
-  }
-
-  if (score >= 60) {
-    return "CAUTION";
-  }
-
-  return "RISK";
 }
 
 const levelThaiLabels: Record<string, string> = {
