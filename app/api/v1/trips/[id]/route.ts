@@ -6,6 +6,7 @@ import {
   AuthorizationError,
   NotFoundError,
   TripCancelledError,
+  ParkChangeConfirmationRequiredError,
   cancelTripForCurrentUser,
   getTripDetailForCurrentUser,
   updateTripForCurrentUser,
@@ -107,6 +108,13 @@ export async function PATCH(request: Request, context: RouteContext) {
   } catch (error) {
     if (error instanceof RequestValidationError) {
       return validationErrorResponse(error);
+    }
+
+    if (error instanceof ParkChangeConfirmationRequiredError) {
+      return NextResponse.json(
+        { error: { code: "park_change_confirmation_required", message: error.message } },
+        { status: 409 },
+      );
     }
 
     if (error instanceof TripCancelledError) {
