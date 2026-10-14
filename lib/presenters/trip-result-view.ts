@@ -1,4 +1,5 @@
 import type { TripDetailDto } from "@/lib/mappers/trip-dto";
+import { getFactorStatus } from "@/lib/evaluation/factor-status";
 
 export type FactorScoreKey = "weather" | "duration" | "time" | "userProfile";
 
@@ -159,7 +160,7 @@ export function buildTripResultViewModel(trip: TripDetailDto): TripResultViewMod
       const parsed = parsedFactors[factor.key];
       const status =
         parsed?.status ??
-        (score >= 75 ? "GOOD" : score >= 50 ? "CAUTION" : "RISK");
+        getFactorStatus(score);
       return {
         ...factor,
         score,
