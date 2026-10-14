@@ -490,7 +490,9 @@ export function createConversationAwareAssistantV2Tools(
             topic: input.topic,
           });
 
-          if ("found" in result && result.found) {
+          // Answering a question about another park is not a request to switch
+          // the park the user is planning. Establish an initial focus only.
+          if ("found" in result && result.found && !state.selectedPark) {
             setSelectedPark(state, result.park);
           }
 
@@ -626,7 +628,8 @@ export function createConversationAwareAssistantV2Tools(
           if (
             result.status === "OK" &&
             "park" in result &&
-            result.park
+            result.park &&
+            !state.selectedPark
           ) {
             setSelectedPark(state, result.park);
           }
