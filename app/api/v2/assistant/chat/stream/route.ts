@@ -12,6 +12,7 @@ import {
   sanitizeAssistantV2Text,
 } from "@/lib/chat-v2/application/chat-v2-application";
 import { AssistantV2ConversationExpiredError } from "@/lib/chat-v2/state/conversation-state";
+import { nearbyAttributionSource } from "@/lib/chat-v2/application/nearby-attribution";
 import { getChatMessageMaxLength } from "@/lib/chat/shared/limits";
 
 export const runtime = "nodejs";
@@ -120,7 +121,14 @@ export async function POST(request: Request) {
             ? sanitizeAssistantV2Text(await result.text)
             : "";
           if (finalText) {
-            send({ type: "done", text: finalText });
+            const steps = await result.steps;
+            const nearbySource = nearbyAttributionSource(
+              steps.flatMap((step) => step.toolResults.map((toolResult) => ({
+                toolName: toolResult.toolName,
+                output: toolResult.output,
+              }))),
+            );
+            send({ type: "done", text: finalText, ...(nearbySource ? { nearbySource } : {}) });
           } else {
             send({ type: "error", message: "คำตอบขาดตอน กรุณาลองอีกครั้ง" });
           }

@@ -1,6 +1,8 @@
+import type { NearbyAttributionSource } from "@/lib/chat-v2/application/nearby-attribution";
+
 export type AssistantV2StreamEvent =
   | { type: "text"; text: string }
-  | { type: "done"; text: string }
+  | { type: "done"; text: string; nearbySource?: NearbyAttributionSource }
   | { type: "error"; message: string };
 
 function parseEvent(line: string): AssistantV2StreamEvent {
@@ -12,7 +14,12 @@ function parseEvent(line: string): AssistantV2StreamEvent {
     (value.type === "text" || value.type === "done") &&
     "text" in value && typeof value.text === "string"
   ) {
-    return { type: value.type, text: value.text };
+    const nearbySource = "nearbySource" in value &&
+      (value.nearbySource === "GEOAPIFY_PLACES" || value.nearbySource === "OPENSTREETMAP_OVERPASS")
+      ? value.nearbySource : undefined;
+    return value.type === "done"
+      ? { type: "done", text: value.text, ...(nearbySource ? { nearbySource } : {}) }
+      : { type: "text", text: value.text };
   }
   if (
     value.type === "error" &&
@@ -26,6 +33,7 @@ function parseEvent(line: string): AssistantV2StreamEvent {
 export async function readAssistantV2Stream(
   stream: ReadableStream<Uint8Array>,
   onText: (text: string) => void,
+  onNearbySource?: (source: NearbyAttributionSource) => void,
 ): Promise<string> {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
@@ -44,6 +52,7 @@ export async function readAssistantV2Stream(
     } else {
       completed = event.text;
       onText(completed);
+      if (event.nearbySource) onNearbySource?.(event.nearbySource);
     }
   };
 

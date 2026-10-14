@@ -12,6 +12,14 @@ function streamOf(...chunks: string[]): ReadableStream<Uint8Array> {
 }
 
 describe("Assistant V2 stream reader", () => {
+  it("passes the real Nearby provider from the completion frame to the UI", async () => {
+    const onSource = vi.fn();
+    await readAssistantV2Stream(streamOf(
+      '{"type":"done","text":"พบร้านอาหาร","nearbySource":"GEOAPIFY_PLACES"}\n',
+    ), () => {}, onSource);
+    expect(onSource).toHaveBeenCalledWith("GEOAPIFY_PLACES");
+  });
+
   it("accepts split frames and returns the canonical completed answer", async () => {
     const onText = vi.fn();
     const answer = await readAssistantV2Stream(streamOf(

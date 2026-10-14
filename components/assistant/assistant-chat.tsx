@@ -35,6 +35,7 @@ import {
 } from "./chat-messages";
 import { readAssistantV2Stream } from "./assistant-stream";
 import { AiTripDraftPanel } from "./ai-trip-draft-panel";
+import { NearbyAttribution } from "./nearby-attribution";
 import type { AssistantV2DraftTrip } from "@/lib/chat-v2/state/conversation-state";
 
 type ChatRequest = {
@@ -535,6 +536,7 @@ export function AssistantChat() {
 
       let fullText = "";
       let displayedText = "";
+      let nearbySource: ChatMessage["nearbySource"];
 
       const flushAssistantText = () => {
         updateTimer = null;
@@ -579,6 +581,8 @@ export function AssistantChat() {
         if (thisRequest !== requestVersion.current) return;
         fullText = nextText;
         scheduleFlush();
+      }, (source) => {
+        nearbySource = source;
       });
 
       if (updateTimer) {
@@ -587,6 +591,13 @@ export function AssistantChat() {
       }
 
       flushAssistantText();
+
+      if (nearbySource) {
+        setMessages((current) => current.map((message, index) =>
+          index === current.length - 1 && message.role === "assistant"
+            ? { ...message, nearbySource }
+            : message));
+      }
 
       if (!fullText.trim()) {
         throw new Error("ผู้ช่วยไม่ได้ส่งข้อความตอบกลับ");
@@ -1116,6 +1127,10 @@ export function AssistantChat() {
                       ? formatAssistantMessageContent(message.content)
                       : message.content}
                   </p>
+
+                  {message.role === "assistant" && message.nearbySource && (
+                    <NearbyAttribution source={message.nearbySource} />
+                  )}
 
                   {/* Sources List */}
                   {message.role === "assistant" && message.sources?.length ? (

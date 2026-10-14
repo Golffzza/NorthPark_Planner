@@ -95,6 +95,7 @@ const txMock = vi.hoisted(() => ({
     create: vi.fn(),
   },
   trip: {
+    update: vi.fn(),
     updateMany: vi.fn(),
   },
 }));
@@ -240,6 +241,8 @@ describe("trip planner evaluation flow", () => {
     prismaMock.$transaction.mockImplementation(async (callback: (tx: typeof txMock) => Promise<unknown>) => {
       return callback(txMock);
     });
+    txMock.trip.update.mockImplementation((args: { where: { id: string }; data: Record<string, unknown> }) =>
+      prismaMock.trip.update(args));
   });
 
   it("supports create, edit, evaluate, and reading the result-ready trip detail", async () => {

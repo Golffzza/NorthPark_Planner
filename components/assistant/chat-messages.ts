@@ -1,3 +1,5 @@
+import type { NearbyAttributionSource } from "@/lib/chat-v2/application/nearby-attribution";
+
 export type ChatSource = {
   id: string;
   title: string;
@@ -8,6 +10,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   sources?: ChatSource[];
+  nearbySource?: NearbyAttributionSource;
 };
 
 const MAX_VISIBLE_MESSAGES = 40;

@@ -19,6 +19,7 @@ const prismaMock = vi.hoisted(() => ({
     findUnique: vi.fn(),
     update: vi.fn(),
   },
+  $transaction: vi.fn(),
 }));
 
 const authMock = vi.hoisted(() => ({
@@ -34,6 +35,8 @@ vi.mock("@/lib/auth/current-user", () => authMock);
 describe("trip service CRUD", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<unknown>) =>
+      callback(prismaMock));
     authMock.getCurrentUser.mockResolvedValue({
       id: "user_1",
       displayName: "Demo User",

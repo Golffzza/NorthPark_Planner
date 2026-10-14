@@ -68,7 +68,7 @@ export type NearbySearchResult = {
     limit: number;
     searchScope: "AROUND_PARK_COORDINATE";
     distanceMethod: "STRAIGHT_LINE";
-    source: "OPENSTREETMAP_OVERPASS";
+    source: "OPENSTREETMAP_OVERPASS" | "GEOAPIFY_PLACES";
     coverageNote: string;
     cached: boolean;
   };
@@ -85,6 +85,20 @@ const TAG_VALUES: Record<NearbyCategory, Partial<Record<OsmTagKey, readonly stri
   },
   service: { shop: ["convenience"], amenity: ["fuel"] },
 };
+
+// Geoapify Places categories: https://apidocs.geoapify.com/docs/places/
+// Keep these narrow enough to match the existing Nearby categories.
+const GEOAPIFY_CATEGORIES: Record<NearbyCategory, readonly string[]> = {
+  food: ["catering.restaurant", "catering.cafe", "catering.fast_food", "catering.food_court"],
+  accommodation: ["accommodation.hotel", "accommodation.guest_house", "accommodation.motel", "accommodation.hostel", "accommodation.chalet"],
+  campsite: ["camping.camp_site", "camping.caravan_site"],
+  attraction: ["tourism.attraction", "entertainment.museum", "leisure.picnic.picnic_site", "tourism.sights.archaeological_site", "tourism.sights.ruines", "tourism.sights.memorial"],
+  service: ["commercial.convenience", "service.vehicle.fuel"],
+};
+
+export function getGeoapifyCategories(categories: readonly NearbyCategory[]): string[] {
+  return [...new Set(categories.flatMap((category) => GEOAPIFY_CATEGORIES[category]))];
+}
 
 function validCoordinates({ lat, lng }: Coordinates): boolean {
   return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
@@ -155,6 +169,76 @@ export function normalizeOverpassPlaces(
       ...(tagText(tags.opening_hours, 160) ? { openingHours: tagText(tags.opening_hours, 160) } : {}),
       ...(tagText(tags.phone, 80) ? { phone: tagText(tags.phone, 80) } : {}),
       ...(websiteTag(tags.website) ? { website: websiteTag(tags.website) } : {}),
+    });
+  }
+  return [...byId.values()]
+    .sort((a, b) => a.straightLineDistanceMeters - b.straightLineDistanceMeters || a.id.localeCompare(b.id))
+    .slice(0, limit);
+}
+
+type GeoapifyFeature = {
+  type?: unknown;
+  properties?: unknown;
+  geometry?: { type?: unknown; coordinates?: unknown };
+};
+
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown> : {};
+}
+
+function geoapifyCategory(values: unknown): NearbyCategory | undefined {
+  if (!Array.isArray(values)) return undefined;
+  const categories = values.filter((value): value is string => typeof value === "string");
+  for (const category of ["campsite", "accommodation", "food", "attraction", "service"] as const) {
+    if (GEOAPIFY_CATEGORIES[category].some((key) =>
+      categories.some((value) => value === key || value.startsWith(`${key}.`)))) {
+      return category;
+    }
+  }
+  return undefined;
+}
+
+/** Only OSM-backed Geoapify features can satisfy the existing OSM reference contract. */
+export function normalizeGeoapifyPlaces(
+  features: unknown,
+  center: Coordinates,
+  categories: readonly NearbyCategory[],
+  radiusMeters: number,
+  limit: number,
+): NearbyPlace[] {
+  if (!Array.isArray(features)) return [];
+  const byId = new Map<string, NearbyPlace>();
+  for (const feature of features as GeoapifyFeature[]) {
+    if (!feature || feature.type !== "Feature") continue;
+    const properties = record(feature.properties);
+    const raw = record(record(properties.datasource).raw);
+    const osmType = { n: "node", w: "way", r: "relation" }[String(raw.osm_type)] as NearbyPlace["osmType"] | undefined;
+    const osmId = raw.osm_id;
+    if (!osmType || !Number.isSafeInteger(osmId) || Number(osmId) <= 0) continue;
+    const name = tagText(properties.name, 160) ?? tagText(raw["name:th"], 160)
+      ?? tagText(raw.name, 160) ?? tagText(raw["name:en"], 160);
+    const category = geoapifyCategory(properties.categories);
+    if (!name || !category || !categories.includes(category)) continue;
+    const point = feature.geometry?.type === "Point" && Array.isArray(feature.geometry.coordinates)
+      ? feature.geometry.coordinates : undefined;
+    const lat = typeof properties.lat === "number" ? properties.lat : point?.[1];
+    const lng = typeof properties.lon === "number" ? properties.lon : point?.[0];
+    if (typeof lat !== "number" || typeof lng !== "number" || !validCoordinates({ lat, lng })) continue;
+    const distance = straightLineMeters(center, { lat, lng });
+    if (distance > radiusMeters) continue;
+    const id = `osm:${osmType}:${osmId}`;
+    if (byId.has(id)) continue;
+    const openingHours = tagText(properties.opening_hours, 160) ?? tagText(raw.opening_hours, 160);
+    const phone = tagText(properties.phone, 80) ?? tagText(raw.phone, 80);
+    const website = websiteTag(properties.website) ?? websiteTag(raw.website);
+    byId.set(id, {
+      id, osmType, osmId: osmId as number,
+      osmUrl: `https://www.openstreetmap.org/${osmType}/${osmId}`,
+      name, category, lat, lng, straightLineDistanceMeters: distance, source: "OPENSTREETMAP",
+      ...(openingHours ? { openingHours } : {}),
+      ...(phone ? { phone } : {}),
+      ...(website ? { website } : {}),
     });
   }
   return [...byId.values()]
@@ -304,7 +388,134 @@ export function createNearbyPlacesService(dependencies: ServiceDependencies = {}
   return { search };
 }
 
-export const nearbyPlacesService = createNearbyPlacesService();
+const GEOAPIFY_PLACES_URL = "https://api.geoapify.com/v2/places";
+const GEOAPIFY_TIMEOUT_MS = 10_000;
+// One bounded request; unnamed or non-OSM features may be skipped by the mapper.
+const GEOAPIFY_RESULT_LIMIT = 40;
+
+type GeoapifyDependencies = {
+  fetcher?: typeof fetch;
+  now?: () => number;
+  apiKey?: string;
+  endpoint?: string;
+};
+
+export function createGeoapifyNearbyPlacesService(dependencies: GeoapifyDependencies = {}) {
+  const fetcher = dependencies.fetcher ?? fetch;
+  const now = dependencies.now ?? Date.now;
+  const endpoint = dependencies.endpoint ?? GEOAPIFY_PLACES_URL;
+  const cache = new Map<string, { expiresAt: number; result: NearbySearchResult }>();
+  const pending = new Map<string, Promise<NearbySearchResult>>();
+  let rateLimitedUntil = 0;
+  let providerQueue: Promise<void> = Promise.resolve();
+
+  async function search(input: SearchInput): Promise<NearbySearchResult> {
+    const options = nearbySearchSchema.parse({
+      categories: input.categories, radiusMeters: input.radiusMeters, limit: input.limit,
+    });
+    if (!validCoordinates(input.coordinates)) throw new Error("INVALID_COORDINATES");
+    const categories = [...new Set(options.categories)].sort() as NearbyCategory[];
+    const meta: NearbySearchResult["meta"] = {
+      center: input.coordinates, radiusMeters: options.radiusMeters, categories,
+      limit: options.limit, searchScope: "AROUND_PARK_COORDINATE", distanceMethod: "STRAIGHT_LINE",
+      source: "GEOAPIFY_PLACES",
+      coverageNote: "Geoapify Places รอบพิกัดอุทยาน; แสดงเฉพาะสถานที่ที่มีชื่อและ OSM ID ตรวจสอบได้จากผลลัพธ์หน้าแรก ระยะทางเป็นเส้นตรง ไม่ใช่ระยะขับรถ. © OpenStreetMap contributors; Powered by Geoapify (https://www.geoapify.com/)",
+      cached: false,
+    };
+    const result = (status: SearchStatus, places: NearbyPlace[] = []): NearbySearchResult => ({ status, places, meta });
+    const present = (value: NearbySearchResult, cached: boolean): NearbySearchResult => ({
+      ...value, places: value.places.slice(0, options.limit),
+      meta: { ...value.meta, limit: options.limit, cached },
+    });
+    const apiKey = (dependencies.apiKey ?? process.env.GEOAPIFY_API_KEY)?.trim();
+    if (!apiKey || apiKey === "your_api_key_here") return result("UPSTREAM_UNAVAILABLE");
+    const key = JSON.stringify([input.coordinates.lat, input.coordinates.lng, categories, options.radiusMeters]);
+    const hit = cache.get(key);
+    if (hit && hit.expiresAt > now()) return present(hit.result, true);
+    if (rateLimitedUntil > now()) return result("UPSTREAM_RATE_LIMITED");
+    const existing = pending.get(key);
+    if (existing) return present(await existing, false);
+    const task = (async () => {
+      const previous = providerQueue;
+      let release!: () => void;
+      providerQueue = new Promise<void>((resolve) => { release = resolve; });
+      await previous;
+      try {
+        if (rateLimitedUntil > now()) return result("UPSTREAM_RATE_LIMITED");
+        if (input.signal?.aborted) return result("UPSTREAM_TIMEOUT");
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), GEOAPIFY_TIMEOUT_MS);
+        const onAbort = () => controller.abort();
+        input.signal?.addEventListener("abort", onAbort, { once: true });
+        try {
+          const response = await fetcher(endpoint, {
+            method: "POST", redirect: "error", cache: "no-store", signal: controller.signal,
+            headers: { "content-type": "application/json", accept: "application/json", "x-api-key": apiKey },
+            body: JSON.stringify({
+              categories: getGeoapifyCategories(categories),
+              filter: { type: "circle", lon: input.coordinates.lng, lat: input.coordinates.lat, radius: options.radiusMeters },
+              bias: { type: "proximity", lon: input.coordinates.lng, lat: input.coordinates.lat },
+              limit: GEOAPIFY_RESULT_LIMIT, lang: "th",
+            }),
+          });
+          if (response.status === 429) {
+            rateLimitedUntil = now() + RATE_LIMIT_COOLDOWN_MS;
+            return result("UPSTREAM_RATE_LIMITED");
+          }
+          if (response.status === 408 || response.status === 504) return result("UPSTREAM_TIMEOUT");
+          if (!response.ok || Number(response.headers.get("content-length")) > MAX_RESPONSE_BYTES) {
+            return result("UPSTREAM_UNAVAILABLE");
+          }
+          const body = await response.text();
+          if (Buffer.byteLength(body, "utf8") > MAX_RESPONSE_BYTES) return result("UPSTREAM_UNAVAILABLE");
+          const data = JSON.parse(body) as { type?: unknown; features?: unknown };
+          if (data.type !== "FeatureCollection" || !Array.isArray(data.features)) return result("UPSTREAM_UNAVAILABLE");
+          const places = normalizeGeoapifyPlaces(data.features, input.coordinates, categories, options.radiusMeters, GEOAPIFY_RESULT_LIMIT);
+          const found = result(places.length ? "OK" : "EMPTY", places);
+          if (cache.size >= 100) cache.delete(cache.keys().next().value!);
+          cache.set(key, { expiresAt: now() + CACHE_TTL_MS, result: found });
+          return found;
+        } catch (error) {
+          return result(controller.signal.aborted || (error instanceof Error && error.name === "AbortError")
+            ? "UPSTREAM_TIMEOUT" : "UPSTREAM_UNAVAILABLE");
+        } finally {
+          clearTimeout(timer);
+          input.signal?.removeEventListener("abort", onAbort);
+        }
+      } finally {
+        release();
+      }
+    })();
+    pending.set(key, task);
+    try { return present(await task, false); } finally { pending.delete(key); }
+  }
+
+  return { search };
+}
+
+type NearbyPlacesEnvironment = Readonly<Record<string, string | undefined>>;
+
+export function getNearbyPlacesProvider(environment: NearbyPlacesEnvironment = process.env): "geoapify" | "overpass" {
+  const configured = environment.NEARBY_PLACES_PROVIDER?.trim().toLowerCase();
+  if (!configured || configured === "geoapify") return "geoapify";
+  if (configured === "overpass") return "overpass";
+  throw new Error("NEARBY_PLACES_PROVIDER must be geoapify or overpass");
+}
+
+export function createConfiguredNearbyPlacesService(
+  environment: NearbyPlacesEnvironment = process.env,
+  dependencies: { geoapify?: ReturnType<typeof createGeoapifyNearbyPlacesService>; overpass?: ReturnType<typeof createNearbyPlacesService> } = {},
+) {
+  const geoapify = dependencies.geoapify ?? createGeoapifyNearbyPlacesService();
+  const overpass = dependencies.overpass ?? createNearbyPlacesService();
+  return {
+    search(input: SearchInput) {
+      return (getNearbyPlacesProvider(environment) === "geoapify" ? geoapify : overpass).search(input);
+    },
+  };
+}
+
+export const nearbyPlacesService = createConfiguredNearbyPlacesService();
 
 type ParkForNearby = { id: string; slug: string; nameTh: string; latitude: number | null; longitude: number | null };
 type ParkDependencies = {

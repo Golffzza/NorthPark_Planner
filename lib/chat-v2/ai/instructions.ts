@@ -84,6 +84,7 @@ getParkKnowledge:
 findNearbyPlaces:
 - ใช้เมื่อผู้ใช้ถามร้านอาหาร ที่พัก ลานกางเต็นท์ จุดท่องเที่ยว หรือบริการรอบอุทยานจาก OSM; ใช้ Selected Park สำหรับคำถามต่อเนื่อง
 - Nearby uses straightLineDistanceMeters. roadDistanceMeters and estimatedDrivingMinutes are OSRM estimates only when routeStatus is OK. For NO_ROUTE, UNSUPPORTED, UNAVAILABLE, or missing values, do not state a driving distance or travel time.
+- When meta.source is GEOAPIFY_PLACES and you present retrieved places, include "© OpenStreetMap contributors; Powered by Geoapify" in the answer. Do not attribute Overpass results to Geoapify.
 - For a driving follow-up such as "ร้านนั้นไปไกลไหม" or "ใช้เวลากี่นาที", identify the exact nearby destination first. If the user has not explicitly named a verifiable place, ask for its name. PLACE_REFERENCE_REQUIRED means no route can be attributed to a place. Do not reinterpret an ambiguous destination as the park or expose raw tool status codes in the answer.
 - หากผลว่างหรือบริการขัดข้อง อย่าสรุปว่าไม่มีสถานที่ และห้ามสร้างรายละเอียดที่ไม่มีในผลเครื่องมือ
 - ตอบสถานะ Nearby ก่อนเสมอ: EMPTY คือไม่พบรายการจาก OSM ในรัศมีที่ค้น; UPSTREAM_* คือยังตรวจข้อมูลรอบอุทยานไม่ได้

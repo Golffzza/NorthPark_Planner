@@ -23,7 +23,7 @@ function request() {
   });
 }
 
-function mockResult(parts: Array<Record<string, unknown>>, text: string) {
+function mockResult(parts: Array<Record<string, unknown>>, text: string, toolResults: Array<{ toolName: string; output: unknown }> = []) {
   applicationMock.stream.mockResolvedValue({
     conversationId: "5c3cabbd-61e8-4ec9-bce6-18a72bf06895",
     result: {
@@ -34,6 +34,7 @@ function mockResult(parts: Array<Record<string, unknown>>, text: string) {
         },
       }),
       text: Promise.resolve(text),
+      steps: Promise.resolve([{ toolResults }]),
       toTextStreamResponse: () => new Response("partial text"),
     },
   });
@@ -60,6 +61,16 @@ describe("POST /api/v2/assistant/chat/stream", () => {
     expect(response.headers.get("X-Conversation-Id")).toBe(
       "5c3cabbd-61e8-4ec9-bce6-18a72bf06895",
     );
+  });
+
+  it("includes Geoapify source only after a real nearby tool result", async () => {
+    mockResult([{ type: "finish", finishReason: "stop" }], "พบร้านอาหาร", [{
+      toolName: "findNearbyPlaces",
+      output: { status: "OK", places: [{ name: "Cafe" }], meta: { source: "GEOAPIFY_PLACES" } },
+    }]);
+    const response = await POST(request());
+    const events = (await response.text()).trim().split("\n").map((line) => JSON.parse(line));
+    expect(events.at(-1)).toEqual({ type: "done", text: "พบร้านอาหาร", nearbySource: "GEOAPIFY_PLACES" });
   });
 
   it("reports a provider error after partial output without marking it complete", async () => {
