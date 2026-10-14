@@ -1,33 +1,38 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { useToast } from "@/components/ui/toast";
 
 type CancelTripButtonProps = {
   tripId: string;
   isCancelled?: boolean;
-  variant?: "default" | "compact" | "icon" | "full";
+  variant?: "default" | "compact" | "icon" | "full" | "menuItem";
+  label?: string;
+  parkName?: string;
+  onBeforeOpen?: () => void;
 };
 
 export function CancelTripButton({
   tripId,
   isCancelled = false,
   variant = "default",
+  label,
+  parkName,
+  onBeforeOpen,
 }: CancelTripButtonProps) {
   const router = useRouter();
+  const toast = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isCancelled) {
     return null;
   }
 
-  async function handleCancel() {
-    const confirmed = window.confirm("คุณต้องการลบแผนที่/ยกเลิกทริปนี้ใช่หรือไม่?");
-
-    if (!confirmed) {
-      return;
-    }
-
+  async function handleConfirmDelete() {
     setIsSubmitting(true);
 
     try {
@@ -39,124 +44,123 @@ export function CancelTripButton({
         throw new Error("Failed to cancel trip");
       }
 
+      setIsModalOpen(false);
+      toast.success("ลบทริปเรียบร้อยแล้ว");
       router.refresh();
     } catch {
-      window.alert("ไม่สามารถลบแผนที่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง");
+      toast.error("ไม่สามารถลบทริปได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  const modalElement = (
+    <ConfirmModal
+      isOpen={isModalOpen}
+      onClose={() => {
+        if (!isSubmitting) setIsModalOpen(false);
+      }}
+      onConfirm={handleConfirmDelete}
+      isConfirming={isSubmitting}
+      title={parkName ? `ต้องการลบทริปไป "${parkName}"?` : "คุณแน่ใจหรือไม่ที่จะลบทริปนี้?"}
+      description="ข้อมูลแผนการเดินทางและการประเมินทั้งหมดของทริปนี้จะถูกลบออก และไม่สามารถกู้คืนได้"
+      confirmLabel="ยืนยันการลบ"
+      cancelLabel="ยกเลิก"
+      icon="trash"
+    />
+  );
+
+  if (variant === "menuItem") {
+    const text = label ?? (isSubmitting ? "กำลังลบ..." : "ลบทริปนี้");
+    return (
+      <>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onBeforeOpen?.();
+            setIsModalOpen(true);
+          }}
+          disabled={isSubmitting}
+          className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-bold font-heading text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer text-left disabled:opacity-50"
+        >
+          <Trash2 className="h-4 w-4 shrink-0" />
+          <span className="text-xs font-bold font-heading leading-normal">{text}</span>
+        </button>
+        {modalElement}
+      </>
+    );
+  }
+
   if (variant === "icon") {
     return (
-      <button
-        type="button"
-        onClick={handleCancel}
-        disabled={isSubmitting}
-        title="ลบแผนที่"
-        className="group inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-rose-600/80 bg-[#280811] hover:bg-[#3a0c1a] text-white shadow-sm transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
-      >
-        <svg
-          className="h-4 w-4 transition-transform group-hover:scale-110"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <>
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          disabled={isSubmitting}
+          title="ลบทริป"
+          className="group inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-rose-600/80 bg-[#280811] hover:bg-[#3a0c1a] text-white shadow-sm transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
         >
-          <path d="M3 6h18" />
-          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-          <line x1="10" x2="10" y1="11" y2="17" />
-          <line x1="14" x2="14" y1="11" y2="17" />
-        </svg>
-      </button>
+          <Trash2 className="h-4 w-4 transition-transform group-hover:scale-110" />
+        </button>
+        {modalElement}
+      </>
     );
   }
 
   if (variant === "full") {
+    const text = label ?? (isSubmitting ? "กำลังลบ..." : "ลบทริป");
     return (
-      <button
-        type="button"
-        onClick={handleCancel}
-        disabled={isSubmitting}
-        title="ลบแผนที่"
-        className="w-full h-11 px-3 inline-flex items-center justify-center gap-2 rounded-full border border-rose-600/80 bg-[#280811] hover:bg-[#3a0c1a] font-heading font-bold text-xs sm:text-sm text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer whitespace-nowrap"
-      >
-        <svg
-          className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <>
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          disabled={isSubmitting}
+          title="ลบทริป"
+          className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-full border border-rose-600/40 bg-rose-950/5 px-3 text-xs font-bold font-heading text-rose-700 transition-all hover:bg-rose-500/10 active:scale-[0.98] dark:border-rose-500/60 dark:bg-[#280811] dark:text-rose-200 dark:hover:bg-[#3a0c1a] sm:text-sm whitespace-nowrap disabled:opacity-60 cursor-pointer"
         >
-          <path d="M3 6h18" />
-          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-          <line x1="10" x2="10" y1="11" y2="17" />
-          <line x1="14" x2="14" y1="11" y2="17" />
-        </svg>
-        <span>{isSubmitting ? "กำลังลบ..." : "ลบแผนที่"}</span>
-      </button>
+          <Trash2 className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
+          <span>{text}</span>
+        </button>
+        {modalElement}
+      </>
     );
   }
 
   if (variant === "compact") {
+    const text = label ?? (isSubmitting ? "กำลังลบ..." : "ลบทริป");
     return (
-      <button
-        type="button"
-        onClick={handleCancel}
-        disabled={isSubmitting}
-        title="ลบแผนที่"
-        className="group inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-rose-200 bg-rose-950/70 hover:bg-rose-900/80 border border-rose-500/50 shadow-2xs transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer whitespace-nowrap"
-      >
-        <svg
-          className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <>
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          disabled={isSubmitting}
+          title="ลบทริป"
+          className="group inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-rose-200 bg-rose-950/70 hover:bg-rose-900/80 border border-rose-500/50 shadow-2xs transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer whitespace-nowrap"
         >
-          <path d="M3 6h18" />
-          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-          <line x1="10" x2="10" y1="11" y2="17" />
-          <line x1="14" x2="14" y1="11" y2="17" />
-        </svg>
-        <span>{isSubmitting ? "กำลังลบ..." : "ลบแผนที่"}</span>
-      </button>
+          <Trash2 className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
+          <span>{text}</span>
+        </button>
+        {modalElement}
+      </>
     );
   }
 
+  const text = label ?? (isSubmitting ? "กำลังลบ..." : "ลบทริป");
   return (
-    <button
-      type="button"
-      onClick={handleCancel}
-      disabled={isSubmitting}
-      title="ลบแผนที่"
-      className="group inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-4 sm:px-5 text-xs sm:text-sm font-semibold text-rose-200 bg-rose-950/70 hover:bg-rose-900/80 border border-rose-500/50 shadow-2xs transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer whitespace-nowrap"
-    >
-      <svg
-        className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
+    <>
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
+        disabled={isSubmitting}
+        title="ลบทริป"
+        className="group inline-flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full px-4 sm:px-5 text-xs sm:text-sm font-semibold text-rose-200 bg-rose-950/70 hover:bg-rose-900/80 border border-rose-500/50 shadow-2xs transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer whitespace-nowrap"
       >
-        <path d="M3 6h18" />
-        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-        <line x1="10" x2="10" y1="11" y2="17" />
-        <line x1="14" x2="14" y1="11" y2="17" />
-      </svg>
-      <span>{isSubmitting ? "กำลังลบ..." : "ลบแผนที่"}</span>
-    </button>
+        <Trash2 className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
+        <span>{text}</span>
+      </button>
+      {modalElement}
+    </>
   );
 }

@@ -6,13 +6,33 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { FormError } from "@/components/ui/form-error";
+import { useToast } from "@/components/ui/toast";
+import {
+  Map,
+  Edit3,
+  Trees,
+  Calendar,
+  Car,
+  MapPin,
+  Check,
+  Radio,
+  Loader2,
+  Bike,
+  Train,
+  Bus,
+  CarFront,
+  User,
+  Users,
+  Compass,
+} from "lucide-react";
 import {
   QUICK_ORIGIN_PRESETS,
-  TRANSPORT_MODE_OPTIONS,
   WEATHER_CONDITION_OPTIONS,
+  TRANSPORT_MODE_OPTIONS,
 } from "@/lib/constants/trip-form-options";
 import type { ParkOptionDto } from "@/lib/mappers/park-dto";
 import type { TripDetailDto } from "@/lib/mappers/trip-dto";
+import { addDays, fromYMD, toYMD } from "@/lib/date";
 import { toDateInputValue } from "@/lib/utils/date";
 
 import { TripFormField } from "./trip-form-fields/trip-form-field";
@@ -44,18 +64,23 @@ type FormState = {
   originLng: string;
   transportMode: string;
   travelerCount: string;
-  drivetrain: string;
-  engineType: string;
-  motorcycleType: string;
-  trainType: string;
-  rentVehicleAtDestination: string;
-  mountainExperience: string;
-  coDriver: string;
   weatherCondition: string;
   estimatedTravelMinutes: string;
-  mockSunsetTime: string;
   notes: string;
 };
+
+function getDefaultTripDate(): string {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 is Sunday, 6 is Saturday
+  // Upcoming weekend (Saturday):
+  let daysToAdd = (6 - dayOfWeek + 7) % 7;
+  if (daysToAdd === 0) {
+    // If today is Saturday, suggest tomorrow Sunday (+1 day)
+    daysToAdd = 1;
+  }
+  const defaultDate = addDays(now, daysToAdd);
+  return toYMD(defaultDate);
+}
 
 function getInitialState(
   mode: TripFormMode,
@@ -72,39 +97,23 @@ function getInitialState(
       originLng: trip.originLng !== null ? String(trip.originLng) : "",
       transportMode: trip.transportMode ?? "",
       travelerCount: trip.travelerCount === null ? "" : String(trip.travelerCount),
-      drivetrain: "2WD",
-      engineType: "ICE",
-      motorcycleType: "MANUAL_BIGBIKE",
-      trainType: "CNR_SLEEPER",
-      rentVehicleAtDestination: "NO",
-      mountainExperience: "BEGINNER",
-      coDriver: "SOLO",
       weatherCondition: trip.weatherCondition ?? "",
       estimatedTravelMinutes: trip.estimatedTravelMinutes === null ? "" : String(trip.estimatedTravelMinutes),
-      mockSunsetTime: trip.mockSunsetTime ?? "",
       notes: trip.notes ?? "",
     };
   }
 
   return {
     parkId: initialParkId ?? "",
-    tripDate: "",
+    tripDate: getDefaultTripDate(),
     departAt: "07:00",
-    originText: "",
-    originLat: "",
-    originLng: "",
+    originText: "ตัวเมืองเชียงใหม่",
+    originLat: "18.7883",
+    originLng: "98.9853",
     transportMode: "CAR",
-    travelerCount: "1",
-    drivetrain: "2WD",
-    engineType: "ICE",
-    motorcycleType: "MANUAL_BIGBIKE",
-    trainType: "CNR_SLEEPER",
-    rentVehicleAtDestination: "NO",
-    mountainExperience: "BEGINNER",
-    coDriver: "SOLO",
-    weatherCondition: "CLEAR",
-    estimatedTravelMinutes: "120",
-    mockSunsetTime: "",
+    travelerCount: "2",
+    weatherCondition: "",
+    estimatedTravelMinutes: "",
     notes: "",
   };
 }
@@ -193,10 +202,10 @@ function getThaiTimeDescription(timeStr: string): {
 }
 
 const QUICK_TIME_PRESETS = [
-  { label: "🌅 06:00 น.", time: "06:00" },
-  { label: "🚗 07:30 น.", time: "07:30" },
-  { label: "☀️ 09:00 น.", time: "09:00" },
-  { label: "🌤️ 13:00 น.", time: "13:00" },
+  { label: "06:00 น.", time: "06:00" },
+  { label: "07:30 น.", time: "07:30" },
+  { label: "09:00 น.", time: "09:00" },
+  { label: "13:00 น.", time: "13:00" },
 ];
 
 function getQuickDatePresets() {
@@ -309,6 +318,7 @@ function getRefreshEvaluationErrorMessage(
 
 export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
   const router = useRouter();
+  const toast = useToast();
   const isCreateMode = mode === "create";
   const [formState, setFormState] = useState<FormState>(
     getInitialState(mode, initialParkId, trip),
@@ -316,7 +326,6 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(mode === "edit");
   const [isSyncingLocation, setIsSyncingLocation] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string>();
 
@@ -374,7 +383,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
           delete nextErrors.originLng;
           return nextErrors;
         });
-        setLocationMessage("✓ เชื่อมต่อพิกัดตำแหน่งปัจจุบันสำเร็จ");
+        setLocationMessage("เชื่อมต่อพิกัดตำแหน่งปัจจุบันสำเร็จ");
         setIsSyncingLocation(false);
       },
       (error) => {
@@ -396,16 +405,6 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
     errors: Record<string, string>,
     generalError?: string,
   ) {
-    // If error is in advanced fields, ensure advanced section is open
-    if (
-      errors.weatherCondition ||
-      errors.estimatedTravelMinutes ||
-      errors.mockSunsetTime ||
-      errors.notes
-    ) {
-      setShowAdvanced(true);
-    }
-
     const performScroll = () => {
       // 1. Specific field error mappings to container section IDs or inputs in top-to-bottom order
       const fieldMapping: Record<string, string[]> = {
@@ -415,12 +414,9 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
         originText: ["step-origin", "originText"],
         originLat: ["step-origin", "originText"],
         originLng: ["step-origin", "originText"],
-        transportMode: ["step-preferences", "transportMode"],
-        travelerCount: ["step-preferences", "travelerCount"],
-        weatherCondition: ["step-advanced", "weatherCondition"],
-        estimatedTravelMinutes: ["step-advanced", "estimatedTravelMinutes"],
-        mockSunsetTime: ["step-advanced", "mockSunsetTime"],
-        notes: ["step-advanced", "notes"],
+        transportMode: ["step-origin", "transportMode"],
+        travelerCount: ["step-origin", "travelerCount"],
+        notes: ["notes"],
       };
 
       for (const [field, selectors] of Object.entries(fieldMapping)) {
@@ -509,6 +505,25 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
     if (isCreateMode && (!formState.tripDate || formState.tripDate.trim().length === 0)) {
       missing.push("กรุณากำหนดวันที่เดินทาง");
       newFieldErrors.tripDate = "กรุณากำหนดวันที่เดินทาง";
+    } else if (formState.tripDate) {
+      const selected = fromYMD(formState.tripDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const maxDate = new Date(today);
+      maxDate.setDate(today.getDate() + 15);
+      maxDate.setHours(23, 59, 59, 999);
+
+      const target = new Date(selected);
+      target.setHours(0, 0, 0, 0);
+
+      if (target < today) {
+        missing.push("ไม่สามารถเลือกวันเดินทางในอดีตได้");
+        newFieldErrors.tripDate = "ไม่สามารถเลือกวันเดินทางในอดีตได้";
+      } else if (target > maxDate) {
+        missing.push("เลือกวันเดินทางได้ล่วงหน้าสูงสุด 16 วันเท่านั้น");
+        newFieldErrors.tripDate =
+          "เลือกวันเดินทางได้ล่วงหน้าสูงสุด 16 วัน (ตามช่วงพยากรณ์อากาศ)";
+      }
     }
 
     if (isCreateMode && (!formState.departAt || formState.departAt.trim().length === 0)) {
@@ -519,6 +534,16 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
     if (isCreateMode && (!formState.originText || formState.originText.trim().length === 0)) {
       missing.push("กรุณาระบุจุดเริ่มต้นเดินทาง");
       newFieldErrors.originText = "กรุณาระบุจุดเริ่มต้นเดินทาง";
+    }
+
+    if (isCreateMode && !formState.weatherCondition) {
+      missing.push("กรุณาระบุสภาพอากาศสำหรับการประเมินเบื้องต้น");
+      newFieldErrors.weatherCondition = "กรุณาเลือกสภาพอากาศ";
+    }
+
+    if (isCreateMode && (!Number.isInteger(Number(formState.estimatedTravelMinutes)) || Number(formState.estimatedTravelMinutes) < 1)) {
+      missing.push("กรุณาระบุเวลาเดินทางโดยประมาณ");
+      newFieldErrors.estimatedTravelMinutes = "กรุณาระบุเวลาเดินทางเป็นนาที";
     }
 
     if (missing.length > 0) {
@@ -555,7 +580,6 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
       travelerCount: formState.travelerCount ? Number(formState.travelerCount) : null,
       weatherCondition: formState.weatherCondition || null,
       estimatedTravelMinutes: formState.estimatedTravelMinutes ? Number(formState.estimatedTravelMinutes) : null,
-      mockSunsetTime: formState.mockSunsetTime || undefined,
       notes: formState.notes || undefined,
     };
 
@@ -620,10 +644,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
           .catch(() => null)) as RefreshEvaluationErrorPayload | null;
 
         const refreshMessage = getRefreshEvaluationErrorMessage(refreshPayload);
-
-        if (typeof window !== "undefined") {
-          window.alert(refreshMessage);
-        }
+        toast.info(refreshMessage);
 
         router.push(`/trips/${tripId}/result`);
         router.refresh();
@@ -645,8 +666,13 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
       {/* Overview Steps Card */}
       <section className="soft-card relative overflow-hidden rounded-3xl p-4.5 sm:p-6 border border-white/60 dark:border-emerald-800/40 shadow-md shadow-emerald-950/5 backdrop-blur-2xl bg-white/85 dark:bg-[#0b1c16]/90">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white font-heading">
-          {mode === "create" ? "🗺️ ขั้นตอนวางแผนทริป" : "✏️ ปรับแผนการเดินทาง"}
+        <h2 className="inline-flex items-center gap-2 text-base sm:text-lg font-semibold text-slate-900 dark:text-white font-heading">
+          {mode === "create" ? (
+            <Map className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          ) : (
+            <Edit3 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          )}
+          <span>{mode === "create" ? "ขั้นตอนวางแผนทริป" : "ปรับแผนการเดินทาง"}</span>
         </h2>
         <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-emerald-200/80 font-normal leading-relaxed">
           กรอก 3 ขั้นตอนง่ายๆ เพื่อให้ระบบคำนวณและประเมินความปลอดภัยของทริป
@@ -654,19 +680,19 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
 
         <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2.5">
           <div className="flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full bg-emerald-500/15 dark:bg-emerald-950/70 border border-emerald-500/35 px-2 text-center shadow-xs">
-            <span className="text-xs shrink-0">🌲</span>
+            <Trees className="h-3.5 w-3.5 shrink-0 text-emerald-700 dark:text-emerald-300" />
             <span className="text-[11px] sm:text-xs font-bold text-emerald-800 dark:text-emerald-300 whitespace-nowrap">
               1. อุทยาน
             </span>
           </div>
           <div className="flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full bg-slate-100/80 dark:bg-[#0c221b]/80 border border-slate-200/80 dark:border-emerald-800/40 px-2 text-center">
-            <span className="text-xs shrink-0">🗓️</span>
+            <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-emerald-300/70" />
             <span className="text-[11px] sm:text-xs font-medium text-slate-600 dark:text-emerald-200/70 whitespace-nowrap">
               2. วันเวลา
             </span>
           </div>
           <div className="flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-full bg-slate-100/80 dark:bg-[#0c221b]/80 border border-slate-200/80 dark:border-emerald-800/40 px-2 text-center">
-            <span className="text-xs shrink-0">🚗</span>
+            <Car className="h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-emerald-300/70" />
             <span className="text-[11px] sm:text-xs font-medium text-slate-600 dark:text-emerald-200/70 whitespace-nowrap">
               3. จุดเริ่มต้น
             </span>
@@ -746,7 +772,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             <TripFormField
               label="วันเดินทาง"
               htmlFor="tripDate"
-              hint="แตะเลือกวันที่หรือกดปุ่มลัด"
+              hint="เลือกวันเดินทางได้ล่วงหน้าสูงสุด 16 วัน (สำหรับประเมินสภาพอากาศแบบเรียลไทม์)"
             >
               <TripDatePicker
                 id="tripDate"
@@ -810,7 +836,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             >
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-base z-10 select-none">
-                  📍
+                  <MapPin className="h-4 w-4 text-slate-400 dark:text-emerald-300/60" />
                 </span>
                 <input
                   id="originText"
@@ -829,7 +855,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             {/* Quick Origin Presets */}
             <div className="space-y-1.5 pt-0.5">
               <div className="flex items-center gap-1.5 text-[11.5px] font-bold text-slate-500 dark:text-emerald-300/80">
-                <span>📍</span>
+                <MapPin className="h-3.5 w-3.5" />
                 <span>จุดเริ่มต้นยอดนิยม (แตะเพื่อเลือก):</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -848,7 +874,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                     >
                       <span>{preset.label}</span>
                       {isSelected ? (
-                        <span className="text-[10px] font-bold">✓</span>
+                        <Check className="h-3 w-3" />
                       ) : null}
                     </button>
                   );
@@ -862,15 +888,16 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/20 dark:bg-emerald-500/20 text-sm">
-                    🛰️
+                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/20 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                    <Radio className="h-4 w-4" />
                   </span>
                   <p className="text-sm font-bold text-slate-900 dark:text-white">
                     ระบุจากพิกัดตำแหน่งปัจจุบัน (GPS)
                   </p>
                   {formState.originLat && formState.originLng ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 dark:bg-emerald-400/20 px-2 py-0.5 text-[10.5px] font-bold text-emerald-800 dark:text-emerald-300">
-                      ✓ เชื่อมต่อพิกัดแล้ว
+                      <Check className="h-3 w-3" />
+                      เชื่อมต่อพิกัดแล้ว
                     </span>
                   ) : null}
                 </div>
@@ -880,9 +907,12 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                 </p>
                 {locationMessage ? (
                   <p
-                    className={`text-xs font-semibold ${locationMessage.includes("สำเร็จ") ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}
+                    className={`inline-flex items-center gap-1 text-xs font-semibold ${locationMessage.includes("สำเร็จ") ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}
                   >
-                    {locationMessage}
+                    {locationMessage.includes("สำเร็จ") ? (
+                      <Check className="h-3.5 w-3.5 shrink-0" />
+                    ) : null}
+                    <span>{locationMessage}</span>
                   </p>
                 ) : null}
               </div>
@@ -892,7 +922,11 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                 disabled={isSyncingLocation}
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 dark:from-emerald-500 dark:to-teal-600 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 shadow-md shadow-emerald-900/15 active:scale-95 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span>{isSyncingLocation ? "⏳" : "📡"}</span>
+                {isSyncingLocation ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Radio className="h-4 w-4" />
+                )}
                 <span>
                   {isSyncingLocation
                     ? "กำลังค้นหาตำแหน่ง..."
@@ -917,35 +951,36 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                 {
                   value: "CAR",
                   label: "รถยนต์",
-                  icon: "🚗",
+                  icon: Car,
                   desc: "เก๋ง / SUV / กระบะ",
                 },
                 {
                   value: "MOTORCYCLE",
                   label: "รถจักรยานยนต์",
-                  icon: "🛵",
+                  icon: Bike,
                   desc: "ออโต้ / บิ๊กไบค์",
                 },
                 {
                   value: "TRAIN",
                   label: "รถไฟ",
-                  icon: "🚆",
+                  icon: Train,
                   desc: "สายเหนือ / ขุนตาน",
                 },
                 {
                   value: "PUBLIC_TRANSPORT",
                   label: "รถสาธารณะ",
-                  icon: "🚌",
+                  icon: Bus,
                   desc: "รถตู้ / สองแถว",
                 },
                 {
                   value: "OTHER",
                   label: "อื่น ๆ",
-                  icon: "🚙",
+                  icon: CarFront,
                   desc: "เหมารถพร้อมคนขับ",
                 },
               ].map((option) => {
                 const isSelected = formState.transportMode === option.value;
+                const Icon = option.icon;
 
                 return (
                   <button
@@ -958,9 +993,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                         : "bg-white/90 dark:bg-[#0c221b]/80 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/30 border-slate-200/80 dark:border-emerald-800/40 text-slate-700 dark:text-emerald-100"
                     }`}
                   >
-                    <span className="text-2xl sm:text-3xl mb-1.5 transition-transform duration-200 group-hover:scale-110">
-                      {option.icon}
-                    </span>
+                    <Icon className="h-6 w-6 sm:h-7 sm:w-7 mb-1.5 transition-transform duration-200 group-hover:scale-110 text-emerald-700 dark:text-emerald-300" />
                     <span
                       className={`text-xs sm:text-sm font-bold ${isSelected ? "text-emerald-950 dark:text-emerald-200" : "text-slate-800 dark:text-slate-200"}`}
                     >
@@ -970,8 +1003,8 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                       {option.desc}
                     </span>
                     {isSelected ? (
-                      <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-slate-950">
-                        ✓
+                      <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950">
+                        <Check className="h-2.5 w-2.5" />
                       </span>
                     ) : null}
                   </button>
@@ -981,628 +1014,10 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
             <FormError message={fieldErrors.transportMode} />
           </div>
 
-          {/* 2. Conditional Sub-options (Dynamic Expansion) */}
-          {formState.transportMode === "CAR" && (
-            <div className="animate-in fade-in slide-in-from-top-3 duration-250 space-y-4 rounded-2xl border border-emerald-500/30 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/40 p-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                <span>⚙️</span>
-                <span>รายละเอียดระบบรถยนต์</span>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                {/* Drivetrain Option */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    ระบบขับเคลื่อน
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateField("drivetrain", "2WD")}
-                      className={`flex flex-col items-center rounded-xl border p-2.5 text-center transition-all active:scale-95 cursor-pointer ${
-                        formState.drivetrain === "2WD"
-                          ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-xs ring-1 ring-emerald-500/50"
-                          : "border-slate-200 dark:border-emerald-900/40 bg-white/80 dark:bg-black/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                    >
-                      <span className="text-sm font-bold">2WD</span>
-                      <span className="text-[10.5px]">ขับเคลื่อน 2 ล้อ</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => updateField("drivetrain", "4WD_AWD")}
-                      className={`flex flex-col items-center rounded-xl border p-2.5 text-center transition-all active:scale-95 cursor-pointer ${
-                        formState.drivetrain === "4WD_AWD"
-                          ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-xs ring-1 ring-emerald-500/50"
-                          : "border-slate-200 dark:border-emerald-900/40 bg-white/80 dark:bg-black/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                    >
-                      <span className="text-sm font-bold">4WD / AWD</span>
-                      <span className="text-[10.5px]">ขับเคลื่อน 4 ล้อ</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Engine Type Option */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    ประเภทเครื่องยนต์ / พลังงาน
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateField("engineType", "ICE")}
-                      className={`flex flex-col items-center rounded-xl border p-2.5 text-center transition-all active:scale-95 cursor-pointer ${
-                        formState.engineType === "ICE"
-                          ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-xs ring-1 ring-emerald-500/50"
-                          : "border-slate-200 dark:border-emerald-900/40 bg-white/80 dark:bg-black/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                    >
-                      <span className="text-sm font-bold">
-                        ⛽ น้ำมัน / ไฮบริด
-                      </span>
-                      <span className="text-[10.5px]">ICE Engine</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => updateField("engineType", "EV")}
-                      className={`flex flex-col items-center rounded-xl border p-2.5 text-center transition-all active:scale-95 cursor-pointer ${
-                        formState.engineType === "EV"
-                          ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-xs ring-1 ring-emerald-500/50"
-                          : "border-slate-200 dark:border-emerald-900/40 bg-white/80 dark:bg-black/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                    >
-                      <span className="text-sm font-bold">⚡ ไฟฟ้า 100%</span>
-                      <span className="text-[10.5px]">EV Electric</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Motorcycle Sub-options */}
-          {formState.transportMode === "MOTORCYCLE" && (
-            <div className="animate-in fade-in slide-in-from-top-3 duration-250 space-y-3 rounded-2xl border border-emerald-500/30 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/40 p-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                <span>⚙️</span>
-                <span>ประเภทและขนาดเครื่องยนต์รถจักรยานยนต์</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateField("motorcycleType", "AUTO_UNDER_150")
-                  }
-                  className={`flex flex-col items-center rounded-xl border p-3 text-center transition-all active:scale-95 cursor-pointer ${
-                    formState.motorcycleType === "AUTO_UNDER_150"
-                      ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-xs ring-1 ring-emerald-500/50"
-                      : "border-slate-200 dark:border-emerald-900/40 bg-white/80 dark:bg-black/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                >
-                  <span className="text-2xl mb-1">🛵</span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">
-                    ออโตเมติก (&lt;150cc)
-                  </span>
-                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Scooter / รถเกียร์ออโต้
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateField("motorcycleType", "MANUAL_BIGBIKE")
-                  }
-                  className={`flex flex-col items-center rounded-xl border p-3 text-center transition-all active:scale-95 cursor-pointer ${
-                    formState.motorcycleType === "MANUAL_BIGBIKE"
-                      ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-xs ring-1 ring-emerald-500/50"
-                      : "border-slate-200 dark:border-emerald-900/40 bg-white/80 dark:bg-black/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                >
-                  <span className="text-2xl mb-1">🏍️</span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">
-                    เกียร์ธรรมดา / Big Bike
-                  </span>
-                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    คลัตช์มือ / วิบาก / Touring
-                  </span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Train Sub-options & Northern Rail Route Info */}
-          {formState.transportMode === "TRAIN" && (
-            <div className="animate-in fade-in slide-in-from-top-3 duration-250 space-y-3.5 rounded-2xl border border-emerald-500/30 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/40 p-4">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                  <span>🚆</span>
-                  <span>ข้อมูลและประเภทการเดินทางด้วยรถไฟสายเหนือ</span>
-                </div>
-                <span className="inline-flex shrink-0 items-center justify-center text-[10.5px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/20 whitespace-nowrap">
-                  ความปลอดภัยสูง
-                </span>
-              </div>
-
-              {/* Train Class / Type Selection */}
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  ประเภทขบวนรถไฟที่เลือกใช้
-                </label>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => updateField("trainType", "CNR_SLEEPER")}
-                    className={`flex flex-col items-center rounded-xl border p-3 text-center transition-all active:scale-95 cursor-pointer ${
-                      formState.trainType === "CNR_SLEEPER"
-                        ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-xs ring-1 ring-emerald-500/50"
-                        : "border-slate-200 dark:border-emerald-900/40 bg-white/80 dark:bg-black/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600 hover:text-slate-900 dark:hover:text-slate-200"
-                    }`}
-                  >
-                    <span className="text-2xl mb-1">🛌</span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white">
-                      ด่วนพิเศษ CNR / ตู้นอน
-                    </span>
-                    <span className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      ขบวนอุตราวิถี ปรับอากาศ นอนสบาย
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => updateField("trainType", "RAPID_LOCAL")}
-                    className={`flex flex-col items-center rounded-xl border p-3 text-center transition-all active:scale-95 cursor-pointer ${
-                      formState.trainType === "RAPID_LOCAL"
-                        ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-xs ring-1 ring-emerald-500/50"
-                        : "border-slate-200 dark:border-emerald-900/40 bg-white/80 dark:bg-black/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600 hover:text-slate-900 dark:hover:text-slate-200"
-                    }`}
-                  >
-                    <span className="text-2xl mb-1">🪟</span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white">
-                      รถเร็ว / รถธรรมดาท้องถิ่น
-                    </span>
-                    <span className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      สัมผัสวิวธรรมชาติ สบายๆ
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Park Train Connection Highlight */}
-              <div className="rounded-xl border border-emerald-500/30 bg-white/90 dark:bg-emerald-950/60 p-3 text-xs text-slate-700 dark:text-emerald-100 space-y-1.5">
-                <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300">
-                  <span>💡</span>
-                  <span>
-                    ข้อแนะนำการเดินทางด้วยรถไฟสู่อุทยานแห่งชาติภาคเหนือ:
-                  </span>
-                </div>
-                <div className="text-[11.5px] leading-relaxed text-slate-600 dark:text-emerald-200/90 space-y-1">
-                  <p>
-                    •{" "}
-                    <strong className="text-emerald-700 dark:text-emerald-300">
-                      อุทยานแห่งชาติดอยขุนตาล:
-                    </strong>{" "}
-                    สามารถนั่งรถไฟลงที่ <em>&quot;สถานีรถไฟขุนตาน&quot;</em>{" "}
-                    แล้วเดินเท้าตรงเข้าสู่ที่ทำการอุทยานฯ ได้ทันที
-                    ผ่านอุโมงค์ขุนตาน
-                  </p>
-                  <p>
-                    •{" "}
-                    <strong className="text-emerald-700 dark:text-emerald-300">
-                      อุทยานฯ อื่นๆ ในภาคเหนือ:
-                    </strong>{" "}
-                    ลงที่สถานีหลัก เช่น สถานีเชียงใหม่ สถานีลำปาง สถานีเด่นชัย
-                    (แพร่/น่าน) สถานีพิษณุโลก แล้วต่อรถสองแถว รถโดยสารประจำทาง
-                    หรือเช่ารถขับ
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* สำหรับ รถไฟ / รถสาธารณะ: ถามความต้องการเช่ารถขับเองที่ปลายทาง */}
-          {(formState.transportMode === "TRAIN" ||
-            formState.transportMode === "PUBLIC_TRANSPORT" ||
-            formState.transportMode === "OTHER") && (
-            <div className="animate-in fade-in slide-in-from-top-3 duration-250 space-y-3.5 rounded-2xl border border-emerald-500/30 dark:border-emerald-700/40 bg-white/90 dark:bg-emerald-950/40 p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="space-y-0.5">
-                  <label className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <span>🚗</span>
-                    <span>คุณต้องการเช่ารถขับเองที่ปลายทางหรือไม่?</span>
-                  </label>
-                  <p className="text-xs text-slate-500 dark:text-emerald-300/70">
-                    เช่น
-                    เช่ารถยนต์หรือเช่ารถจักรยานยนต์ขับต่อจากสถานี/จุดส่งผู้โดยสาร
-                  </p>
-                </div>
-
-                <div className="inline-flex rounded-xl bg-slate-100 dark:bg-black/30 p-1 border border-slate-200/80 dark:border-emerald-900/40 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateField("rentVehicleAtDestination", "NO")
-                    }
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer ${
-                      formState.rentVehicleAtDestination === "NO"
-                        ? "bg-white dark:bg-emerald-600 text-emerald-800 dark:text-white shadow-xs font-extrabold border border-slate-200/60 dark:border-emerald-500"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    ❌ ไม่ใช่ (ใช้รถสาธารณะต่อ)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateField("rentVehicleAtDestination", "YES")
-                    }
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer ${
-                      formState.rentVehicleAtDestination === "YES"
-                        ? "bg-emerald-600 dark:bg-emerald-500 text-white shadow-xs font-extrabold"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    🔑 ใช่ (เช่าขับเอง)
-                  </button>
-                </div>
-              </div>
-
-              {formState.rentVehicleAtDestination === "NO" && (
-                <div className="animate-in fade-in duration-200 flex items-start gap-2.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-900/30 border border-emerald-500/20 p-3 text-xs text-emerald-800 dark:text-emerald-200">
-                  <span className="text-base leading-none shrink-0 mt-0.5">
-                    🛡️
-                  </span>
-                  <div className="space-y-0.5">
-                    <p className="font-bold text-emerald-900 dark:text-emerald-300">
-                      ระบบประเมินความปลอดภัยสูงมาก
-                    </p>
-                    <p className="text-[11px] leading-relaxed text-emerald-800/90 dark:text-emerald-300/80">
-                      เนื่องจากใช้บริการรถสาธารณะ/รถสองแถวของอุทยาน/เดินเท้า
-                      จึงไม่มีความเสี่ยงเรื่องการขับขี่บนทางลาดชันหรือโค้งหักศอกด้วยตนเอง
-                      (ระบบจะซ่อนการประเมินผู้ขับขี่ส่วนนี้)
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 3. Driver Readiness Profile Section - แสดงเมื่อขับไปเองตั้งแต่ต้น หรือเลือกเช่ารถขับเองที่ปลายทาง */}
-          {(formState.transportMode === "CAR" ||
-            formState.transportMode === "MOTORCYCLE" ||
-            formState.rentVehicleAtDestination === "YES") && (
-            <div className="animate-in fade-in slide-in-from-top-3 duration-250 space-y-4 border-t border-slate-200/80 dark:border-emerald-800/40 pt-4">
-              <div>
-                <label className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                  2. ประเมินความพร้อมของผู้ขับขี่{" "}
-                  {formState.rentVehicleAtDestination === "YES"
-                    ? "(สำหรับขับรถเช่าปลายทาง)"
-                    : ""}
-                </label>
-                <p className="text-xs text-slate-500 dark:text-emerald-300/70">
-                  ประเมินประสบการณ์เพื่อความปลอดภัยบนเส้นทางลาดชันและคดเคี้ยว
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                {/* Mountain Experience */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    ประสบการณ์ขับรถขึ้น-ลงเขา
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateField("mountainExperience", "BEGINNER")
-                      }
-                      className={`flex flex-col items-center rounded-2xl border p-3 text-center transition-all active:scale-95 cursor-pointer ${
-                        formState.mountainExperience === "BEGINNER"
-                          ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-[0_0_15px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/50"
-                          : "border-slate-200/80 dark:border-emerald-900/40 bg-white/80 dark:bg-emerald-950/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600"
-                      }`}
-                    >
-                      <span className="text-2xl mb-1">🔰</span>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        มือใหม่ทางเขา
-                      </span>
-                      <span className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        ยังไม่คุ้นเคยเส้นทางชัน
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateField("mountainExperience", "EXPERIENCED")
-                      }
-                      className={`flex flex-col items-center rounded-2xl border p-3 text-center transition-all active:scale-95 cursor-pointer ${
-                        formState.mountainExperience === "EXPERIENCED"
-                          ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-[0_0_15px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/50"
-                          : "border-slate-200/80 dark:border-emerald-900/40 bg-white/80 dark:bg-emerald-950/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600"
-                      }`}
-                    >
-                      <span className="text-2xl mb-1">🏔️</span>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        ชำนาญทางเขา
-                      </span>
-                      <span className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        เคยขับเส้นทางดอยสูง
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Co-Driver / Fatigue Risk */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    จำนวนคนขับ (ประเมินความล้า)
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateField("coDriver", "SOLO")}
-                      className={`flex flex-col items-center rounded-2xl border p-3 text-center transition-all active:scale-95 cursor-pointer ${
-                        formState.coDriver === "SOLO"
-                          ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-[0_0_15px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/50"
-                          : "border-slate-200/80 dark:border-emerald-900/40 bg-white/80 dark:bg-emerald-950/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600"
-                      }`}
-                    >
-                      <span className="text-2xl mb-1">👤</span>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        ขับคนเดียว (Solo)
-                      </span>
-                      <span className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        ไม่มีผู้ช่วยสลับขับ
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => updateField("coDriver", "CO_DRIVER")}
-                      className={`flex flex-col items-center rounded-2xl border p-3 text-center transition-all active:scale-95 cursor-pointer ${
-                        formState.coDriver === "CO_DRIVER"
-                          ? "border-emerald-500 bg-emerald-500/20 dark:bg-emerald-500/25 text-emerald-900 dark:text-white shadow-[0_0_15px_rgba(16,185,129,0.2)] ring-1 ring-emerald-500/50"
-                          : "border-slate-200/80 dark:border-emerald-900/40 bg-white/80 dark:bg-emerald-950/20 text-slate-600 dark:text-slate-400 hover:border-emerald-600"
-                      }`}
-                    >
-                      <span className="text-2xl mb-1">👥</span>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        มีคนสลับขับ
-                      </span>
-                      <span className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        ลดความเหนื่อยล้า
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 4. Live Mountain Readiness Safety Insight Card */}
-          <div className="rounded-2xl border border-emerald-500/30 dark:border-emerald-700/40 bg-emerald-500/10 dark:bg-emerald-950/50 p-4 shadow-2xs">
-            <div className="flex flex-wrap items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-base shrink-0">🧭</span>
-                <span className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-300">
-                  ข้อแนะนำความปลอดภัยสำหรับพาหนะ & ผู้ขับขี่
-                </span>
-              </div>
-              <div
-                className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-3 py-1 text-[11px] sm:text-xs font-bold tracking-tight whitespace-nowrap shadow-xs backdrop-blur-md transition-all ${
-                  (formState.transportMode !== "CAR" &&
-                    formState.transportMode !== "MOTORCYCLE" &&
-                    formState.rentVehicleAtDestination === "NO") ||
-                  (formState.mountainExperience === "EXPERIENCED" &&
-                    (formState.transportMode !== "CAR" ||
-                      formState.drivetrain === "4WD_AWD"))
-                    ? "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40 shadow-emerald-950/10"
-                    : "bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/40 shadow-amber-950/10"
-                }`}
-              >
-                <span
-                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                    (formState.transportMode !== "CAR" &&
-                      formState.transportMode !== "MOTORCYCLE" &&
-                      formState.rentVehicleAtDestination === "NO") ||
-                    (formState.mountainExperience === "EXPERIENCED" &&
-                      (formState.transportMode !== "CAR" ||
-                        formState.drivetrain === "4WD_AWD"))
-                      ? "bg-emerald-500 animate-pulse"
-                      : "bg-amber-500"
-                  }`}
-                />
-                <span className="text-center font-extrabold leading-none">
-                  {formState.transportMode !== "CAR" &&
-                  formState.transportMode !== "MOTORCYCLE" &&
-                  formState.rentVehicleAtDestination === "NO"
-                    ? "ความปลอดภัยสูงมาก"
-                    : formState.mountainExperience === "EXPERIENCED"
-                      ? "ความพร้อมสูง"
-                      : "ควรเพิ่มความระมัดระวัง"}
-                </span>
-              </div>
-            </div>
-
-            <ul className="mt-2.5 space-y-1.5 text-[11.5px] text-slate-700 dark:text-slate-300">
-              {/* รถไฟ กรณีไม่เช่ารถขับเอง */}
-              {formState.transportMode === "TRAIN" &&
-                formState.rentVehicleAtDestination === "NO" && (
-                  <>
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                        •
-                      </span>
-                      <span>
-                        เดินทางด้วยรถไฟ: ความปลอดภัยสูงมาก
-                        ไม่มีความเสี่ยงเรื่องการขับรถบนทางลาดชันหรือโค้งหักศอก
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-teal-600 dark:text-teal-400 font-bold">
-                        •
-                      </span>
-                      <span>
-                        หากเดินทางไปอุทยานแห่งชาติดอยขุนตาล
-                        สามารถลงที่สถานีขุนตานและเดินเท้าสู่อุทยานได้โดยตรง
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-slate-600 dark:text-slate-400 font-bold">
-                        •
-                      </span>
-                      <span>
-                        แนะนำตรวจสอบตารางเดินรถไฟและสำรองที่นั่งล่วงหน้า
-                        โดยเฉพาะขบวนด่วนพิเศษช่วงวันหยุด
-                      </span>
-                    </li>
-                  </>
-                )}
-
-              {/* รถสาธารณะ/อื่น ๆ กรณีไม่เช่ารถขับเอง */}
-              {(formState.transportMode === "PUBLIC_TRANSPORT" ||
-                formState.transportMode === "OTHER") &&
-                formState.rentVehicleAtDestination === "NO" && (
-                  <>
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                        •
-                      </span>
-                      <span>
-                        ใช้บริการรถสาธารณะ/เหมารถพร้อมคนขับท้องถิ่น:
-                        มีความชำนาญทางสูงและปลอดภัย ไม่เหนื่อยล้าจากการขับเอง
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-teal-600 dark:text-teal-400 font-bold">
-                        •
-                      </span>
-                      <span>
-                        แนะนำตรวจสอบรอบเวลาเดินรถสองแถวของอุทยาน
-                        หรือนัดหมายเวลากลับกับคนขับรถท้องถิ่นล่วงหน้า
-                      </span>
-                    </li>
-                  </>
-                )}
-
-              {/* กรณีเช่ารถขับเองที่ปลายทาง */}
-              {formState.transportMode !== "CAR" &&
-                formState.transportMode !== "MOTORCYCLE" &&
-                formState.rentVehicleAtDestination === "YES" && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                      •
-                    </span>
-                    <span>
-                      เช่ารถขับต่อที่ปลายทาง: ควรตรวจเช็กระบบเบรก ยาง
-                      และกำลังเครื่องยนต์ของรถเช่าก่อนขับขึ้นดอย
-                    </span>
-                  </li>
-                )}
-
-              {/* คำแนะนำสำหรับรถยนต์ */}
-              {formState.transportMode === "CAR" &&
-                formState.drivetrain === "4WD_AWD" && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                      •
-                    </span>
-                    <span>
-                      ระบบ 4WD/AWD ยึดเกาะถนนโค้งลาดชันได้มั่นคง ปลอดภัยสูง
-                    </span>
-                  </li>
-                )}
-              {formState.transportMode === "CAR" &&
-                formState.drivetrain === "2WD" && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                      •
-                    </span>
-                    <span>
-                      รถขับเคลื่อน 2 ล้อ
-                      ควรระวังทางดินชันหรือพื้นผิวลื่นช่วงฝนตก
-                    </span>
-                  </li>
-                )}
-              {formState.transportMode === "CAR" &&
-                formState.engineType === "EV" && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-teal-600 dark:text-teal-400 font-bold">
-                      •
-                    </span>
-                    <span>
-                      รถยนต์ไฟฟ้า (EV) ควรตรวจสอบสถานีชาร์จตามเส้นทาง
-                      และเผื่อพลังงานขณะขับขึ้นดอยสูง
-                    </span>
-                  </li>
-                )}
-
-              {/* คำแนะนำสำหรับรถจักรยานยนต์ */}
-              {formState.transportMode === "MOTORCYCLE" &&
-                formState.motorcycleType === "AUTO_UNDER_150" && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                      •
-                    </span>
-                    <span>
-                      รถออโตเมติก &lt;150cc ควรระวังระบบเบรกไหม้ขณะลงทางชัน ใช้
-                      Engine Brake ช่วยเป็นระยะ
-                    </span>
-                  </li>
-                )}
-
-              {/* คำแนะนำผู้ขับขี่ (แสดงเมื่อขับเองหรือเช่าขับ) */}
-              {(formState.transportMode === "CAR" ||
-                formState.transportMode === "MOTORCYCLE" ||
-                formState.rentVehicleAtDestination === "YES") && (
-                <>
-                  {formState.mountainExperience === "BEGINNER" && (
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-600 dark:text-amber-400 font-bold">
-                        •
-                      </span>
-                      <span>
-                        มือใหม่ทางเขา ควรใช้ความเร็วต่ำ เปิดไฟหน้ารถเมื่อมีหมอก
-                        และงดแซงในทางโค้ง
-                      </span>
-                    </li>
-                  )}
-                  {formState.coDriver === "SOLO" && (
-                    <li className="flex items-start gap-2">
-                      <span className="text-slate-600 dark:text-slate-400 font-bold">
-                        •
-                      </span>
-                      <span>
-                        ขับคนเดียว ควรแวะจุดพักรถทุก 2
-                        ชั่วโมงเพื่อป้องกันความเหนื่อยล้าสะสม
-                      </span>
-                    </li>
-                  )}
-                  {formState.coDriver === "CO_DRIVER" && (
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                        •
-                      </span>
-                      <span>
-                        มีผู้ช่วยสลับขับ
-                        ช่วยลดความเสี่ยงจากความเหนื่อยล้าได้เป็นอย่างดี
-                      </span>
-                    </li>
-                  )}
-                </>
-              )}
-            </ul>
-          </div>
-
-          {/* 5. จำนวนผู้เดินทาง Stepper & Quick Options */}
+          {/* 2. จำนวนผู้เดินทาง Stepper & Quick Options */}
           <div className="space-y-2.5 border-t border-slate-200/80 dark:border-emerald-800/40 pt-4">
             <TripFormField
-              label="3. จำนวนผู้เดินทางทั้งหมด (คน)"
+              label="2. จำนวนผู้เดินทางทั้งหมด (คน)"
               htmlFor="travelerCount"
               hint="แตะปุ่ม + / - หรือกดปุ่มลัด"
             >
@@ -1646,135 +1061,92 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
                 {/* Quick traveler presets */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   {[
-                    { label: "👤 1 คน (เดี่ยว)", count: "1" },
-                    { label: "👥 2 คน (คู่)", count: "2" },
-                    { label: "👨‍👩‍👧 4 คน (กลุ่ม)", count: "4" },
-                  ].map((preset) => (
-                    <button
-                      key={preset.count}
-                      type="button"
-                      onClick={() => updateField("travelerCount", preset.count)}
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-all active:scale-95 cursor-pointer ${
-                        formState.travelerCount === preset.count
-                          ? "bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-emerald-500 dark:to-teal-600 text-white shadow-xs ring-1 ring-white/20 dark:ring-emerald-300/30"
-                          : "bg-slate-100 dark:bg-[#0e2a21] hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60 text-slate-700 dark:text-emerald-200 border border-slate-200/80 dark:border-emerald-700/40"
-                      }`}
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
+                    { label: "1 คน (เดี่ยว)", count: "1", icon: User },
+                    { label: "2 คน (คู่)", count: "2", icon: Users },
+                    { label: "4 คน (กลุ่ม)", count: "4", icon: Users },
+                  ].map((preset) => {
+                    const PresetIcon = preset.icon;
+                    return (
+                      <button
+                        key={preset.count}
+                        type="button"
+                        onClick={() => updateField("travelerCount", preset.count)}
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-all active:scale-95 cursor-pointer ${
+                          formState.travelerCount === preset.count
+                            ? "bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-emerald-500 dark:to-teal-600 text-white shadow-xs ring-1 ring-white/20 dark:ring-emerald-300/30"
+                            : "bg-slate-100 dark:bg-[#0e2a21] hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60 text-slate-700 dark:text-emerald-200 border border-slate-200/80 dark:border-emerald-700/40"
+                        }`}
+                      >
+                        <PresetIcon className="h-3 w-3" />
+                        <span>{preset.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <FormError message={fieldErrors.travelerCount} />
             </TripFormField>
           </div>
-        </div>
-      </section>
 
-      {!isCreateMode ? (
-        <section className="soft-card rounded-3xl p-4.5 sm:p-6 border border-white/60 dark:border-emerald-800/40 shadow-md shadow-emerald-950/5 backdrop-blur-2xl bg-white/85 dark:bg-[#0b1c16]/90">
-          <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <span className="guide-chip text-xs">Step 04</span>
-              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white font-heading">
-                ตั้งค่าขั้นสูง (Advanced Settings)
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-emerald-200/80 font-normal leading-relaxed">
-                ระบบใส่ค่าเริ่มต้นที่ปลอดภัยไว้แล้ว
-                เปิดส่วนนี้เมื่อต้องการปรับแต่งเพิ่มเติม
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowAdvanced((current) => !current)}
-              className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-300 dark:border-emerald-700/60 bg-white/80 dark:bg-emerald-950/60 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 dark:text-emerald-200 shadow-xs active:scale-95 transition-all cursor-pointer"
+          {/* ข้อมูลที่ผู้ใช้ระบุสำหรับการประเมินเบื้องต้น */}
+          <div className="grid grid-cols-1 gap-4 border-t border-slate-200/80 pt-4 dark:border-emerald-800/40 sm:grid-cols-2">
+            <TripFormField
+              label="สภาพอากาศที่คาดไว้"
+              htmlFor="weatherCondition"
+              hint={isCreateMode ? "ระบุข้อมูลเบื้องต้นตามที่ทราบ ระบบจะตรวจพยากรณ์จริงเมื่อประเมิน" : "เว้นว่างได้หากยังไม่มีข้อมูล"}
             >
-              {showAdvanced ? "ซ่อนการตั้งค่าขั้นสูง" : "เปิดการตั้งค่าขั้นสูง"}
-            </button>
+              <select
+                id="weatherCondition"
+                value={formState.weatherCondition}
+                onChange={(event) => updateField("weatherCondition", event.target.value)}
+                className={inputClassName}
+              >
+                <option value="">ยังไม่ระบุ</option>
+                {WEATHER_CONDITION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+              <FormError message={fieldErrors.weatherCondition} />
+            </TripFormField>
+            <TripFormField
+              label="เวลาเดินทางโดยประมาณ (นาที)"
+              htmlFor="estimatedTravelMinutes"
+              hint="ระบุจากแผนของคุณ ระบบจะตรวจเส้นทางจริงเมื่อประเมิน"
+            >
+              <input
+                id="estimatedTravelMinutes"
+                type="number"
+                min={1}
+                step={1}
+                value={formState.estimatedTravelMinutes}
+                onChange={(event) => updateField("estimatedTravelMinutes", event.target.value)}
+                className={inputClassName}
+                placeholder="เช่น 180"
+              />
+              <FormError message={fieldErrors.estimatedTravelMinutes} />
+            </TripFormField>
           </div>
 
-          {!showAdvanced ? (
-            <div className="mt-3.5 rounded-2xl border border-slate-200/70 bg-slate-50/80 dark:border-white/10 dark:bg-emerald-950/30 px-4 py-3 text-xs sm:text-sm text-slate-600 dark:text-emerald-200/80 leading-relaxed">
-              ใช้ค่ามาตรฐาน: อากาศแจ่มใส เวลาเดินทาง 120 นาที
-              และซ่อนตัวเลือกเพิ่มเติม
-            </div>
-          ) : null}
-
-          {showAdvanced ? (
-            <div className="mt-4 grid gap-4 rounded-2xl border border-slate-200/70 bg-slate-50/60 dark:border-white/10 dark:bg-emerald-950/40 p-4 sm:grid-cols-2">
-              <TripFormField
-                label="สภาพอากาศของอุทยาน"
-                htmlFor="weatherCondition"
-              >
-                <select
-                  id="weatherCondition"
-                  value={formState.weatherCondition}
-                  onChange={(event) =>
-                    updateField("weatherCondition", event.target.value)
-                  }
-                  className={inputClassName}
-                >
-                  {WEATHER_CONDITION_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <FormError message={fieldErrors.weatherCondition} />
-              </TripFormField>
-              <TripFormField
-                label="ระยะเวลาเดินทาง (นาที)"
-                htmlFor="estimatedTravelMinutes"
-                hint="ใช้เป็นค่าตั้งต้นก่อน route sync"
-              >
-                <input
-                  id="estimatedTravelMinutes"
-                  type="number"
-                  min={1}
-                  value={formState.estimatedTravelMinutes}
-                  onChange={(event) =>
-                    updateField("estimatedTravelMinutes", event.target.value)
-                  }
-                  className={inputClassName}
-                />
-                <FormError message={fieldErrors.estimatedTravelMinutes} />
-              </TripFormField>
-              <TripFormField
-                label="เวลา sunset ตั้งต้น"
-                htmlFor="mockSunsetTime"
-                hint="ใช้เป็น fallback หากยังไม่ได้ sync sunset ล่าสุด"
-              >
-                <input
-                  id="mockSunsetTime"
-                  type="time"
-                  value={formState.mockSunsetTime}
-                  onChange={(event) =>
-                    updateField("mockSunsetTime", event.target.value)
-                  }
-                  className={inputClassName}
-                />
-                <FormError message={fieldErrors.mockSunsetTime} />
-              </TripFormField>
-              <TripFormField
-                label="หมายเหตุเพิ่มเติม"
-                htmlFor="notes"
-                hint="เช่น เดินทางกับครอบครัว หรืออยากเผื่อเวลาแวะพัก"
-              >
-                <input
-                  id="notes"
-                  type="text"
-                  value={formState.notes}
-                  onChange={(event) => updateField("notes", event.target.value)}
-                  placeholder="เช่น เดินทางกับครอบครัว"
-                  className={inputClassName}
-                />
-                <FormError message={fieldErrors.notes} />
-              </TripFormField>
-            </div>
-          ) : null}
-        </section>
-      ) : null}
+          {/* 3. หมายเหตุเพิ่มเติม (ถ้ามี) */}
+          <div className="space-y-2.5 border-t border-slate-200/80 dark:border-emerald-800/40 pt-4">
+            <TripFormField
+              label="3. หมายเหตุเพิ่มเติม (ถ้ามี)"
+              htmlFor="notes"
+              hint="เช่น เดินทางกับครอบครัว มีเด็กเล็ก หรืออยากเผื่อเวลาแวะพัก"
+            >
+              <input
+                id="notes"
+                type="text"
+                value={formState.notes}
+                onChange={(event) => updateField("notes", event.target.value)}
+                placeholder="เช่น เดินทางกับครอบครัว, มีเด็กเล็ก"
+                className="form-control !px-4 text-sm font-medium rounded-2xl bg-white/90 dark:bg-[#0c221b]/90 border-slate-200/80 dark:border-emerald-800/40 focus:ring-2 focus:ring-emerald-500/30"
+              />
+              <FormError message={fieldErrors.notes} />
+            </TripFormField>
+          </div>
+        </div>
+      </section>
 
       <FormError message={formError} />
 
@@ -1786,7 +1158,11 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
               disabled={isSubmitting}
               className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 px-6 py-3.5 text-sm sm:text-base font-bold text-slate-950 shadow-md shadow-emerald-500/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60"
             >
-              <span>{isSubmitting ? "⏳" : "🧭"}</span>
+              {isSubmitting ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Compass className="h-5 w-5" />
+              )}
               <span>
                 {isSubmitting
                   ? isCreateMode

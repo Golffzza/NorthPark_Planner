@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { Moon, Sun } from "lucide-react";
+
 export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
@@ -50,7 +52,7 @@ export function ThemeToggle() {
       aria-label={isDark ? "เปลี่ยนเป็นธีมสว่าง" : "เปลี่ยนเป็นธีมมืด"}
       title={isDark ? "เปลี่ยนเป็นธีมสว่าง (Light Mode)" : "เปลี่ยนเป็นธีมมืด (Dark Mode)"}
     >
-      <span>{isDark ? "🌙" : "☀️"}</span>
+      {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-500" />}
     </button>
   );
 }

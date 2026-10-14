@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { Calendar, MapPin, AlertCircle } from "lucide-react";
 import {
   addDays,
+  endOfDay,
   formatMonthYear,
   formatThaiDate,
   fromYMD,
@@ -11,6 +13,7 @@ import {
   isSameDay,
   isToday,
   isWeekend,
+  startOfDay,
   THAI_DAYS_SHORT,
   toYMD,
 } from "@/lib/date";
@@ -47,15 +50,36 @@ export function TripDatePicker({
       : new Date();
   });
 
+  // Effective minDate: start of today (cannot pick past date)
+  const effectiveMinDate = useMemo(() => {
+    return minDate ? startOfDay(minDate) : startOfDay(new Date());
+  }, [minDate]);
+
+  // Effective maxDate: 16 days forecast window (today + 15 days = 16 days total: 0..15)
+  const effectiveMaxDate = useMemo(() => {
+    return maxDate ? endOfDay(maxDate) : endOfDay(addDays(new Date(), 15));
+  }, [maxDate]);
+
   const calendarDays = useMemo(() => getCalendarDays(viewMonth), [viewMonth]);
 
   const isDateDisabled = (date: Date) => {
-    if (minDate && date < minDate) return true;
-    if (maxDate && date > maxDate) return true;
+    const target = startOfDay(date);
+    if (target < effectiveMinDate) return true;
+    if (target > effectiveMaxDate) return true;
     return false;
   };
 
   const isCurrentMonth = (date: Date) => date.getMonth() === viewMonth.getMonth();
+
+  const isPrevMonthDisabled = useMemo(() => {
+    const lastDayOfPrevMonth = endOfDay(new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 0));
+    return lastDayOfPrevMonth < effectiveMinDate;
+  }, [viewMonth, effectiveMinDate]);
+
+  const isNextMonthDisabled = useMemo(() => {
+    const firstDayOfNextMonth = startOfDay(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1));
+    return firstDayOfNextMonth > effectiveMaxDate;
+  }, [viewMonth, effectiveMaxDate]);
 
   const handleSelectDate = (date: Date) => {
     const ymd = toYMD(date);
@@ -64,12 +88,14 @@ export function TripDatePicker({
   };
 
   const handlePrevMonth = () => {
+    if (isPrevMonthDisabled) return;
     startTransition(() => {
       setViewMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
     });
   };
 
   const handleNextMonth = () => {
+    if (isNextMonthDisabled) return;
     startTransition(() => {
       setViewMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
     });
@@ -82,7 +108,7 @@ export function TripDatePicker({
     setIsOpen(false);
   };
 
-  // Quick Preset options
+  // Quick Preset options (only those within the 16-day window)
   const quickPresets = useMemo(() => {
     const now = new Date();
     const tomorrow = addDays(now, 1);
@@ -100,8 +126,12 @@ export function TripDatePicker({
       { label: "เสาร์นี้", date: toYMD(thisSat) },
       { label: "อาทิตย์นี้", date: toYMD(thisSun) },
       { label: "สัปดาห์หน้า", date: toYMD(nextWeek) },
-    ];
-  }, []);
+    ].filter((preset) => {
+      const d = fromYMD(preset.date);
+      const target = startOfDay(d);
+      return target >= effectiveMinDate && target <= effectiveMaxDate;
+    });
+  }, [effectiveMinDate, effectiveMaxDate]);
 
   return (
     <div className="relative w-full min-w-0 max-w-full space-y-2">
@@ -139,7 +169,22 @@ export function TripDatePicker({
                   {formatThaiDate(value, { includeDay: true, includeYear: true })}
                 </p>
                 <p className="text-[10.5px] sm:text-[11px] font-medium text-emerald-700 dark:text-emerald-300/80 truncate">
-                  {isToday(fromYMD(value)) ? "📍 วันนี้" : isPast(fromYMD(value)) ? "⚠️ วันที่ผ่านมาแล้ว" : "🗓️ วันที่กำหนด"}
+                  {isToday(fromYMD(value)) ? (
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      วันนี้
+                    </span>
+                  ) : isPast(fromYMD(value)) ? (
+                    <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                      <AlertCircle className="h-3 w-3" />
+                      วันที่ผ่านมาแล้ว
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      วันที่กำหนด
+                    </span>
+                  )}
                 </p>
               </div>
             ) : (
@@ -211,8 +256,10 @@ export function TripDatePicker({
             <button
               type="button"
               onClick={handlePrevMonth}
-              disabled={isPending}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-600 dark:text-emerald-200 hover:bg-slate-100 dark:hover:bg-emerald-900/50 active:scale-95 transition-all cursor-pointer"
+              disabled={isPending || isPrevMonthDisabled}
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-slate-600 dark:text-emerald-200 hover:bg-slate-100 dark:hover:bg-emerald-900/50 active:scale-95 transition-all cursor-pointer ${
+                isPrevMonthDisabled ? "opacity-25 cursor-not-allowed hover:bg-transparent" : ""
+              }`}
               aria-label="เดือนก่อนหน้า"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -229,14 +276,25 @@ export function TripDatePicker({
             <button
               type="button"
               onClick={handleNextMonth}
-              disabled={isPending}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-600 dark:text-emerald-200 hover:bg-slate-100 dark:hover:bg-emerald-900/50 active:scale-95 transition-all cursor-pointer"
+              disabled={isPending || isNextMonthDisabled}
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-slate-600 dark:text-emerald-200 hover:bg-slate-100 dark:hover:bg-emerald-900/50 active:scale-95 transition-all cursor-pointer ${
+                isNextMonthDisabled ? "opacity-25 cursor-not-allowed hover:bg-transparent" : ""
+              }`}
               aria-label="เดือนถัดไป"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
+          </div>
+
+          {/* 16-day forecast window badge */}
+          <div className="flex items-center justify-between gap-2 rounded-xl bg-emerald-950/40 border border-emerald-500/20 px-3 py-1.5 mb-3 text-[11px] text-emerald-200/90 font-medium">
+            <span className="inline-flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-emerald-400" />
+              วางแผนล่วงหน้าได้ 16 วัน
+            </span>
+            <span className="text-[10px] text-emerald-300/70">(ตามช่วงพยากรณ์อากาศ)</span>
           </div>
 
           {/* Weekday Headers */}
@@ -292,7 +350,9 @@ export function TripDatePicker({
                   }}
                   disabled={disabled}
                   className={`relative flex aspect-square items-center justify-center rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 active:scale-90 cursor-pointer ${
-                    selected
+                    disabled
+                      ? "opacity-20 text-slate-400 dark:text-white/20 cursor-not-allowed hover:bg-transparent pointer-events-none"
+                      : selected
                       ? "bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-extrabold shadow-md shadow-emerald-700/30 scale-105 z-10"
                       : today
                       ? "border-2 border-emerald-500 dark:border-emerald-400 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 font-bold"
@@ -301,7 +361,7 @@ export function TripDatePicker({
                       : weekend
                       ? "text-amber-800 dark:text-amber-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/40"
                       : "text-slate-800 dark:text-slate-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/40"
-                  } ${disabled ? "opacity-35 cursor-not-allowed hover:bg-transparent" : ""}`}
+                  }`}
                 >
                   <span>{date.getDate()}</span>
                   {today && !selected ? (
@@ -319,7 +379,8 @@ export function TripDatePicker({
               onClick={handleGoToToday}
               className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
             >
-              <span>📍 ไปที่วันนี้</span>
+              <MapPin className="h-3.5 w-3.5" />
+              <span>ไปที่วันนี้</span>
             </button>
 
             <button

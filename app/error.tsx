@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 
 export default function Error({
   error,
@@ -17,8 +18,8 @@ export default function Error({
   return (
     <div className="flex min-h-[65vh] flex-col items-center justify-center px-4 text-center">
       <div className="soft-card max-w-md w-full p-8 rounded-3xl border border-white/20 shadow-2xl space-y-6">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500 text-3xl">
-          ⚠️
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500">
+          <AlertTriangle className="h-8 w-8" />
         </div>
         
         <div className="space-y-2">

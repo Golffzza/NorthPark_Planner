@@ -1,3 +1,4 @@
+import { Trees, Globe, Car, Bike, Bus } from "lucide-react";
 import { getParkFeeInfo } from "@/lib/data/park-fees";
 import type { ParkDetailDto } from "@/lib/mappers/park-dto";
 
@@ -14,7 +15,9 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
       {feeInfo.isFree && (
         <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-3.5 sm:p-4 text-emerald-900 dark:text-emerald-200 shadow-xs">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl">🌿</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
+              <Trees className="h-5 w-5" />
+            </span>
             <div>
               <p className="text-xs sm:text-sm font-bold">
                 พื้นที่เตรียมการจัดตั้ง — ไม่มีค่าธรรมเนียมเข้าชมบุคคล (เข้าฟรี ฿0)
@@ -34,7 +37,7 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
           <div className="flex items-center gap-3">
             {/* Dark Emerald Squircle Icon */}
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 shadow-sm">
-              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.3} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 3L4 15h5l-3 6h12l-3-6h5L12 3z" />
                 <path d="M12 21v2" />
               </svg>
@@ -95,8 +98,8 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
             {/* Foreigner Rate Card */}
             <div className="rounded-2xl border border-[#124133] bg-[#07261d]/90 p-4 space-y-3 shadow-sm">
               <div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#0a3530] px-2.5 py-0.5 text-xs font-semibold text-[#7dd3fc] border border-[#134944]">
-                  <span className="text-[11px]">🌐</span> ต่างชาติ
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0a3530] px-2.5 py-0.5 text-xs font-semibold text-[#7dd3fc] border border-[#134944]">
+                  <Globe className="h-3.5 w-3.5" /> ต่างชาติ
                 </span>
               </div>
 
@@ -144,8 +147,8 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
                 อัตราต่อคันที่นำเข้าเขตอุทยาน
               </p>
             </div>
-            <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-emerald-300/80 bg-[#0a2e24] px-2.5 py-0.5 rounded-full border border-[#144839]">
-              <span>🚗</span>
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-medium text-emerald-300/80 bg-[#0a2e24] px-2.5 py-0.5 rounded-full border border-[#144839]">
+              <Car className="h-3 w-3" />
               <span>ชำระต่อคัน</span>
             </span>
           </div>
@@ -154,8 +157,8 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
             {/* Car */}
             <div className="rounded-2xl border border-[#124133] bg-[#07261d]/90 p-3.5 flex flex-col justify-between space-y-2 shadow-sm">
               <div className="flex items-center justify-between gap-1">
-                <span className="text-xs text-slate-200 font-medium flex items-center gap-1">
-                  <span>🚗</span> รถยนต์ 4 ล้อ
+                <span className="text-xs text-slate-200 font-medium flex items-center gap-1.5">
+                  <Car className="h-3.5 w-3.5 text-emerald-400" /> รถยนต์ 4 ล้อ
                 </span>
               </div>
               <div>
@@ -170,8 +173,8 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
             {/* Motorcycle */}
             <div className="rounded-2xl border border-[#124133] bg-[#07261d]/90 p-3.5 flex flex-col justify-between space-y-2 shadow-sm">
               <div className="flex items-center justify-between gap-1">
-                <span className="text-xs text-slate-200 font-medium flex items-center gap-1">
-                  <span>🛵</span> รถจักรยานยนต์
+                <span className="text-xs text-slate-200 font-medium flex items-center gap-1.5">
+                  <Bike className="h-3.5 w-3.5 text-emerald-400" /> รถจักรยานยนต์
                 </span>
               </div>
               <div>
@@ -186,8 +189,8 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
             {/* Bicycle */}
             <div className="rounded-2xl border border-[#124133] bg-[#07261d]/90 p-3.5 flex flex-col justify-between space-y-2 shadow-sm">
               <div className="flex items-center justify-between gap-1">
-                <span className="text-xs text-slate-200 font-medium flex items-center gap-1">
-                  <span>🚲</span> รถจักรยาน
+                <span className="text-xs text-slate-200 font-medium flex items-center gap-1.5">
+                  <Bike className="h-3.5 w-3.5 text-emerald-400" /> รถจักรยาน
                 </span>
               </div>
               <div>
@@ -206,8 +209,8 @@ export function ParkFeeCard({ park }: ParkFeeCardProps) {
             {/* Bus / 6+ Wheels */}
             <div className="rounded-2xl border border-[#124133] bg-[#07261d]/90 p-3.5 flex flex-col justify-between space-y-2 shadow-sm">
               <div className="flex items-center justify-between gap-1">
-                <span className="text-xs text-slate-200 font-medium flex items-center gap-1">
-                  <span>🚌</span> บัส / 6 ล้อ+
+                <span className="text-xs text-slate-200 font-medium flex items-center gap-1.5">
+                  <Bus className="h-3.5 w-3.5 text-emerald-400" /> บัส / 6 ล้อ+
                 </span>
               </div>
               <div>

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/ui/toast";
 
 type EvaluateTripButtonProps = {
   tripId: string;
@@ -9,6 +10,7 @@ type EvaluateTripButtonProps = {
 
 export function EvaluateTripButton({ tripId }: EvaluateTripButtonProps) {
   const router = useRouter();
+  const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleEvaluate() {
@@ -26,7 +28,7 @@ export function EvaluateTripButton({ tripId }: EvaluateTripButtonProps) {
       router.push(`/trips/${tripId}/result`);
       router.refresh();
     } catch {
-      window.alert("ไม่สามารถประเมินทริปด้วยค่าเริ่มต้นที่บันทึกไว้ได้ในขณะนี้");
+      toast.error("ไม่สามารถประเมินทริปด้วยค่าเริ่มต้นที่บันทึกไว้ได้ในขณะนี้");
     } finally {
       setIsSubmitting(false);
     }

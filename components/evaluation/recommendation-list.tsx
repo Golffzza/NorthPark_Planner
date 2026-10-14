@@ -1,3 +1,5 @@
+import { Lightbulb } from "lucide-react";
+
 type RecommendationListProps = {
   items: string[];
 };
@@ -10,8 +12,8 @@ export function RecommendationList({ items }: RecommendationListProps) {
   return (
     <section className="soft-card relative overflow-hidden rounded-[32px] sm:rounded-[34px] px-5 py-6 sm:px-7">
       <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500 text-sm">
-          💡
+        <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500">
+          <Lightbulb className="h-4 w-4" />
         </span>
         <span className="guide-chip">ข้อแนะนำความปลอดภัย</span>
       </div>

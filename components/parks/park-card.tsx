@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Clock, CheckCircle2, Ticket, Car, Zap, ArrowRight } from "lucide-react";
 
 import { getParkEvCharging } from "@/lib/data/park-ev-charging";
 import { getParkFeeInfo } from "@/lib/data/park-fees";
@@ -29,7 +30,7 @@ export function ParkCard({ park }: ParkCardProps) {
           ) : (
             <div className="park-media-placeholder h-full w-full" />
           )}
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,22,17,0.5)_0%,rgba(2,16,12,0.78)_40%,rgba(1,8,6,0.96)_100%)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/92 via-slate-950/40 to-transparent" />
 
           <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/60 px-3 py-1.5 text-xs font-bold text-white shadow-md backdrop-blur-md">
@@ -59,19 +60,28 @@ export function ParkCard({ park }: ParkCardProps) {
 
         <div className="ticket-divider space-y-3.5 p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="guide-chip bg-[var(--mint)]/70">🕒 เปิด {park.openTime} - {park.closeTime} น.</span>
+            <span className="guide-chip bg-[var(--mint)]/70 inline-flex items-center gap-1">
+              <Clock className="w-3 h-3 text-emerald-700 dark:text-emerald-300" />
+              <span>เปิด {park.openTime} - {park.closeTime} น.</span>
+            </span>
             {feeInfo.isFree ? (
-              <span className="guide-chip bg-emerald-100 dark:bg-emerald-950 font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                🟢 เข้าชมฟรี (เตรียมการฯ)
+              <span className="guide-chip bg-emerald-100 dark:bg-emerald-950 font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 inline-flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <span>เข้าชมฟรี (เตรียมการฯ)</span>
               </span>
             ) : (
-              <span className="guide-chip bg-emerald-50 dark:bg-emerald-950/60 font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
-                🎟️ ไทย ฿{feeInfo.thaiAdult} · 🚗 ฿{feeInfo.vehicles.car}
+              <span className="guide-chip bg-emerald-50 dark:bg-emerald-950/60 font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40 inline-flex items-center gap-1">
+                <Ticket className="w-3 h-3 text-emerald-700 dark:text-emerald-300" />
+                <span>ไทย ฿{feeInfo.thaiAdult}</span>
+                <span className="opacity-40">·</span>
+                <Car className="w-3 h-3 text-emerald-700 dark:text-emerald-300" />
+                <span>฿{feeInfo.vehicles.car}</span>
               </span>
             )}
             {evCharging.hasEvCharger ? (
-              <span className="guide-chip bg-emerald-100/90 dark:bg-emerald-950/80 font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-400/50">
-                ⚡ จุดชาร์จ EV
+              <span className="guide-chip bg-emerald-100/90 dark:bg-emerald-950/80 font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-400/50 inline-flex items-center gap-1">
+                <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+                <span>จุดชาร์จ EV</span>
               </span>
             ) : null}
           </div>
@@ -80,7 +90,7 @@ export function ParkCard({ park }: ParkCardProps) {
             <p className="text-xs font-medium text-[var(--muted)]">กดเพื่อดูจุดเด่นและวางแผนทริป</p>
             <span className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-emerald-500 dark:to-teal-600 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-emerald-950/20 ring-1 ring-white/20 dark:ring-emerald-300/30 transition-all group-hover:brightness-110 group-hover:shadow-lg active:scale-95">
               <span>ดูรายละเอียด</span>
-              <span>→</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
         </div>

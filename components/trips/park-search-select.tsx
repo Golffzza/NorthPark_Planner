@@ -2,6 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Star,
+  MapPin,
+  Tent,
+  Trees,
+  Check,
+  Clock,
+  Zap,
+  RefreshCw,
+  Tag,
+  X,
+  ExternalLink,
+} from "lucide-react";
 import { getParkEvCharging } from "@/lib/data/park-ev-charging";
 import type { ParkOption } from "@/lib/services/park-service";
 
@@ -13,15 +26,66 @@ type ParkSearchSelectProps = {
   hasError?: boolean;
 };
 
-// Curated popular parks with short, mobile-friendly labels
-const POPULAR_PARK_SLUGS = [
-  { slug: "doi-inthanon", icon: "🌲", label: "ดอยอินทนนท์" },
-  { slug: "doi-suthep-pui", icon: "⛰️", label: "ดอยสุเทพ" },
-  { slug: "huai-nam-dang", icon: "🏔️", label: "ห้วยน้ำดัง" },
-  { slug: "sri-nan", icon: "⛺", label: "ดอยเสมอดาว" },
-  { slug: "jae-son", icon: "♨️", label: "แจ้ซ้อน" },
-  { slug: "phu-chi-fa", icon: "🍃", label: "ภูชี้ฟ้า" },
+export type ParkCategory = "POPULAR" | "CHIANG_MAI" | "NAN" | "CAMPING" | "ALL";
+
+const CATEGORY_CHIPS: {
+  id: ParkCategory;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  { id: "POPULAR", label: "ยอดนิยม", icon: Star },
+  { id: "CHIANG_MAI", label: "เชียงใหม่", icon: MapPin },
+  { id: "NAN", label: "น่าน", icon: MapPin },
+  { id: "CAMPING", label: "สายกางเต็นท์", icon: Tent },
+  { id: "ALL", label: "ทั้งหมด", icon: Trees },
 ];
+
+const POPULAR_SLUGS = new Set([
+  "doi-inthanon",
+  "doi-suthep-pui",
+  "huai-nam-dang",
+  "sri-nan",
+  "jae-son",
+  "phu-chi-fa",
+  "doi-phu-kha",
+  "phu-soi-dao",
+  "khlong-lan",
+]);
+
+const CAMPING_SLUGS = new Set([
+  "sri-nan",
+  "huai-nam-dang",
+  "doi-inthanon",
+  "doi-phu-kha",
+  "phu-soi-dao",
+  "phu-hin-rong-kla",
+  "nanthaburi",
+  "mae-charim",
+  "jae-son",
+  "nam-nao",
+  "thung-salaeng-luang",
+  "khlong-lan",
+  "salawin",
+  "mae-ping",
+  "doi-khun-tan",
+  "doi-pha-hom-pok",
+]);
+
+function matchesCategory(park: ParkOption, category: ParkCategory): boolean {
+  if (category === "ALL") return true;
+  if (category === "POPULAR") return POPULAR_SLUGS.has(park.slug);
+  if (category === "CHIANG_MAI") return park.province.includes("เชียงใหม่");
+  if (category === "NAN") return park.province.includes("น่าน");
+  if (category === "CAMPING") {
+    return (
+      CAMPING_SLUGS.has(park.slug) ||
+      park.nameTh.includes("เสมอดาว") ||
+      park.nameTh.includes("ภูสอยดาว") ||
+      park.nameTh.includes("กางเต็นท์")
+    );
+  }
+  return true;
+}
 
 export function ParkSearchSelect({
   id = "parkId",
@@ -32,6 +96,7 @@ export function ParkSearchSelect({
 }: ParkSearchSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<ParkCategory>("POPULAR");
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -40,19 +105,42 @@ export function ParkSearchSelect({
     [parks, selectedParkId],
   );
 
-  // Filter parks by query
+  // Filter parks by category and query
   const filteredParks = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return parks;
+    let result = parks;
+
+    if (selectedCategory !== "ALL") {
+      result = result.filter((p) => matchesCategory(p, selectedCategory));
     }
-    const q = searchQuery.toLowerCase().trim();
-    return parks.filter(
-      (park) =>
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const queryMatches = (park: ParkOption) =>
         park.nameTh.toLowerCase().includes(q) ||
         (park.nameEn && park.nameEn.toLowerCase().includes(q)) ||
-        park.province.toLowerCase().includes(q),
-    );
-  }, [parks, searchQuery]);
+        park.province.toLowerCase().includes(q);
+
+      const categoryFiltered = result.filter(queryMatches);
+      if (categoryFiltered.length > 0) {
+        return categoryFiltered;
+      }
+      // If none found within category, search across all parks
+      return parks.filter(queryMatches);
+    }
+
+    return result;
+  }, [parks, selectedCategory, searchQuery]);
+
+  // Top quick recommendation pills matching the selected category
+  const quickPills = useMemo(() => {
+    let pool = parks;
+    if (selectedCategory !== "ALL") {
+      pool = pool.filter((p) => matchesCategory(p, selectedCategory));
+    } else {
+      pool = pool.filter((p) => POPULAR_SLUGS.has(p.slug));
+    }
+    return pool.slice(0, 6);
+  }, [parks, selectedCategory]);
 
   // Handle clicking outside to close
   useEffect(() => {
@@ -104,14 +192,15 @@ export function ParkSearchSelect({
                   aria-label={selectedPark.nameTh}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-emerald-950 text-2xl text-emerald-400">
-                  🌲
+                <div className="flex h-full w-full items-center justify-center bg-emerald-950 text-emerald-400">
+                  <Trees className="h-6 w-6" />
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:hidden" />
               <div className="absolute top-2 left-2">
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm backdrop-blur-md">
-                  ✓ เลือกแล้ว
+                  <Check className="h-3 w-3" />
+                  เลือกแล้ว
                 </span>
               </div>
             </div>
@@ -120,19 +209,22 @@ export function ParkSearchSelect({
             <div className="flex flex-1 flex-col justify-between p-3.5 sm:p-4">
               <div>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
-                    📍 {selectedPark.province}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                    <MapPin className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    {selectedPark.province}
                   </span>
                   {selectedPark.openTime && selectedPark.closeTime ? (
-                    <span className="rounded-full bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 text-[11px] font-medium text-[var(--foreground)] border border-slate-200/60 dark:border-slate-700/60">
-                      ⏰ {selectedPark.openTime} - {selectedPark.closeTime} น.
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 text-[11px] font-medium text-[var(--foreground)] border border-slate-200/60 dark:border-slate-700/60">
+                      <Clock className="h-3 w-3 shrink-0 text-slate-500" />
+                      {selectedPark.openTime} - {selectedPark.closeTime} น.
                     </span>
                   ) : null}
                   {(() => {
                     const evCharging = getParkEvCharging(selectedPark.slug, selectedPark.nameTh);
                     return evCharging.hasEvCharger ? (
-                      <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-400/50">
-                        ⚡ {evCharging.badgeLabel}
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-400/50">
+                        <Zap className="h-3 w-3 shrink-0 text-amber-500 fill-amber-500" />
+                        {evCharging.badgeLabel}
                       </span>
                     ) : null;
                   })()}
@@ -157,14 +249,15 @@ export function ParkSearchSelect({
                       setIsOpen(true);
                       setTimeout(() => inputRef.current?.focus(), 50);
                     }}
-                    className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[var(--brand-strong)] transition-all hover:bg-emerald-200/80 dark:hover:bg-emerald-900 active:scale-95"
+                    className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[var(--brand-strong)] transition-all hover:bg-emerald-200/80 dark:hover:bg-emerald-900 active:scale-95 cursor-pointer"
                   >
-                    🔄 เปลี่ยน
+                    <RefreshCw className="h-3 w-3" />
+                    เปลี่ยน
                   </button>
                   <button
                     type="button"
                     onClick={handleClear}
-                    className="rounded-full px-2 py-1 text-xs text-[var(--muted)] hover:text-rose-600 transition-colors"
+                    className="rounded-full px-2 py-1 text-xs text-[var(--muted)] hover:text-rose-600 transition-colors cursor-pointer"
                   >
                     ล้าง
                   </button>
@@ -174,9 +267,10 @@ export function ParkSearchSelect({
                   href={`/parks/${selectedPark.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-semibold text-[var(--brand-strong)] hover:underline"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand-strong)] hover:underline"
                 >
-                  ดูข้อมูล ↗
+                  ดูข้อมูล
+                  <ExternalLink className="h-3 w-3" />
                 </Link>
               </div>
             </div>
@@ -188,35 +282,94 @@ export function ParkSearchSelect({
 
   return (
     <div ref={containerRef} className={`relative space-y-3 ${isOpen ? "z-50" : "z-30"}`}>
-      {/* 🌟 Quick Recommendations */}
-      <div>
-        <p className="text-xs font-semibold text-[var(--muted)]">🌟 อุทยานยอดนิยม</p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {POPULAR_PARK_SLUGS.map((item) => {
-            const parkMatch = parks.find((p) => p.slug === item.slug);
-            if (!parkMatch) return null;
-            const isSelected = selectedParkId === parkMatch.id || selectedParkId === parkMatch.slug;
+      {/* Quick Filter Category Chips */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="inline-flex items-center gap-1.5 text-xs font-bold font-heading text-slate-600 dark:text-emerald-300/80">
+            <Tag className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            ตัวกรองด่วน:
+          </p>
+          {selectedCategory !== "ALL" && (
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("ALL")}
+              className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+            >
+              แสดงทั้งหมด ({parks.length})
+            </button>
+          )}
+        </div>
+
+        {/* Category Chips Bar */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {CATEGORY_CHIPS.map((cat) => {
+            const isCatActive = selectedCategory === cat.id;
+            const count = parks.filter((p) => matchesCategory(p, cat.id)).length;
+            const Icon = cat.icon;
 
             return (
               <button
-                key={item.slug}
+                key={cat.id}
                 type="button"
-                onClick={() => handleSelect(parkMatch.id)}
-                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-all active:scale-95 ${
-                  isSelected
-                    ? "bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-emerald-500 dark:to-teal-600 text-white shadow-sm font-bold ring-1 ring-white/20 dark:ring-emerald-300/30"
-                    : "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 hover:border-emerald-500"
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  if (!isOpen) setIsOpen(true);
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold font-heading transition-all active:scale-95 cursor-pointer ${
+                  isCatActive
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xs ring-1 ring-emerald-400/40"
+                    : "bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-emerald-200/70 hover:bg-slate-200/70 dark:hover:bg-white/10"
                 }`}
               >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
+                <Icon className="h-3.5 w-3.5" />
+                <span>{cat.label}</span>
+                {cat.id !== "ALL" && (
+                  <span
+                    className={`text-[10px] ml-0.5 ${
+                      isCatActive
+                        ? "text-white/80"
+                        : "text-slate-400 dark:text-emerald-300/40"
+                    }`}
+                  >
+                    ({count})
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
+
+        {/* 1-Tap Quick Select Park Pills for Current Category */}
+        {quickPills.length > 0 && (
+          <div className="pt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-emerald-200/60 font-medium mb-1">
+              แตะเลือกได้ทันที ({CATEGORY_CHIPS.find((c) => c.id === selectedCategory)?.label}):
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {quickPills.map((park) => {
+                const isSelected = selectedParkId === park.id || selectedParkId === park.slug;
+                return (
+                  <button
+                    key={park.id}
+                    type="button"
+                    onClick={() => handleSelect(park.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-all active:scale-95 cursor-pointer ${
+                      isSelected
+                        ? "bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-emerald-500 dark:to-teal-600 text-white shadow-xs font-bold ring-1 ring-white/20 dark:ring-emerald-300/30"
+                        : "bg-white dark:bg-emerald-950/40 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-emerald-800/40 hover:border-emerald-500"
+                    }`}
+                  >
+                    <Trees className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="font-heading font-medium">{park.nameTh}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 🔍 Search Input & Results Dropdown */}
+      {/* Search Input & Results Dropdown */}
       <div className="relative w-full pt-0.5">
         <div className="relative flex items-center">
           <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center text-[var(--muted)]">
@@ -248,10 +401,10 @@ export function ParkSearchSelect({
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="rounded-full p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                className="rounded-full p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                 title="ล้างคำค้นหา"
               >
-                ✕
+                <X className="h-3.5 w-3.5" />
               </button>
             ) : null}
             <span className="rounded-full bg-slate-200/70 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-[var(--muted)]">
@@ -264,13 +417,15 @@ export function ParkSearchSelect({
         {isOpen && (
           <div className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-64 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-emerald-800/60 bg-white/98 dark:bg-[#0c231c] p-1.5 shadow-2xl backdrop-blur-2xl ring-1 ring-black/10 dark:ring-emerald-500/20">
             <div className="px-2.5 py-1 text-[10px] font-semibold text-[var(--muted)] border-b border-[var(--border)] mb-1 flex items-center justify-between">
-              <span>ผลการค้นหา ({filteredParks.length})</span>
+              <span>
+                ผลการค้นหา {selectedCategory !== "ALL" ? `(${CATEGORY_CHIPS.find((c) => c.id === selectedCategory)?.label})` : ""} ({filteredParks.length} แห่ง)
+              </span>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="text-[10px] text-[var(--brand-strong)] hover:underline"
+                className="inline-flex items-center gap-0.5 text-[10px] text-[var(--brand-strong)] hover:underline cursor-pointer"
               >
-                ปิด ✕
+                ปิด <X className="h-3 w-3" />
               </button>
             </div>
 
@@ -297,8 +452,8 @@ export function ParkSearchSelect({
                             style={{ backgroundImage: `url(${park.coverImageUrl})` }}
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-sm">
-                            🌲
+                          <div className="flex h-full w-full items-center justify-center text-sm text-emerald-400">
+                            <Trees className="h-4 w-4" />
                           </div>
                         )}
                       </div>
@@ -310,16 +465,21 @@ export function ParkSearchSelect({
                             {park.nameTh}
                           </span>
                           {isSelected ? (
-                            <span className="shrink-0 rounded-full bg-emerald-500 px-1.5 py-0.2 text-[9px] font-bold text-white">
-                              ✓ เลือกอยู่
+                            <span className="inline-flex items-center gap-0.5 shrink-0 rounded-full bg-emerald-500 px-1.5 py-0.2 text-[9px] font-bold text-white">
+                              <Check className="h-2.5 w-2.5" /> เลือกอยู่
                             </span>
                           ) : null}
                         </div>
 
                         <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
-                          <span>📍 {park.province}</span>
+                          <span className="inline-flex items-center gap-0.5">
+                            <MapPin className="h-2.5 w-2.5 shrink-0" />
+                            {park.province}
+                          </span>
                           {park.openTime && park.closeTime ? (
-                            <span className="text-[10px] opacity-75">· ⏰ {park.openTime}-{park.closeTime}</span>
+                            <span className="inline-flex items-center gap-0.5 text-[10px] opacity-75">
+                              · <Clock className="h-2.5 w-2.5 shrink-0" /> {park.openTime}-{park.closeTime}
+                            </span>
                           ) : null}
                         </div>
 
@@ -328,7 +488,7 @@ export function ParkSearchSelect({
                           return evCharging.hasEvCharger ? (
                             <div className="mt-1 flex items-center">
                               <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 dark:bg-emerald-400/20 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                                ⚡ มีจุดชาร์จ EV
+                                <Zap className="h-2.5 w-2.5 text-amber-500 fill-amber-500" /> มีจุดชาร์จ EV
                               </span>
                             </div>
                           ) : null;

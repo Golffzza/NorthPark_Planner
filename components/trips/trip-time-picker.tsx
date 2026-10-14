@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Sunrise, Car, Sun, CloudSun, Sunset, Moon, Clock } from "lucide-react";
 
 export interface TripTimePickerProps {
   value: string; // HH:mm format e.g. "07:00"
@@ -33,11 +34,32 @@ export function getTripTimeContext(timeStr: string): { label: string; period: st
   }
 }
 
+function getTimeLucideIcon(timeStr: string) {
+  if (!timeStr) return Clock;
+  const [hStr] = timeStr.split(":");
+  const h = parseInt(hStr, 10);
+  if (isNaN(h)) return Clock;
+  if (h >= 4 && h < 7) return Sunrise;
+  if (h >= 7 && h < 10) return Car;
+  if (h >= 10 && h < 13) return Sun;
+  if (h >= 13 && h < 16) return CloudSun;
+  if (h >= 16 && h < 19) return Sunset;
+  return Moon;
+}
+
+function getHourLucideIcon(hour: string) {
+  const hNum = parseInt(hour, 10);
+  if (hNum >= 5 && hNum < 10) return Sunrise;
+  if (hNum >= 10 && hNum < 16) return Sun;
+  if (hNum >= 16 && hNum < 19) return Sunset;
+  return Moon;
+}
+
 const COMMON_TIME_PRESETS = [
-  { label: "🌅 06:00", time: "06:00", desc: "เช้าตรู่" },
-  { label: "🚗 07:30", time: "07:30", desc: "ยอดนิยม" },
-  { label: "☀️ 09:00", time: "09:00", desc: "สาย" },
-  { label: "🌤️ 13:00", time: "13:00", desc: "บ่าย" },
+  { label: "06:00", time: "06:00", desc: "เช้าตรู่", icon: Sunrise },
+  { label: "07:30", time: "07:30", desc: "ยอดนิยม", icon: Car },
+  { label: "09:00", time: "09:00", desc: "สาย", icon: Sun },
+  { label: "13:00", time: "13:00", desc: "บ่าย", icon: CloudSun },
 ];
 
 export function TripTimePicker({
@@ -56,6 +78,7 @@ export function TripTimePicker({
   }, [value]);
 
   const timeContext = useMemo(() => getTripTimeContext(value), [value]);
+  const ContextIcon = useMemo(() => getTimeLucideIcon(value), [value]);
 
   const handleSelectHour = (hour: string) => {
     const newTime = `${hour}:${currentMin}`;
@@ -101,8 +124,9 @@ export function TripTimePicker({
           <div className="min-w-0 flex-1">
             {value ? (
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                  {timeContext.icon} {timeContext.label}
+                <p className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                  <ContextIcon className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                  <span>{timeContext.label}</span>
                 </p>
                 <p className="text-[10.5px] sm:text-[11px] font-medium text-teal-700 dark:text-teal-300/80 truncate">
                   {timeContext.period}
@@ -144,18 +168,20 @@ export function TripTimePicker({
         <span className="text-[11px] font-bold text-slate-500 dark:text-emerald-300/70 mr-0.5">รอบ:</span>
         {COMMON_TIME_PRESETS.map((preset) => {
           const isSelected = value === preset.time;
+          const Icon = preset.icon;
           return (
             <button
               key={preset.label}
               type="button"
               onClick={() => handleSelectPreset(preset.time)}
-              className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-all active:scale-95 cursor-pointer ${
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-all active:scale-95 cursor-pointer ${
                 isSelected
                   ? "bg-gradient-to-r from-teal-600 to-emerald-700 dark:from-teal-500 dark:to-emerald-600 text-white shadow-xs ring-1 ring-white/20 dark:ring-emerald-300/30"
                   : "bg-slate-100 dark:bg-[#0e2a21] hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60 text-slate-700 dark:text-emerald-200 border border-slate-200/80 dark:border-emerald-700/40"
               }`}
             >
-              {preset.label}
+              <Icon className="h-3 w-3" />
+              <span>{preset.label}</span>
             </button>
           );
         })}
@@ -188,8 +214,7 @@ export function TripTimePicker({
               <div className="max-h-48 overflow-y-auto pr-1 space-y-1 rounded-2xl bg-slate-50 dark:bg-black/20 p-1.5 border border-slate-200/70 dark:border-emerald-900/40 custom-scrollbar">
                 {TIME_SLOT_HOURS.map((hour) => {
                   const isSelected = currentHour === hour;
-                  const hNum = parseInt(hour, 10);
-                  const icon = hNum >= 5 && hNum < 10 ? "🌅" : hNum >= 10 && hNum < 16 ? "☀️" : hNum >= 16 && hNum < 19 ? "🌇" : "🌙";
+                  const HourIcon = getHourLucideIcon(hour);
 
                   return (
                     <button
@@ -203,7 +228,7 @@ export function TripTimePicker({
                       }`}
                     >
                       <span className="font-mono text-sm">{hour}</span>
-                      <span className="text-xs opacity-75">{icon}</span>
+                      <HourIcon className="h-3.5 w-3.5 opacity-75" />
                     </button>
                   );
                 })}
@@ -254,7 +279,8 @@ export function TripTimePicker({
               }}
               className="inline-flex items-center gap-1 font-bold text-teal-700 dark:text-teal-300 hover:underline cursor-pointer"
             >
-              <span>🚗 เวลามาตรฐาน 07:00 น.</span>
+              <Car className="h-3.5 w-3.5" />
+              <span>เวลามาตรฐาน 07:00 น.</span>
             </button>
 
             <button

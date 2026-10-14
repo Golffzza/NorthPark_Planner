@@ -1,4 +1,12 @@
 import Link from "next/link";
+import {
+  Compass,
+  ClipboardList,
+  Calendar,
+  Clock,
+  CloudSun,
+  Navigation,
+} from "lucide-react";
 import { ScoreHeroCard } from "@/components/evaluation/score-hero-card";
 import { PlanAdjustmentBanner } from "@/components/evaluation/plan-adjustment-banner";
 import { FactorBreakdown } from "@/components/evaluation/factor-breakdown";
@@ -139,7 +147,7 @@ export default function DemoTripResultPage() {
               className="inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 shadow-sm shadow-emerald-950/30 transition-all active:scale-[0.98] cursor-pointer"
             >
               <span>ลองประเมินทริปจริง</span>
-              <span>🧭</span>
+              <Compass className="h-3.5 w-3.5 text-white" />
             </Link>
           }
         />
@@ -156,8 +164,8 @@ export default function DemoTripResultPage() {
         <section className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <div className="soft-card relative overflow-hidden rounded-[32px] sm:rounded-[34px] px-5 py-6 sm:px-7">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-500 text-sm">
-                📋
+              <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-500">
+                <ClipboardList className="h-4 w-4" />
               </span>
               <span className="guide-chip">Trip Snapshot</span>
             </div>
@@ -172,7 +180,7 @@ export default function DemoTripResultPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 transition-all duration-200 hover:border-emerald-500/30">
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                  <span>🗓️</span>
+                  <Calendar className="h-3.5 w-3.5" />
                   <span>วันออกเดินทาง</span>
                 </div>
                 <p className="mt-2 text-base font-bold font-heading text-[var(--foreground)]">
@@ -183,7 +191,7 @@ export default function DemoTripResultPage() {
 
               <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 transition-all duration-200 hover:border-emerald-500/30">
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                  <span>⏰</span>
+                  <Clock className="h-3.5 w-3.5" />
                   <span>เวลาออกเดินทาง</span>
                 </div>
                 <p className="mt-2 text-base font-bold font-heading text-[var(--foreground)]">
@@ -195,7 +203,7 @@ export default function DemoTripResultPage() {
               <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 transition-all duration-200 hover:border-emerald-500/30">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                    <span>🌤️</span>
+                    <CloudSun className="h-3.5 w-3.5 text-amber-500" />
                     <span>สภาพอากาศอุทยาน</span>
                   </div>
                   <span className="rounded-full bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold font-heading">
@@ -211,7 +219,7 @@ export default function DemoTripResultPage() {
               <div className="dashboard-card group relative overflow-hidden rounded-[24px] p-4 transition-all duration-200 hover:border-emerald-500/30">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-emerald-300/80">
-                    <span>🧭</span>
+                    <Navigation className="h-3.5 w-3.5 text-teal-500" />
                     <span>ระยะเวลาเดินทาง</span>
                   </div>
                   <span className="rounded-full bg-teal-500/15 text-teal-800 dark:text-teal-300 border border-teal-500/30 px-2 py-0.5 text-[10px] font-bold font-heading">

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/ui/toast";
 
 type EvaluateLiveTripButtonProps = {
   tripId: string;
@@ -51,6 +52,7 @@ async function runStep(url: string) {
 
 export function EvaluateLiveTripButton({ tripId, label = "ประเมินใหม่ด้วยข้อมูลล่าสุด" }: EvaluateLiveTripButtonProps) {
   const router = useRouter();
+  const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleEvaluateLive() {
@@ -62,7 +64,7 @@ export function EvaluateLiveTripButton({ tripId, label = "ประเมิน�
       router.push(`/trips/${tripId}/result`);
       router.refresh();
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "ไม่สามารถประเมินทริปด้วยข้อมูลจริงได้ในขณะนี้");
+      toast.error(error instanceof Error ? error.message : "ไม่สามารถประเมินทริปด้วยข้อมูลจริงได้ในขณะนี้");
     } finally {
       setIsSubmitting(false);
     }
