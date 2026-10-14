@@ -96,7 +96,9 @@ const txMock = vi.hoisted(() => ({
   },
   trip: {
     updateMany: vi.fn(),
+    update: vi.fn(),
   },
+  tripItineraryDay: { deleteMany: vi.fn() },
 }));
 
 const authMock = vi.hoisted(() => ({
@@ -199,6 +201,10 @@ describe("trip planner evaluation flow", () => {
 
       return buildTripDetailRecord(state.trip, state.park, state.evaluations);
     });
+
+    txMock.trip.update.mockImplementation((args: { where: { id: string }; data: Record<string, unknown> }) =>
+      prismaMock.trip.update(args),
+    );
 
     txMock.tripEvaluation.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
       const createdEvaluation: EvaluationRecord = {
