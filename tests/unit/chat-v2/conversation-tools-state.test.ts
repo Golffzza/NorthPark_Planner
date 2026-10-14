@@ -65,7 +65,7 @@ describe("Assistant V2 conversation tools state", () => {
     expect(state.selectedPark?.slug).toBe("doi-inthanon");
   });
 
-  it("uses a newly named park instead of the previously selected park", async () => {
+  it("answers about a newly named park without replacing the selected park", async () => {
     const state = makeState();
     state.selectedPark = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
     state.draftTrip = {
@@ -80,7 +80,7 @@ describe("Assistant V2 conversation tools state", () => {
       .getParkInfo.execute!({ parkName: "ดอยสุเทพ", topic: "province" }, options);
 
     expect(result).toMatchObject({ found: true, park: { slug: "doi-suthep-pui" } });
-    expect(state.selectedPark?.slug).toBe("doi-suthep-pui");
+    expect(state.selectedPark?.slug).toBe("doi-inthanon");
     expect(state.draftTrip?.park.slug).toBe("doi-inthanon");
   });
 
