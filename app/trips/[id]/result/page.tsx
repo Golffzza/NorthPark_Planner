@@ -26,6 +26,7 @@ import {
   NotFoundError,
 } from "@/lib/services/trip-service";
 import { sanitizeExplanationText } from "@/lib/services/evaluation-explainer-service";
+import { resolveTripCanProceed } from "@/lib/evaluation/resolve-trip-can-proceed";
 
 import { formatThaiDate } from "@/lib/utils/date";
 
@@ -497,9 +498,10 @@ export default async function TripResultPage({
         latestEvaluation.constraints,
       );
 
-    const canProceed =
-      latestEvaluation.canProceed ??
-      true;
+    const canProceed = resolveTripCanProceed(
+      latestEvaluation.canProceed,
+      constraints,
+    );
 
     const blockingConstraints =
       constraints.filter(
@@ -812,7 +814,7 @@ export default async function TripResultPage({
                 ))}
 
               {constraints.length ===
-                0 && (
+                0 && canProceed && (
                 <div className="rounded-[24px] border border-emerald-500/20 bg-emerald-500/[0.05] p-4">
                   <div className="flex items-start gap-3">
                     <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
