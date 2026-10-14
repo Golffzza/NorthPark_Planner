@@ -12,6 +12,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import type { FactorScoreViewModel } from "@/lib/presenters/trip-result-view";
+import { getFactorStatus } from "@/lib/evaluation/factor-status";
 
 type FactorScoreCardProps = {
   factor: FactorScoreViewModel;
@@ -31,11 +32,9 @@ function getFactorStatusTheme(
   score: number,
   explicitStatus?: "GOOD" | "CAUTION" | "RISK",
 ): FactorStatusTheme {
-  // สีเขียว = ปลอดภัย (score >= 75 หรือ status === GOOD)
-  // สีส้ม = ควรระวัง (score 50..74 หรือ status === CAUTION)
-  // สีแดง/ชมพู = ควรปรับแผน (score < 50 หรือ status === RISK)
-  const isSafe = explicitStatus === "GOOD" || (!explicitStatus && score >= 75);
-  const isRisk = explicitStatus === "RISK" || (!explicitStatus && score < 50);
+  const status = explicitStatus ?? getFactorStatus(score);
+  const isSafe = status === "GOOD";
+  const isRisk = status === "RISK";
 
   if (isSafe) {
     return {
@@ -105,40 +104,40 @@ function renderFactorIcon(key: string) {
 
 function getActionableTip(factorKey: string, score: number): string {
   if (factorKey === "weather") {
-    if (score >= 75) {
+    if (score >= 80) {
       return "สภาพอากาศเปิด ฟ้าโปร่ง เดินทางและท่องเที่ยวกลางแจ้งได้อย่างสบายใจ";
     }
-    if (score >= 50) {
+    if (score >= 60) {
       return "เช็กเรดาร์ฝนล่วงหน้า 2 ชม. และเตรียมเสื้อกันฝนหรือร่มติดตัวไว้";
     }
     return "มีโอกาสเจอฝนตกชุกหรือสภาพอากาศปิด ควรตรวจสอบประกาศอุทยานหรือเลื่อนวันเดินทาง";
   }
 
   if (factorKey === "duration") {
-    if (score >= 75) {
+    if (score >= 80) {
       return "ระยะทางและเวลาขับขี่พอเหมาะ ไม่เหนื่อยล้าจนเกินไป เดินทางสะดวก";
     }
-    if (score >= 50) {
+    if (score >= 60) {
       return "ระยะทางค่อนข้างไกล แนะนำวางแผนแวะจุดพักรถทุก 1.5–2 ชม. เพื่อพักสายตา";
     }
     return "การขับขี่ใช้เวลานานมาก ควรออกเดินทางแต่เช้าตรู่ หรือแบ่งทริปแวะพักค้างแรมระหว่างทาง";
   }
 
   if (factorKey === "time") {
-    if (score >= 75) {
+    if (score >= 80) {
       return "เวลาถึงอุทยานอยู่ในช่วงกลางวัน มีเวลาเที่ยวชมและกลับก่อนพระอาทิตย์ตกดิน";
     }
-    if (score >= 50) {
+    if (score >= 60) {
       return "แนะนำออกเดินทางเร็วขึ้น 30–60 นาที เพื่อให้ถึงอุทยานก่อนพระอาทิตย์ตก";
     }
     return "เวลาเดินทางเสี่ยงถึงใกล้ค่ำหรือหลังเวลาปิดอุทยาน แนะนำปรับเวลาออกเดินทางให้เช้าขึ้นทันที";
   }
 
   if (factorKey === "userProfile" || factorKey === "profile") {
-    if (score >= 75) {
+    if (score >= 80) {
       return "ยานพาหนะและจำนวนผู้ร่วมทริปเหมาะสมกับเส้นทางขึ้นอุทยาน";
     }
-    if (score >= 50) {
+    if (score >= 60) {
       return "เส้นทางขึ้นเขาคดเคี้ยว ควรตรวจสภาพเบรก ยางรถ และระบบระบายความร้อนก่อนออกเดินทาง";
     }
     return "ยานพาหนะอาจไม่เหมาะกับเส้นทางลาดชันสูง แนะนำเปลี่ยนประเภทรถหรือเดินทางร่วมกับผู้ชำนาญทาง";
