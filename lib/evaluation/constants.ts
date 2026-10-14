@@ -1,6 +1,6 @@
 //* ./lib/evaluation/constants.ts
 
-import type { EvaluationLevel, WeatherCondition } from "./types";
+import type { EvaluationLevel, WeatherCondition, FactorStatus } from "./types";
 
 export const EVALUATION_WEIGHTS = {
   weather: 0.35,
@@ -36,3 +36,9 @@ export const SCORE_LEVELS: Array<{
   { min: 40, level: "MODERATE" },
   { min: 0, level: "NEEDS_ADJUSTMENT" },
 ];
+/** Factor status thresholds shared by evaluator and presentation. */
+export function getFactorStatus(score: number): FactorStatus {
+  if (score >= 80) return "GOOD";
+  if (score >= 60) return "CAUTION";
+  return "RISK";
+}
