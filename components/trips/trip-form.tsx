@@ -564,9 +564,21 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
       return;
     }
 
+    const parkChanged = !isCreateMode && trip !== undefined && formState.parkId !== trip.park.id;
+    const hasExistingItinerary = (trip?.itineraryDays?.length ?? 0) > 0;
+    let confirmParkChange = false;
+
+    if (parkChanged && hasExistingItinerary) {
+      confirmParkChange = window.confirm(
+        "การเปลี่ยนอุทยานจะล้างกิจกรรมทั้งหมดในแผนเดิม และต้องประเมินทริปใหม่ ยืนยันเปลี่ยนอุทยานหรือไม่?",
+      );
+      if (!confirmParkChange) return;
+    }
+
     setIsSubmitting(true);
 
     const payload = {
+      ...(!isCreateMode && parkChanged ? { confirmParkChange } : {}),
       parkId: formState.parkId,
       tripDate: formState.tripDate || null,
       departAt: formState.departAt || null,

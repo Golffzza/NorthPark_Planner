@@ -19,6 +19,13 @@ import type { TripUpdateInput } from "@/lib/validations/trip-update";
 
 export { NotFoundError };
 
+export class ParkChangeConfirmationRequiredError extends Error {
+  constructor() {
+    super("การเปลี่ยนอุทยานจะล้างกิจกรรมในแผนเดิม กรุณายืนยันก่อนบันทึก");
+    this.name = "ParkChangeConfirmationRequiredError";
+  }
+}
+
 export class TripCancelledError extends Error {
   constructor() {
     super("ไม่สามารถแก้ไขทริปที่ยกเลิกแล้วได้");
@@ -477,12 +484,25 @@ export async function updateTripForCurrentUser(
     await ensureActivePark(input.parkId);
   }
 
+  const parkChanged = input.parkId !== undefined && input.parkId !== trip.parkId;
+  const mustClearItinerary = parkChanged && trip.itineraryDays.length > 0;
+
+  if (mustClearItinerary && input.confirmParkChange !== true) {
+    throw new ParkChangeConfirmationRequiredError();
+  }
+
   const resetToDraft = shouldResetTripStatus(trip, input);
 
   // The status condition also protects against a concurrent cancellation.
   let updatedTrip;
   try {
-    updatedTrip = await prisma.trip.update({
+    updatedTrip = await prisma.$transaction(async (tx) => {
+      if (mustClearItinerary) {
+        // Deleting days cascades to their items. Roll back if the trip update fails.
+        await tx.tripItineraryDay.deleteMany({ where: { tripId } });
+      }
+
+      return tx.trip.update({
     where: {
       id: tripId,
       status: { not: "CANCELLED" },
@@ -570,6 +590,7 @@ export async function updateTripForCurrentUser(
     },
 
     include: detailTripInclude,
+      });
     });
   } catch (error) {
     if (

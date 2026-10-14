@@ -4,6 +4,7 @@ import { RequestValidationError, type ValidationIssue } from "@/lib/validations/
 
 export type TripUpdateInput = {
   parkId?: string;
+  confirmParkChange?: boolean;
   tripDate?: Date | null;
   departAt?: string | null;
   originText?: string | null;
@@ -82,6 +83,14 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
         code: "required",
       },
     ]);
+  }
+
+  if ("confirmParkChange" in input) {
+    if (typeof input.confirmParkChange !== "boolean") {
+      issues.push({ field: "confirmParkChange", message: "Must be a boolean", code: "invalid_type" });
+    } else {
+      parsed.confirmParkChange = input.confirmParkChange;
+    }
   }
 
   if ("parkId" in input) {
