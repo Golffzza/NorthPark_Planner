@@ -95,8 +95,13 @@ describe("refreshTripEvaluationForCurrentUser", () => {
       id: "trip_1",
       userId: "user_1",
       status: "DRAFT",
+      tripDate: new Date("2026-06-12T00:00:00.000Z"),
+      departAt: "08:00",
+      originText: "เชียงใหม่",
       originLat: 18.7883,
       originLng: 98.9853,
+      transportMode: "CAR",
+      travelerCount: 2,
       park: {
         id: "park_1",
         latitude: 18.5883,

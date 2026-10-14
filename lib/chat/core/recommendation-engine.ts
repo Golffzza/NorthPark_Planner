@@ -17,6 +17,18 @@ function reportsIndefiniteClosure(chunk: RetrievedKnowledgeChunk): boolean {
     .test(chunk.content);
 }
 
+function difficultyDescription(value?: string): string | undefined {
+  const descriptions: Record<string, string> = {
+    LOW: "ระดับง่าย",
+    "LOW-MODERATE": "ระดับง่ายถึงปานกลาง",
+    MODERATE: "ระดับปานกลาง",
+    "MODERATE-HIGH": "ระดับปานกลางถึงยาก",
+    HIGH: "ระดับยาก",
+    VERY_HIGH: "ระดับยากมาก",
+  };
+  return descriptions[value?.toUpperCase() ?? ""];
+}
+
 export function recommendParks(
   parks: ParkCatalogEntry[],
   constraints: AssistantConstraints,
@@ -56,7 +68,7 @@ export function recommendParks(
 
       const reasons = selectedActivities.flatMap((activity) => [
         `${activity.name}${activity.summary ? `: ${activity.summary}` : ""}`,
-        [activity.walking && `ระยะเดิน ${activity.walking}`, activity.difficulty && `ความยาก ${activity.difficulty}`].filter(Boolean).join("; "),
+        [activity.walking && `ระยะเดิน ${activity.walking}`, difficultyDescription(activity.difficulty) && `ความยาก${difficultyDescription(activity.difficulty)}`].filter(Boolean).join("; "),
         activity.risks && `ข้อควรระวัง: ${activity.risks}`,
       ]).filter((value): value is string => Boolean(value));
       if (constraints.companions?.includes("ELDERLY")) {

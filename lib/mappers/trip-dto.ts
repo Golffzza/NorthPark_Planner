@@ -14,15 +14,15 @@ type TripParkSummary = {
 
 export type TripListDto = {
   id: string;
-  tripDate: string;
-  departAt: string;
-  originText: string;
+  tripDate: string | null;
+  departAt: string | null;
+  originText: string | null;
   originLat: number | null;
   originLng: number | null;
-  transportMode: string;
-  travelerCount: number;
-  weatherCondition: string;
-  estimatedTravelMinutes: number;
+  transportMode: string | null;
+  travelerCount: number | null;
+  weatherCondition: string | null;
+  estimatedTravelMinutes: number | null;
   mockSunsetTime: string | null;
   notes: string | null;
   status: string;
@@ -59,6 +59,12 @@ export type TripDetailEvaluationDto = EvaluationDto & {
 };
 
 export type TripDetailDto = Omit<TripListDto, "latestEvaluation"> & {
+  itineraryDays?: Array<{
+    day: number;
+    title: string;
+    notes: string | null;
+    items: Array<{ position: number; name: string; sourceReference: string | null; notes: string | null }>;
+  }>;
   evaluations: TripDetailEvaluationDto[];
   latestWeatherSnapshot?: {
     id: string;
@@ -101,6 +107,7 @@ type TripListRecord = Prisma.TripGetPayload<{
 
 type TripDetailRecord = Prisma.TripGetPayload<{
   include: {
+    itineraryDays: { include: { items: true } };
     park: {
       select: {
         id: true;
@@ -175,11 +182,11 @@ export function mapTripToListDto(trip: TripListRecord): TripListDto {
 
   return {
     id: trip.id,
-    tripDate: trip.tripDate.toISOString(),
+    tripDate: trip.tripDate?.toISOString() ?? null,
     departAt: trip.departAt,
     originText: trip.originText,
-    originLat: trip.originLat ? Number(trip.originLat) : null,
-    originLng: trip.originLng ? Number(trip.originLng) : null,
+    originLat: trip.originLat !== null ? Number(trip.originLat) : null,
+    originLng: trip.originLng !== null ? Number(trip.originLng) : null,
     transportMode: trip.transportMode,
     travelerCount: trip.travelerCount,
     weatherCondition: trip.weatherCondition,
@@ -210,11 +217,11 @@ export function mapTripToDetailDto(trip: TripDetailRecord): TripDetailDto {
 
   return {
     id: trip.id,
-    tripDate: trip.tripDate.toISOString(),
+    tripDate: trip.tripDate?.toISOString() ?? null,
     departAt: trip.departAt,
     originText: trip.originText,
-    originLat: trip.originLat ? Number(trip.originLat) : null,
-    originLng: trip.originLng ? Number(trip.originLng) : null,
+    originLat: trip.originLat !== null ? Number(trip.originLat) : null,
+    originLng: trip.originLng !== null ? Number(trip.originLng) : null,
     transportMode: trip.transportMode,
     travelerCount: trip.travelerCount,
     weatherCondition: trip.weatherCondition,
@@ -225,6 +232,17 @@ export function mapTripToDetailDto(trip: TripDetailRecord): TripDetailDto {
     createdAt: trip.createdAt.toISOString(),
     updatedAt: trip.updatedAt.toISOString(),
     park: mapPark(trip.park),
+    itineraryDays: (trip.itineraryDays ?? []).map((day) => ({
+      day: day.dayNumber,
+      title: day.title,
+      notes: day.notes,
+      items: day.items.map((item) => ({
+        position: item.position,
+        name: item.name,
+        sourceReference: item.sourceReference,
+        notes: item.notes,
+      })),
+    })),
     evaluations: trip.evaluations.map((evaluation) => ({
       ...mapEvaluationToDto(evaluation),
       weatherSnapshot: evaluation.weatherSnapshot

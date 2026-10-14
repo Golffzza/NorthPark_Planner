@@ -6,6 +6,7 @@ import { executeCompareParks } from "@/lib/chat-v2/tools/compare-parks";
 import { executeGetParkInfo } from "@/lib/chat-v2/tools/get-park-info";
 import { executeGetParkKnowledge } from "@/lib/chat-v2/tools/get-park-knowledge";
 import { executeRecommendParks } from "@/lib/chat-v2/tools/recommend-parks";
+import { NotFoundError } from "@/lib/services/park-service";
 import {
   executeSearchParks,
   searchParksInputSchema,
@@ -124,6 +125,94 @@ describe("Assistant V2 tool handlers", () => {
   });
 
   describe("getParkInfo", () => {
+    it("returns stored opening hours for a park without claiming current opening status", async () => {
+      const getParkDetail = vi.fn().mockResolvedValue({ openTime: "08:00", closeTime: "16:30" });
+      const result = await executeGetParkInfo(
+        { parkName: "ลานสาง", topic: "hours" },
+        { getParkDetail },
+      );
+
+      expect(getParkDetail).toHaveBeenCalledWith("lan-sang");
+      expect(result).toMatchObject({
+        found: true,
+        park: { slug: "lan-sang" },
+        topic: "hours",
+        status: "RECORDED",
+        openingHours: { openTime: "08:00", closeTime: "16:30" },
+        currentStatusVerified: false,
+        freshnessNote: expect.stringContaining("ไม่ได้ยืนยันว่าเปิดวันนี้"),
+      });
+    });
+
+    it("reports unknown hours when a catalog park has no active database record", async () => {
+      const result = await executeGetParkInfo(
+        { parkName: "ลานสาง", topic: "hours" },
+        { getParkDetail: vi.fn().mockRejectedValue(new NotFoundError("Park not found")) },
+      );
+      expect(result).toMatchObject({ found: true, topic: "hours", status: "UNKNOWN" });
+      expect(result).not.toHaveProperty("openingHours");
+    });
+
+    it("returns only listed fees, never a generic fallback tariff", async () => {
+      const known = await executeGetParkInfo({ parkName: "ลานสาง", topic: "fees" });
+      expect(known).toMatchObject({
+        found: true,
+        topic: "fees",
+        status: "RECORDED",
+        fees: { thaiAdult: 40, thaiChild: 20, foreignAdult: 200, foreignChild: 100 },
+        currentStatusVerified: false,
+        freshnessNote: expect.stringContaining("ไม่ได้ยืนยันอัตราปัจจุบัน"),
+      });
+
+      const anotherPark = await executeGetParkInfo({ parkName: "ดอยอินทนนท์", topic: "fees" });
+      expect(anotherPark).toMatchObject({
+        found: true,
+        park: { slug: "doi-inthanon" },
+        fees: { thaiAdult: 60, foreignAdult: 300 },
+      });
+
+      const unknown = await executeGetParkInfo(
+        { parkName: "อุทยานทดสอบ", topic: "fees" },
+        { findMentionedParks: () => [{ ...parks[0], slug: "unlisted-park", id: "unlisted-park" }] },
+      );
+      expect(unknown).toMatchObject({ found: true, topic: "fees", status: "UNKNOWN" });
+      expect(unknown).not.toHaveProperty("fees");
+    });
+
+    it("includes stored hours in basic facts used by Gemini for opening questions", async () => {
+      const result = await executeGetParkInfo(
+        { parkName: "ลานสาง", topic: "basic" },
+        { getParkDetail: vi.fn().mockResolvedValue({ openTime: "08:00", closeTime: "16:30" }) },
+      );
+      expect(result).toMatchObject({
+        found: true,
+        topic: "basic",
+        basic: { openingHours: {
+          openTime: "08:00",
+          closeTime: "16:30",
+          freshnessNote: expect.stringContaining("ไม่ได้ยืนยันว่าเปิดวันนี้"),
+        } },
+      });
+    });
+
+    it("exposes a recorded contact only when the park has a registry entry", async () => {
+      const known = await executeGetParkInfo({ parkName: "ลานสาง", topic: "contact" });
+      expect(known).toMatchObject({
+        found: true,
+        topic: "contact",
+        status: "RECORDED",
+        contact: { address: expect.stringContaining("อำเภอเมืองตาก") },
+        currentStatusVerified: false,
+      });
+
+      const missing = await executeGetParkInfo(
+        { parkName: "อุทยานทดสอบ", topic: "contact" },
+        { findMentionedParks: () => [{ ...parks[0], slug: "unlisted-park", id: "unlisted-park" }] },
+      );
+      expect(missing).toMatchObject({ found: true, status: "UNKNOWN" });
+      expect(missing).not.toHaveProperty("contact");
+    });
+
     it("returns the canonical park and province without retrieving knowledge", async () => {
       const findByParkSlugs = vi.fn();
       const result = await executeGetParkInfo(
@@ -226,6 +315,25 @@ describe("Assistant V2 tool handlers", () => {
         topic: "camping",
         status: "EVIDENCE_FOUND",
         campsites: [{ type: "CAMPSITE", name: "ลานกางเต็นท์ดงสน" }],
+      });
+    });
+
+    it("uses facilities evidence for a camping area without inventing a campsite name", async () => {
+      const facilities = {
+        ...activityChunk(parks[0], "OTHER", "facilities"),
+        section: "facilities",
+        content: "- **camping_facilities:** มีพื้นที่กางเต็นท์ตามข้อมูลเดิม; ต้องตรวจสถานะล่าสุด",
+      };
+      const result = await executeGetParkInfo(
+        { parkName: "ดอยอินทนนท์", topic: "camping" },
+        { findMentionedParks: () => [parks[0]], findByParkSlugs: vi.fn().mockResolvedValue([facilities]) },
+      );
+      expect(result).toMatchObject({
+        found: true,
+        topic: "camping",
+        status: "EVIDENCE_FOUND",
+        campsites: [],
+        campingContext: expect.stringContaining("มีพื้นที่กางเต็นท์"),
       });
     });
 
@@ -411,6 +519,92 @@ describe("Assistant V2 tool handlers", () => {
   });
 
   describe("getParkKnowledge", () => {
+    it.each([
+      ["facilities", "ที่พักและสิ่งอำนวยความสะดวกมีอะไร", "camping_facilities: มีพื้นที่กางเต็นท์; ห้องพัก UNKNOWN"],
+      ["access", "เดินทางไปอย่างไร", "private_car: เข้าถึงพื้นที่บริการ; public_transport: UNKNOWN"],
+      ["safety", "มีสัตว์อันตรายไหม", "wildlife: UNKNOWN_FOR_THIS_PARK"],
+      ["attraction:A01", "มีจุดเด่นอะไร", "น้ำตกลานสาง; walking: ระยะสั้นถึงปานกลาง"],
+      ["nearby_context", "มีที่พักใกล้อุทยานไหม", "nearby_food_cafe_temple_hotel: USE_NEARBY_PLACES_TOOL"],
+    ])("preserves %s evidence and its unknowns for %s", async (section, question, content) => {
+      const chunk: RetrievedKnowledgeChunk = {
+        id: `lan-sang:${section}`,
+        documentId: "document:lan-sang",
+        slug: "lan-sang",
+        parkTitle: "อุทยานแห่งชาติลานสาง",
+        title: section,
+        section,
+        content,
+        similarity: 0.9,
+        rankScore: 1,
+      };
+      const result = await executeGetParkKnowledge(
+        { parkName: "ลานสาง", question },
+        { retrieve: vi.fn().mockResolvedValue({ requiresLiveVerification: false, chunks: [chunk] }) },
+      );
+      expect(result).toMatchObject({
+        status: "OK",
+        park: { slug: "lan-sang" },
+        chunks: [{ section, content }],
+      });
+    });
+
+    it("adds recorded fee facts when RAG retrieval misses the fee section", async () => {
+      const getParkInfo = vi.fn().mockResolvedValue({
+        found: true,
+        topic: "fees",
+        status: "RECORDED",
+        fees: { thaiAdult: 40 },
+        currentStatusVerified: false,
+      });
+      const result = await executeGetParkKnowledge(
+        { parkName: "ลานสาง", question: "ที่นี่มีค่าเข้าไหม" },
+        {
+          retrieve: vi.fn().mockResolvedValue({ requiresLiveVerification: true, chunks: [] }),
+          getParkInfo,
+        },
+      );
+      expect(getParkInfo).toHaveBeenCalledWith({ parkName: "อุทยานแห่งชาติลานสาง", topic: "fees" });
+      expect(result).toMatchObject({
+        status: "OK",
+        structuredFacts: [{ topic: "fees", fees: { thaiAdult: 40 } }],
+      });
+    });
+
+    it("combines several structured topics with RAG evidence in one question", async () => {
+      const getParkInfo = vi.fn().mockImplementation(async ({ topic }: { topic: string }) => ({
+        found: true,
+        topic,
+        status: "RECORDED",
+        currentStatusVerified: false,
+      }));
+      const result = await executeGetParkKnowledge(
+        { parkName: "ลานสาง", question: "ค่าเข้าเท่าไร เปิดกี่โมง และเบอร์โทรติดต่ออะไร" },
+        {
+          retrieve: vi.fn().mockResolvedValue({
+            requiresLiveVerification: false,
+            chunks: [{
+              ...activityChunk(parks[0], "OTHER", "reference"),
+              slug: "lan-sang",
+              section: "dynamic",
+              content: "entry_fee_today: UNKNOWN_IN_STATIC_RAG",
+            }],
+          }),
+          getParkInfo,
+        },
+      );
+      expect(getParkInfo.mock.calls.map(([input]) => input.topic)).toEqual(["fees", "hours", "contact"]);
+      expect(result).toMatchObject({
+        status: "OK",
+        requiresLiveVerification: true,
+        structuredFacts: [
+          { topic: "fees" },
+          { topic: "hours" },
+          { topic: "contact" },
+        ],
+        chunks: [{ section: "dynamic", content: "entry_fee_today: UNKNOWN_IN_STATIC_RAG" }],
+      });
+    });
+
     it("uses canonical park context, invokes retrieval, and maps grounded chunks", async () => {
       const chunk = activityChunk(parks[0], "VIEWPOINT", "ยอดดอยอินทนนท์");
       const retrieve = vi.fn().mockResolvedValue({

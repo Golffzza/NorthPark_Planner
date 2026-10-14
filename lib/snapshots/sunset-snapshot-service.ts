@@ -38,6 +38,7 @@ function toCoordinateNumber(value: { toNumber(): number } | number | null | unde
 export async function syncSunsetSnapshotForCurrentUser(tripId: string) {
   const trip = await getTripForCurrentUser(tripId);
   assertTripCanBeEvaluated(trip);
+  if (!trip.tripDate) throw new TripSnapshotContextError("Trip date is required for sunset sync");
   const latitude = toCoordinateNumber(trip.park.latitude);
   const longitude = toCoordinateNumber(trip.park.longitude);
 

@@ -12,6 +12,7 @@ import {
 } from "@/lib/snapshots/weather-snapshot-service";
 import { SunsetSyncUnavailableError } from "@/lib/snapshots/sunset-snapshot-service";
 import { refreshTripEvaluationForCurrentUser } from "@/lib/orchestration/trip-refresh-evaluation-orchestrator";
+import { IncompleteTripInformationError } from "@/lib/services/trip-evaluation-readiness";
 
 vi.mock("@/lib/orchestration/trip-refresh-evaluation-orchestrator", async () => {
   const actual = await vi.importActual<
@@ -27,6 +28,14 @@ vi.mock("@/lib/orchestration/trip-refresh-evaluation-orchestrator", async () => 
 const refreshEvaluationOrchestratorMock = vi.mocked(refreshTripEvaluationForCurrentUser);
 
 describe("POST /api/v1/trips/[id]/refresh-evaluation", () => {
+  it("returns missing fields as 422 before contacting live providers", async () => {
+    refreshEvaluationOrchestratorMock.mockRejectedValue(new IncompleteTripInformationError(["tripDate", "originLat"]));
+    const response = await POST(new Request("http://localhost/api/v1/trips/trip_1/refresh-evaluation"), {
+      params: Promise.resolve({ id: "trip_1" }),
+    });
+    expect(response.status).toBe(422);
+    expect((await response.json()).error).toMatchObject({ code: "incomplete_trip_information", missingFields: ["tripDate", "originLat"] });
+  });
   it("returns 409 for cancelled trips", async () => {
     refreshEvaluationOrchestratorMock.mockRejectedValue(new CancelledTripEvaluationError());
     const response = await POST(new Request("http://localhost/api/v1/trips/trip_1/refresh-evaluation"), {

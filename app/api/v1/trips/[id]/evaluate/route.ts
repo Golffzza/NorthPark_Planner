@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { evaluateTripForCurrentUser } from "@/lib/services/evaluation-service";
 import { AuthorizationError, CancelledTripEvaluationError, NotFoundError } from "@/lib/services/trip-service";
+import { IncompleteTripInformationError } from "@/lib/services/trip-evaluation-readiness";
 
 type RouteContext = {
   params: Promise<{
@@ -36,6 +37,9 @@ export async function POST(_request: Request, context: RouteContext) {
       },
     });
   } catch (error) {
+    if (error instanceof IncompleteTripInformationError) {
+      return NextResponse.json({ error: { code: "incomplete_trip_information", message: error.message, missingFields: error.missingFields } }, { status: 422 });
+    }
     if (error instanceof CancelledTripEvaluationError) {
       return NextResponse.json({ error: { code: "trip_cancelled", message: error.message } }, { status: 409 });
     }

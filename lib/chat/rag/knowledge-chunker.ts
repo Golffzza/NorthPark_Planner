@@ -27,6 +27,11 @@ const SECTION_KEYS: Record<string, string> = {
   "9": "safety",
   "10": "itinerary",
   "11": "dynamic",
+  "16": "geo_aliases",
+  "17": "preparation",
+  "18": "rules",
+  "19": "emergency",
+  "20": "nearby_context",
 };
 
 function normalizeText(

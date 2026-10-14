@@ -2,6 +2,7 @@
 
 import { evaluateLiveTripForCurrentUser } from "@/lib/orchestration/trip-live-evaluation-orchestrator";
 import { assertTripCanBeEvaluated, getTripForCurrentUser } from "@/lib/services/trip-service";
+import { assertTripEvaluationReady } from "@/lib/services/trip-evaluation-readiness";
 import { syncRouteSnapshotForCurrentUser } from "@/lib/snapshots/route-snapshot-service";
 import { syncSunsetSnapshotForCurrentUser } from "@/lib/snapshots/sunset-snapshot-service";
 import { syncWeatherSnapshotForCurrentUser } from "@/lib/snapshots/weather-snapshot-service";
@@ -32,7 +33,9 @@ export type RefreshTripEvaluationResult = {
 export async function refreshTripEvaluationForCurrentUser(
   tripId: string,
 ): Promise<RefreshTripEvaluationResult> {
-  assertTripCanBeEvaluated(await getTripForCurrentUser(tripId));
+  const trip = await getTripForCurrentUser(tripId);
+  assertTripCanBeEvaluated(trip);
+  assertTripEvaluationReady(trip, "live");
 
   const weatherSnapshot = await syncWeatherSnapshotForCurrentUser(tripId);
   const sunsetSnapshot = await syncSunsetSnapshotForCurrentUser(tripId);

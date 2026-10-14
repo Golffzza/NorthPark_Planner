@@ -12,8 +12,12 @@ import { getParkContactInfo } from "@/lib/data/park-addresses";
 import {
   appendAssistantMessage,
   appendUserMessage,
+  formatAssistantMessageContent,
   type ChatMessage,
 } from "./chat-messages";
+import { readAssistantV2Stream } from "./assistant-stream";
+import { AiTripDraftPanel } from "./ai-trip-draft-panel";
+import type { AssistantV2DraftTrip } from "@/lib/chat-v2/state/conversation-state";
 
 /*
  * ต้องตรงกับ backend:
@@ -139,6 +143,7 @@ const SUGGESTED_FOLLOW_UPS = [
 export function AssistantChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string>();
+  const [draftTrip, setDraftTrip] = useState<AssistantV2DraftTrip | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -149,6 +154,7 @@ export function AssistantChat() {
   const [showQuickSheet, setShowQuickSheet] = useState(false);
 
   const busy = useRef(false);
+  const requestVersion = useRef(0);
   const log = useRef<HTMLDivElement>(null);
   const controller = useRef<AbortController | null>(null);
 
@@ -249,6 +255,7 @@ export function AssistantChat() {
     }
 
     busy.current = true;
+    const thisRequest = ++requestVersion.current;
 
     setLoading(true);
     setError("");
@@ -263,6 +270,7 @@ export function AssistantChat() {
     const timer = setTimeout(() => abort.abort(), 115_000);
 
     let assistantStarted = false;
+    let updateTimer: ReturnType<typeof setTimeout> | null = null;
 
     try {
       const body: ChatRequest = {
@@ -286,6 +294,8 @@ export function AssistantChat() {
 
         signal: abort.signal,
       });
+
+      if (thisRequest !== requestVersion.current) return;
 
       if (!response.ok) {
         let errorResult: ChatErrorResponse = {};
@@ -321,17 +331,13 @@ export function AssistantChat() {
 
       setConversationId(nextConversationId);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
       let fullText = "";
       let displayedText = "";
-      let updateTimer: ReturnType<typeof setTimeout> | null = null;
 
       const flushAssistantText = () => {
         updateTimer = null;
 
-        if (displayedText === fullText) {
+        if (thisRequest !== requestVersion.current || displayedText === fullText) {
           return;
         }
 
@@ -339,6 +345,7 @@ export function AssistantChat() {
         assistantStarted = true;
 
         setMessages((current) => {
+          if (thisRequest !== requestVersion.current) return current;
           const next = [...current];
           const lastIndex = next.length - 1;
           const last = next[lastIndex];
@@ -366,30 +373,11 @@ export function AssistantChat() {
         }, 40);
       };
 
-      while (true) {
-        const { value, done } = await reader.read();
-
-        if (done) {
-          break;
-        }
-
-        const chunk = decoder.decode(value, {
-          stream: true,
-        });
-
-        if (!chunk) {
-          continue;
-        }
-
-        fullText += chunk;
+      fullText = await readAssistantV2Stream(response.body, (nextText) => {
+        if (thisRequest !== requestVersion.current) return;
+        fullText = nextText;
         scheduleFlush();
-      }
-
-      const tail = decoder.decode();
-
-      if (tail) {
-        fullText += tail;
-      }
+      });
 
       if (updateTimer) {
         clearTimeout(updateTimer);
@@ -401,7 +389,17 @@ export function AssistantChat() {
       if (!fullText.trim()) {
         throw new Error("ผู้ช่วยไม่ได้ส่งข้อความตอบกลับ");
       }
+      try {
+        const draftResponse = await fetch(`/api/v2/assistant/trip-draft?conversationId=${encodeURIComponent(nextConversationId)}`, { signal: abort.signal });
+        if (draftResponse.ok && thisRequest === requestVersion.current) {
+          const body = await draftResponse.json();
+          setDraftTrip(body.data ?? null);
+        }
+      } catch {
+        // Chat response remains usable if the draft panel cannot refresh.
+      }
     } catch (failure) {
+      if (thisRequest !== requestVersion.current) return;
       setMessages((current) => {
         if (
           assistantStarted &&
@@ -422,11 +420,12 @@ export function AssistantChat() {
       }
     } finally {
       clearTimeout(timer);
-
-      controller.current = null;
-      busy.current = false;
-
-      setLoading(false);
+      if (updateTimer) clearTimeout(updateTimer);
+      if (thisRequest === requestVersion.current) {
+        controller.current = null;
+        busy.current = false;
+        setLoading(false);
+      }
     }
   }
 
@@ -437,10 +436,13 @@ export function AssistantChat() {
   }
 
   function startNewConversation() {
+    if (draftTrip && !draftTrip.savedTripId && !window.confirm("มีแผนฉบับร่างที่ยังไม่บันทึก เริ่มบทสนทนาใหม่และออกจากแผนนี้หรือไม่?")) return;
+    requestVersion.current += 1;
     controller.current?.abort();
     stopSpeech();
 
     setConversationId(undefined);
+    setDraftTrip(null);
     setMessages([]);
     setInput("");
     setError("");
@@ -725,7 +727,9 @@ export function AssistantChat() {
                   }`}
                 >
                   <p className="whitespace-pre-wrap break-words leading-7">
-                    {message.content}
+                    {message.role === "assistant"
+                      ? formatAssistantMessageContent(message.content)
+                      : message.content}
                   </p>
 
                   {/* Sources List */}
@@ -918,6 +922,9 @@ export function AssistantChat() {
             </div>
           </div>
         ) : null}
+        {conversationId && draftTrip && (
+          <AiTripDraftPanel conversationId={conversationId} draft={draftTrip} onChange={setDraftTrip} />
+        )}
       </div>
 
       {/* Quick Prompts Collapsible Sheet / Drawer (For mobile and active chat) */}

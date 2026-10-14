@@ -164,19 +164,20 @@ model ParkWarning {
 
 model Trip {
   id                     String           @id @default(cuid())
+    aiDraftId              String?          @unique
   userId                 String
   user                   User             @relation(fields: [userId], references: [id], onDelete: Restrict)
   parkId                 String
   park                   Park             @relation(fields: [parkId], references: [id], onDelete: Restrict)
-  tripDate               DateTime
-  departAt               String
-  originText             String
+    tripDate               DateTime?
+    departAt               String?
+    originText             String?
   originLat              Decimal?         @db.Decimal(9, 6)
   originLng              Decimal?         @db.Decimal(9, 6)
-  transportMode          TransportMode
-  travelerCount          Int
-  weatherCondition       WeatherCondition
-  estimatedTravelMinutes Int
+    transportMode          TransportMode?
+    travelerCount          Int?
+    weatherCondition       WeatherCondition?
+    estimatedTravelMinutes Int?
   mockSunsetTime         String?
   notes                  String?
   status                 TripStatus       @default(DRAFT)
@@ -184,6 +185,7 @@ model Trip {
   weatherSnapshots       WeatherSnapshot[]
   sunsetSnapshots        SunsetSnapshot[]
   routeSnapshots         RouteSnapshot[]
+    itineraryDays          TripItineraryDay[]
   createdAt              DateTime         @default(now())
   updatedAt              DateTime         @updatedAt
 
@@ -192,6 +194,32 @@ model Trip {
   @@index([status])
   @@index([userId, createdAt])
   @@index([userId, tripDate])
+}
+
+model TripItineraryDay {
+  id        String              @id @default(cuid())
+  tripId    String
+  trip      Trip                @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  dayNumber Int
+  title     String
+  notes     String?
+  items     TripItineraryItem[]
+
+  @@unique([tripId, dayNumber])
+  @@index([tripId])
+}
+
+model TripItineraryItem {
+  id              String           @id @default(cuid())
+  dayId           String
+  day             TripItineraryDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  position        Int
+  name            String
+  sourceReference String?
+  notes           String?
+
+  @@unique([dayId, position])
+  @@index([dayId])
 }
 
 model TripEvaluation {

@@ -424,7 +424,7 @@ async function main() {
     "7. เปลี่ยน tripDate แต่ยังใช้ Weather snapshot เก่า ต้อง stale_weather_snapshot",
     () => {
       const changedDate =
-        new Date(trip.tripDate);
+        new Date(trip.tripDate ?? "");
 
       changedDate.setUTCDate(
         changedDate.getUTCDate() + 1,

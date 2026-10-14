@@ -57,6 +57,10 @@ const listTripInclude = {
 } satisfies Prisma.TripInclude;
 
 const detailTripInclude = {
+  itineraryDays: {
+    orderBy: { dayNumber: "asc" as const },
+    include: { items: { orderBy: { position: "asc" as const } } },
+  },
   park: {
     select: {
       id: true,
@@ -476,19 +480,19 @@ export async function updateTripForCurrentUser(
           }
         : {}),
 
-      ...(input.tripDate
+      ...("tripDate" in input
         ? {
             tripDate: input.tripDate,
           }
         : {}),
 
-      ...(input.departAt
+      ...("departAt" in input
         ? {
             departAt: input.departAt,
           }
         : {}),
 
-      ...(input.originText
+      ...("originText" in input
         ? {
             originText: input.originText,
           }
@@ -506,25 +510,25 @@ export async function updateTripForCurrentUser(
           }
         : {}),
 
-      ...(input.transportMode
+      ...("transportMode" in input
         ? {
             transportMode: input.transportMode,
           }
         : {}),
 
-      ...(input.travelerCount
+      ...("travelerCount" in input
         ? {
             travelerCount: input.travelerCount,
           }
         : {}),
 
-      ...(input.weatherCondition
+      ...("weatherCondition" in input
         ? {
             weatherCondition: input.weatherCondition,
           }
         : {}),
 
-      ...(input.estimatedTravelMinutes
+      ...("estimatedTravelMinutes" in input
         ? {
             estimatedTravelMinutes: input.estimatedTravelMinutes,
           }

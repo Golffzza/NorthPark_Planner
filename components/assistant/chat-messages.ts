@@ -12,6 +12,13 @@ export type ChatMessage = {
 
 const MAX_VISIBLE_MESSAGES = 40;
 
+export function formatAssistantMessageContent(content: string): string {
+  return content
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/^\s*[-*]\s+/gm, "• ")
+    .replace(/^#{1,6}\s+/gm, "");
+}
+
 function appendMessage(
   messages: ChatMessage[],
   message: ChatMessage,

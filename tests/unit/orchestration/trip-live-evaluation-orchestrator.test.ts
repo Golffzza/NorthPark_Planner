@@ -64,6 +64,7 @@ describe("evaluateLiveTripForCurrentUser", () => {
       userId: "user_1",
       tripDate: new Date("2026-06-12T00:00:00.000Z"),
       departAt: "08:15",
+      originText: "เชียงใหม่",
       originLat: 18.7883,
       originLng: 98.9853,
       travelerCount: 3,

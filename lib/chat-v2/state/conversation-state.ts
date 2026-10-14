@@ -14,18 +14,51 @@ export type AssistantV2RecentMessage = {
   content: string;
 };
 
+export type AssistantV2DraftTripDay = {
+  day: number;
+  title: string;
+  items: string[];
+};
+
+export type AssistantV2DraftTrip = {
+  draftId?: string;
+  revision?: number;
+  savedTripId?: string;
+  verifiedActivities?: Array<{ name: string; sourceReference?: string }>;
+  park: ParkReference;
+  durationDays: number;
+  companions: NonNullable<AssistantConstraints["companions"]>;
+  fatigue?: AssistantConstraints["fatigue"];
+  activities: NonNullable<AssistantConstraints["activities"]>;
+  days: AssistantV2DraftTripDay[];
+  notes?: string;
+};
+
 export type AssistantV2ConversationState = {
   id: string;
   ownerId: string;
   userConstraints: AssistantConstraints;
   currentResults: ParkReference[];
+  currentResultsOrderVerified?: boolean;
   selectedPark?: ParkReference;
   lastComparedParks: ParkReference[];
+  draftTrip?: AssistantV2DraftTrip;
   recentMessages: AssistantV2RecentMessage[];
   createdAt: number;
   updatedAt: number;
   expiresAt: number;
 };
+
+export function setSelectedPark(
+  state: AssistantV2ConversationState,
+  park: ParkReference,
+): void {
+  state.selectedPark = {
+    id: park.id,
+    slug: park.slug,
+    name: park.name,
+  };
+}
 
 export class AssistantV2ConversationExpiredError extends Error {
   constructor() {
@@ -69,7 +102,11 @@ export type AssistantV2ConversationTurnLease = {
 };
 
 function cloneParkReference(park: ParkReference): ParkReference {
-  return { id: park.id, slug: park.slug, name: park.name };
+  return {
+    id: park.id,
+    slug: park.slug,
+    name: park.name,
+  };
 }
 
 function cloneState(
@@ -80,25 +117,50 @@ function cloneState(
     userConstraints: structuredClone(state.userConstraints),
     currentResults: state.currentResults.map(cloneParkReference),
     ...(state.selectedPark
-      ? { selectedPark: cloneParkReference(state.selectedPark) }
+      ? {
+          selectedPark: cloneParkReference(state.selectedPark),
+        }
       : {}),
-    lastComparedParks: state.lastComparedParks.map(cloneParkReference),
-    recentMessages: state.recentMessages.map((message) => ({ ...message })),
+    lastComparedParks: state.lastComparedParks.map(
+      cloneParkReference,
+    ),
+    ...(state.draftTrip
+      ? {
+          draftTrip: structuredClone(state.draftTrip),
+        }
+      : {}),
+    recentMessages: state.recentMessages.map(
+      (message) => ({ ...message }),
+    ),
   };
 }
 
-function trimRecentContent(content: string, maxLength: number): string {
+function trimRecentContent(
+  content: string,
+  maxLength: number,
+): string {
   const value = content.trim();
-  if (value.length <= maxLength) return value;
+
+  if (value.length <= maxLength) {
+    return value;
+  }
+
   return `${value.slice(0, maxLength - 1).trimEnd()}…`;
 }
 
-export class InMemoryAssistantV2ConversationStore implements AssistantV2ConversationStore {
+export class InMemoryAssistantV2ConversationStore
+  implements AssistantV2ConversationStore
+{
   private readonly conversations = new Map<
     string,
     AssistantV2ConversationState
   >();
-  private readonly turnLocks = new Map<string, Promise<void>>();
+
+  private readonly turnLocks = new Map<
+    string,
+    Promise<void>
+  >();
+
   private readonly ttlMs: number;
   private readonly maxRecentMessages: number;
   private readonly maxRecentMessageLength: number;
@@ -107,38 +169,57 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
   constructor(options: ConversationStateStoreOptions = {}) {
     this.ttlMs = options.ttlMs ?? DEFAULT_TTL_MS;
     this.maxRecentMessages =
-      options.maxRecentMessages ?? DEFAULT_MAX_RECENT_MESSAGES;
+      options.maxRecentMessages ??
+      DEFAULT_MAX_RECENT_MESSAGES;
     this.maxRecentMessageLength =
-      options.maxRecentMessageLength ?? DEFAULT_MAX_RECENT_MESSAGE_LENGTH;
+      options.maxRecentMessageLength ??
+      DEFAULT_MAX_RECENT_MESSAGE_LENGTH;
     this.now = options.now ?? Date.now;
   }
 
   async runTurn<T>(
     conversationId: string | undefined,
     ownerId: string,
-    operation: (state: AssistantV2ConversationState) => Promise<T>,
+    operation: (
+      state: AssistantV2ConversationState,
+    ) => Promise<T>,
   ): Promise<T> {
     this.cleanupExpired();
-    const id = conversationId ?? this.create(ownerId).id;
-    const previousTurn = this.turnLocks.get(id) ?? Promise.resolve();
+
+    const id =
+      conversationId ?? this.create(ownerId).id;
+
+    const previousTurn =
+      this.turnLocks.get(id) ?? Promise.resolve();
+
     let releaseTurn: () => void = () => {};
+
     const currentTurn = new Promise<void>((resolve) => {
       releaseTurn = resolve;
     });
-    const lockTail = previousTurn.then(() => currentTurn);
+
+    const lockTail = previousTurn.then(
+      () => currentTurn,
+    );
+
     this.turnLocks.set(id, lockTail);
 
     await previousTurn;
 
     try {
       this.cleanupExpired();
+
       const stored = this.getOwned(id, ownerId);
       const workingState = cloneState(stored);
+
       const result = await operation(workingState);
+
       this.persist(workingState, ownerId);
+
       return result;
     } finally {
       releaseTurn();
+
       if (this.turnLocks.get(id) === lockTail) {
         this.turnLocks.delete(id);
       }
@@ -151,9 +232,11 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
   ): Promise<AssistantV2ConversationTurnLease> {
     this.cleanupExpired();
 
-    const id = conversationId ?? this.create(ownerId).id;
+    const id =
+      conversationId ?? this.create(ownerId).id;
 
-    const previousTurn = this.turnLocks.get(id) ?? Promise.resolve();
+    const previousTurn =
+      this.turnLocks.get(id) ?? Promise.resolve();
 
     let releaseTurn: () => void = () => {};
 
@@ -161,7 +244,9 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
       releaseTurn = resolve;
     });
 
-    const lockTail = previousTurn.then(() => currentTurn);
+    const lockTail = previousTurn.then(
+      () => currentTurn,
+    );
 
     this.turnLocks.set(id, lockTail);
 
@@ -191,6 +276,7 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
 
         commit: () => {
           if (finished) return;
+
           this.persist(workingState, ownerId);
         },
 
@@ -215,7 +301,10 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
     state.recentMessages.push(
       {
         role: "user",
-        content: trimRecentContent(userMessage, this.maxRecentMessageLength),
+        content: trimRecentContent(
+          userMessage,
+          this.maxRecentMessageLength,
+        ),
       },
       {
         role: "assistant",
@@ -225,7 +314,11 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
         ),
       },
     );
-    state.recentMessages = state.recentMessages.slice(-this.maxRecentMessages);
+
+    state.recentMessages =
+      state.recentMessages.slice(
+        -this.maxRecentMessages,
+      );
   }
 
   cleanupExpired(): number {
@@ -233,7 +326,10 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
     let removed = 0;
 
     for (const [id, conversation] of this.conversations) {
-      if (conversation.expiresAt <= now && !this.turnLocks.has(id)) {
+      if (
+        conversation.expiresAt <= now &&
+        !this.turnLocks.has(id)
+      ) {
         this.conversations.delete(id);
         removed += 1;
       }
@@ -242,20 +338,26 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
     return removed;
   }
 
-  private create(ownerId: string): AssistantV2ConversationState {
+  private create(
+    ownerId: string,
+  ): AssistantV2ConversationState {
     const now = this.now();
+
     const state: AssistantV2ConversationState = {
       id: crypto.randomUUID(),
       ownerId,
       userConstraints: {},
       currentResults: [],
+      currentResultsOrderVerified: false,
       lastComparedParks: [],
       recentMessages: [],
       createdAt: now,
       updatedAt: now,
       expiresAt: now + this.ttlMs,
     };
+
     this.conversations.set(state.id, state);
+
     return state;
   }
 
@@ -263,32 +365,51 @@ export class InMemoryAssistantV2ConversationStore implements AssistantV2Conversa
     conversationId: string,
     ownerId: string,
   ): AssistantV2ConversationState {
-    const conversation = this.conversations.get(conversationId);
-    if (!conversation || conversation.ownerId !== ownerId) {
+    const conversation =
+      this.conversations.get(conversationId);
+
+    if (
+      !conversation ||
+      conversation.ownerId !== ownerId
+    ) {
       throw new AssistantV2ConversationExpiredError();
     }
+
     return conversation;
   }
 
-  private persist(state: AssistantV2ConversationState, ownerId: string): void {
-    const stored = this.getOwned(state.id, ownerId);
+  private persist(
+    state: AssistantV2ConversationState,
+    ownerId: string,
+  ): void {
+    const stored = this.getOwned(
+      state.id,
+      ownerId,
+    );
+
     const now = this.now();
     const next = cloneState(state);
+
     next.ownerId = stored.ownerId;
     next.createdAt = stored.createdAt;
     next.updatedAt = now;
     next.expiresAt = now + this.ttlMs;
+
     this.conversations.set(next.id, next);
   }
 }
 
 const globalAssistantV2State = globalThis as typeof globalThis & {
-  northParkAssistantV2ConversationStore?: AssistantV2ConversationStore;
+  northParkAssistantV2ConversationStore?:
+    AssistantV2ConversationStore;
 };
 
-export const assistantV2ConversationStore: AssistantV2ConversationStore =
-  globalAssistantV2State.northParkAssistantV2ConversationStore ??
-  new InMemoryAssistantV2ConversationStore();
+export const assistantV2ConversationStore:
+  AssistantV2ConversationStore =
+    globalAssistantV2State
+      .northParkAssistantV2ConversationStore ??
+    new InMemoryAssistantV2ConversationStore();
 
-globalAssistantV2State.northParkAssistantV2ConversationStore =
+globalAssistantV2State
+  .northParkAssistantV2ConversationStore =
   assistantV2ConversationStore;

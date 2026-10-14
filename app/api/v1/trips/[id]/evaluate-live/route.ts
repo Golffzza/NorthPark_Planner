@@ -11,6 +11,7 @@ import {
   NotFoundError,
 } from "@/lib/services/trip-service";
 import { RouteSyncUnavailableError, TripRouteContextError } from "@/lib/snapshots/route-snapshot-service";
+import { IncompleteTripInformationError } from "@/lib/services/trip-evaluation-readiness";
 import { SunsetSyncUnavailableError, TripSnapshotContextError as SunsetTripSnapshotContextError } from "@/lib/snapshots/sunset-snapshot-service";
 import {
   TripSnapshotContextError as WeatherTripSnapshotContextError,
@@ -54,6 +55,9 @@ export async function POST(
       },
     });
   } catch (error) {
+    if (error instanceof IncompleteTripInformationError) {
+      return NextResponse.json({ error: { code: "incomplete_trip_information", message: error.message, missingFields: error.missingFields } }, { status: 422 });
+    }
     if (error instanceof CancelledTripEvaluationError) {
       return NextResponse.json({ error: { code: "trip_cancelled", message: error.message } }, { status: 409 });
     }

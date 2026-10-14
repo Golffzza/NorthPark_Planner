@@ -264,6 +264,7 @@ describe("trip service CRUD", () => {
     expect(result.originLat).toBe(18.7883);
     expect(result.originLng).toBe(98.9853);
     expect(result.evaluations).toHaveLength(1);
+    expect(result.itineraryDays).toEqual([]);
     expect(prismaMock.trip.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
         include: expect.objectContaining({

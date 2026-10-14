@@ -64,6 +64,7 @@ type PlanTripDependencies = {
 type PlanningCandidate = {
   type: string;
   name: string;
+  sourceReference: string;
   summary?: string;
   difficulty?: string;
   walking?: string;
@@ -74,13 +75,12 @@ function uniqueCandidates(
   chunks: RetrievedKnowledgeChunk[],
 ): PlanningCandidate[] {
   const candidates = chunks
-    .map((chunk) => parseActivityEvidence(chunk))
-    .filter((activity): activity is NonNullable<typeof activity> =>
-      Boolean(activity),
-    )
-    .map((activity) => ({
+    .map((chunk) => ({ activity: parseActivityEvidence(chunk), chunk }))
+    .filter((entry): entry is { activity: NonNullable<typeof entry.activity>; chunk: RetrievedKnowledgeChunk } => Boolean(entry.activity))
+    .map(({ activity, chunk }) => ({
       type: activity.type,
       name: activity.name,
+      sourceReference: `${chunk.documentId}:${chunk.id}`,
       ...(activity.summary ? { summary: activity.summary } : {}),
       ...(activity.difficulty ? { difficulty: activity.difficulty } : {}),
       ...(activity.walking ? { walking: activity.walking } : {}),
@@ -214,13 +214,25 @@ export async function executePlanTrip(
     };
   }
 
+  if (durationDays > 14) {
+    return {
+      status: "NEEDS_CLARIFICATION" as const,
+      park: toParkSummary(resolved.park),
+      missing: ["durationDays"] as const,
+      message: "แผนฉบับร่างรองรับสูงสุด 14 วัน กรุณาระบุจำนวนวันใหม่",
+    };
+  }
+
   const findByParkSlugs =
     dependencies.findByParkSlugs ??
     knowledgeRetriever.findByParkSlugs.bind(knowledgeRetriever);
 
   const chunks = await findByParkSlugs([resolved.park.slug]);
+  const verifiedCandidates = uniqueCandidates(
+    chunks.filter((chunk) => chunk.slug === resolved.park.slug),
+  );
   const candidates = selectCandidates(
-    uniqueCandidates(chunks),
+    verifiedCandidates,
     constraints,
     durationDays,
   );
@@ -259,9 +271,14 @@ export async function executePlanTrip(
     park,
     constraints: structuredClone(constraints),
     draftTrip,
+    verifiedActivities: [...new Map(verifiedCandidates.map((candidate) => [
+      candidate.name,
+      { name: candidate.name, sourceReference: candidate.sourceReference },
+    ])).values()],
     evidence: candidates.map((candidate) => ({
       type: candidate.type,
       name: candidate.name,
+      sourceReference: candidate.sourceReference,
       ...(candidate.summary ? { summary: candidate.summary } : {}),
       ...(candidate.difficulty
         ? { difficulty: candidate.difficulty }

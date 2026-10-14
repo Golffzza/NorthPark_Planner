@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getParkTransitInfo } from "@/lib/data/park-transit-info";
-import { getTransportModeLabel, getWeatherConditionLabel } from "@/lib/constants/trip-form-options";
+import { getWeatherConditionLabel } from "@/lib/constants/trip-form-options";
 import type { TripDetailDto } from "@/lib/mappers/trip-dto";
 
 type PlanAdjustmentBannerProps = {
@@ -21,6 +21,15 @@ type AdjustmentReason = {
 
 export function analyzePlanAdjustment(trip: TripDetailDto): AdjustmentReason {
   const latestEvaluation = trip.evaluations[0];
+  if (!latestEvaluation) {
+    return {
+      type: "READY", severity: "INFO", icon: "📋", badgeLabel: "รอประเมิน",
+      headline: "บันทึกแผนแล้ว แต่ยังไม่มีผลประเมิน",
+      recommendedAction: "เติมข้อมูลการเดินทางที่ยังขาด แล้วจึงขอประเมิน",
+      reasonText: "ระบบยังไม่มีข้อมูลเพียงพอที่จะสรุปความเหมาะสมของทริปนี้",
+      impactLevel: "รอข้อมูลการเดินทาง", editSuggestion: "เติมข้อมูลทริป",
+    };
+  }
   const weatherCondition = trip.latestWeatherSnapshot?.weatherCondition ?? trip.weatherCondition;
   const transitInfo = getParkTransitInfo(trip.park.nameTh);
   const travelDurationMinutes = trip.latestRouteSnapshot
@@ -28,9 +37,9 @@ export function analyzePlanAdjustment(trip: TripDetailDto): AdjustmentReason {
     : trip.estimatedTravelMinutes;
 
   // Calculate estimated arrival time
-  const [departHour, departMin] = trip.departAt.split(":").map(Number);
+  const [departHour, departMin] = (trip.departAt ?? "").split(":").map(Number);
   const totalDepartMinutes = (departHour || 0) * 60 + (departMin || 0);
-  const arrivalMinutes = totalDepartMinutes + travelDurationMinutes;
+  const arrivalMinutes = totalDepartMinutes + (travelDurationMinutes ?? 0);
   const arrivalHour = Math.floor((arrivalMinutes / 60) % 24);
   const arrivalMin = arrivalMinutes % 60;
   const arrivalTimeStr = `${String(arrivalHour).padStart(2, "0")}:${String(arrivalMin).padStart(2, "0")}`;
@@ -59,7 +68,7 @@ export function analyzePlanAdjustment(trip: TripDetailDto): AdjustmentReason {
       badgeLabel: "ความเสี่ยงยานพาหนะ",
       headline: "แนะนำให้เปลี่ยนวิธีการเดินทางเป็นรถยนต์",
       recommendedAction: "ควรเปลี่ยนพาหนะจากรถจักรยานยนต์เป็นรถยนต์ส่วนบุคคล หรือรถสาธารณะ",
-      reasonText: `เนื่องจากการขับขี่รถจักรยานยนต์ขึ้นเส้นทางลาดชันบนเทือกเขาสูงในสภาพอากาศ ${getWeatherConditionLabel(weatherCondition)} มีความเสี่ยงต่อการเกิดอุบัติเหตุลื่นไถลสูง และไม่มีเกราะกำบังลมฝน`,
+      reasonText: `เนื่องจากการขับขี่รถจักรยานยนต์ขึ้นเส้นทางลาดชันบนเทือกเขาสูงในสภาพอากาศ ${weatherCondition ? getWeatherConditionLabel(weatherCondition) : "ยังไม่ระบุ"} มีความเสี่ยงต่อการเกิดอุบัติเหตุลื่นไถลสูง และไม่มีเกราะกำบังลมฝน`,
       impactLevel: "ความปลอดภัยในการเดินทาง",
       editSuggestion: "เปลี่ยนประเภทยานพาหนะ",
     };
@@ -81,25 +90,29 @@ export function analyzePlanAdjustment(trip: TripDetailDto): AdjustmentReason {
   }
 
   // 4. Time Risk: Late departure arriving after 16:00 or after sunset
-  if (arrivalHour >= 16 || (latestEvaluation && latestEvaluation.timeScore < 50)) {
+  if ((trip.departAt && travelDurationMinutes !== null && arrivalHour >= 16) || latestEvaluation.timeScore < 50) {
     return {
       type: "TIME",
       severity: "WARNING",
       icon: "⏰",
       badgeLabel: "เวลาเดินทางไม่เหมาะสม",
       headline: "แนะนำให้ออกเดินทางเร็วขึ้น (ก่อน 07:30 - 08:30 น.)",
-      recommendedAction: `ควรเลื่อนเวลาออกเดินทางจากเดิม (${trip.departAt} น.) ให้เร็วขึ้นอย่างน้อย 2–3 ชั่วโมง`,
-      reasonText: `เนื่องจากเวลาออกเดินทางปัจจุบันจะทำให้คุณเดินทางถึงอุทยานประมาณ ${arrivalTimeStr} น. ซึ่งใกล้เวลาปิดทำการ (${trip.park.closeTime} น.) และแสงอาทิตย์หมด ทำให้มีเวลาท่องเที่ยวไม่เพียงพอและต้องขับรถบนเส้นทางภูเขาในเวลากลางคืน`,
+      recommendedAction: trip.departAt
+        ? `ควรเลื่อนเวลาออกเดินทางจากเดิม (${trip.departAt} น.) ให้เร็วขึ้นอย่างน้อย 2–3 ชั่วโมง`
+        : "กรุณาระบุเวลาออกเดินทางก่อนประเมินใหม่",
+      reasonText: trip.departAt && travelDurationMinutes !== null
+        ? `จากเวลาออกเดินทางและข้อมูลเส้นทางที่บันทึกไว้ คาดว่าจะถึงอุทยานประมาณ ${arrivalTimeStr} น. ซึ่งใกล้เวลาปิดทำการ (${trip.park.closeTime} น.)`
+        : "คะแนนปัจจัยเวลาในผลประเมินล่าสุดต่ำ กรุณาตรวจสอบเวลาออกเดินทางและข้อมูลเส้นทางอีกครั้ง",
       impactLevel: "การบริหารเวลาและทัศนวิสัย",
       editSuggestion: "ปรับเวลาออกเดินทาง",
     };
   }
 
   // 5. Duration Risk: Long travel duration > 4 hours without stops
-  if (travelDurationMinutes >= 240 || (latestEvaluation && latestEvaluation.durationScore < 60)) {
-    const hours = Math.floor(travelDurationMinutes / 60);
-    const mins = travelDurationMinutes % 60;
-    const durationStr = `${hours} ชม. ${mins > 0 ? `${mins} นาที` : ""}`;
+  if ((travelDurationMinutes !== null && travelDurationMinutes >= 240) || latestEvaluation.durationScore < 60) {
+    const hours = travelDurationMinutes === null ? 0 : Math.floor(travelDurationMinutes / 60);
+    const mins = travelDurationMinutes === null ? 0 : travelDurationMinutes % 60;
+    const durationStr = travelDurationMinutes === null ? "ยังไม่ระบุ" : `${hours} ชม. ${mins > 0 ? `${mins} นาที` : ""}`;
 
     return {
       type: "DURATION",
@@ -108,7 +121,9 @@ export function analyzePlanAdjustment(trip: TripDetailDto): AdjustmentReason {
       badgeLabel: "ระยะเวลาเดินทางไกล",
       headline: "แนะนำให้วางแผนจุดแวะพักทุก 2 ชั่วโมง หรือแวะพักค้างแรมระหว่างทาง",
       recommendedAction: "ควรวางแผนจุดพักรถระหว่างทาง และผลัดเปลี่ยนผู้ขับขี่",
-      reasonText: `เนื่องจากต้องใช้เวลาเดินทางต่อเนื่องประมาณ ${durationStr} อาจทำให้เกิดความเหนื่อยล้าสะสมและง่วงนอนขณะขับขี่ขึ้นทางลาดชัน`,
+      reasonText: travelDurationMinutes === null
+        ? "คะแนนปัจจัยเวลาเดินทางในผลประเมินล่าสุดต่ำ กรุณาตรวจสอบข้อมูลเส้นทางอีกครั้ง"
+        : `เนื่องจากต้องใช้เวลาเดินทางต่อเนื่องประมาณ ${durationStr} อาจทำให้เกิดความเหนื่อยล้าสะสม`,
       impactLevel: "ความเหนื่อยล้าของผู้ขับขี่",
       editSuggestion: "ปรับแผนหรือจุดพัก",
     };
@@ -137,7 +152,7 @@ export function analyzePlanAdjustment(trip: TripDetailDto): AdjustmentReason {
     badgeLabel: "แผนการเดินทางมีความพร้อมสูง",
     headline: "ทริปนี้ลงตัวมาก สามารถออกเดินทางได้ตามกำหนดการ",
     recommendedAction: "ดำเนินตามแผนเดิมได้ทันที พร้อมตรวจเช็กความพร้อมของพาหนะก่อนออกเดินทาง",
-    reasonText: `เนื่องจากสภาพอากาศ ช่วงเวลาเดินทาง และยานพาหนะมีความสอดคล้องเหมาะสมสูง (คะแนนความพร้อม ${latestEvaluation?.totalScore ?? 85}/100) มีเวลาท่องเที่ยวอย่างเต็มที่และปลอดภัย`,
+    reasonText: `คะแนนความพร้อมจากผลประเมินล่าสุด ${latestEvaluation.totalScore}/100 กรุณาตรวจสอบข้อมูลต้นทางก่อนออกเดินทาง`,
     impactLevel: "ความพร้อมดีเยี่ยม",
   };
 }

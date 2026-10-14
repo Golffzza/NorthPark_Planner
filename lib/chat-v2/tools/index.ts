@@ -1,3 +1,5 @@
+// ./lib/chat-v2/tools/index.ts
+
 import { createConversationAwareAssistantV2Tools } from "@/lib/chat-v2/tools/conversation-tools";
 import type { AssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
 

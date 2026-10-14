@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   appendAssistantMessage,
   appendUserMessage,
+  formatAssistantMessageContent,
 } from "@/components/assistant/chat-messages";
 
 describe("chat message helpers", () => {
@@ -36,5 +37,10 @@ describe("chat message helpers", () => {
     const messages = appendAssistantMessage([], "คำตอบ", sources);
     expect(messages[0]).toEqual({ role: "assistant", content: "คำตอบ", sources });
     expect(messages[0].content).not.toContain("https://");
+  });
+
+  it("shows Gemini emphasis as readable text rather than raw Markdown", () => {
+    expect(formatAssistantMessageContent("**ขุนแจ**\n- เดินชมธรรมชาติ"))
+      .toBe("ขุนแจ\n• เดินชมธรรมชาติ");
   });
 });

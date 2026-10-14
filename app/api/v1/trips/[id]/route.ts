@@ -1,3 +1,5 @@
+// ./app/api/v1/trips/[id]/route.ts
+
 import { NextResponse } from "next/server";
 
 import {

@@ -45,7 +45,7 @@ export class StaleLiveSnapshotError extends Error {
 }
 
 type TripSnapshotContext = {
-  tripDate: Date;
+  tripDate: Date | null;
 
   originLat: CoordinateValue;
   originLng: CoordinateValue;
@@ -155,9 +155,10 @@ export function coordinatesMatch(
 }
 
 export function formatCalendarDateInTimeZone(
-  date: Date,
+  date: Date | null,
   timeZone: string,
 ) {
+  if (!date) return null;
   const formatter =
     new Intl.DateTimeFormat("en-CA", {
       timeZone,

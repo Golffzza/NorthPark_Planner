@@ -11,6 +11,7 @@ import {
   type RetrievedKnowledgeChunk,
 } from "@/lib/chat/rag/knowledge-retriever";
 import type { ParkKnowledgeChunk } from "@/lib/chat-v2/shared/contracts";
+import { executeGetParkInfo } from "@/lib/chat-v2/tools/get-park-info";
 import {
   resolveSinglePark,
   toParkSummary,
@@ -38,7 +39,22 @@ type GetParkKnowledgeDependencies = {
   findByParkSlugs?: (
     slugs: string[],
   ) => Promise<RetrievedKnowledgeChunk[]>;
+  getParkInfo?: typeof executeGetParkInfo;
 };
+
+function requestedStructuredTopics(question: string): Array<"fees" | "hours" | "contact"> {
+  const topics: Array<"fees" | "hours" | "contact"> = [];
+  if (/ค่าเข้า|ค่าธรรมเนียม|ค่าบริการ|entry fee/i.test(question)) {
+    topics.push("fees");
+  }
+  if (/เปิด.{0,12}กี่โมง|ปิด.{0,12}กี่โมง|เวลา.{0,12}(?:เปิด|ปิด)|(?:เปิด|ปิด).{0,12}เวลา|opening hours/i.test(question)) {
+    topics.push("hours");
+  }
+  if (/ที่อยู่|เบอร์โทร|ติดต่อ|address|phone/i.test(question)) {
+    topics.push("contact");
+  }
+  return topics;
+}
 
 const DETAIL_RETRIEVAL_LIMIT = 3;
 const BROAD_OVERVIEW_LIMIT = 2;
@@ -204,6 +220,18 @@ export async function executeGetParkKnowledge(
     };
   }
 
+  const structuredFacts = await Promise.all(
+    requestedStructuredTopics(input.question).map((topic) =>
+      (dependencies.getParkInfo ?? executeGetParkInfo)({
+        parkName: resolved.park.name,
+        topic,
+      })
+    ),
+  );
+  const supplementary = structuredFacts.length > 0
+    ? { structuredFacts }
+    : {};
+
   /*
    * คำถามกว้าง เช่น:
    * - รู้จักดอยจงไหม
@@ -238,7 +266,8 @@ export async function executeGetParkKnowledge(
           resolved.park,
         ),
         requiresLiveVerification:
-          false,
+          structuredFacts.length > 0,
+        ...supplementary,
         chunks:
           mapRawChunks(
             overviewChunks,
@@ -267,7 +296,8 @@ export async function executeGetParkKnowledge(
       resolved.park,
     ),
     requiresLiveVerification:
-      retrieval.requiresLiveVerification,
+      retrieval.requiresLiveVerification || structuredFacts.length > 0,
+    ...supplementary,
     chunks: mapChunks(retrieval),
   };
 }
@@ -275,7 +305,7 @@ export async function executeGetParkKnowledge(
 export function createGetParkKnowledgeTool() {
   return tool({
     description:
-      "ใช้ค้นข้อมูลเชิงลึกจาก RAG ของอุทยาน เช่น ภาพรวม จุดเด่น การเดินทาง สิ่งอำนวยความสะดวก การเดิน ความยาก accessibility ความปลอดภัย ฤดูกาล และรูปแบบการเที่ยว ห้ามตอบจากความจำและไม่ใช่เครื่องมือข้อมูลสด",
+      "ใช้ค้นข้อมูลเชิงลึกจาก RAG ของอุทยาน เช่น จุดเด่น การเดินทาง ที่พัก สิ่งอำนวยความสะดวก ความปลอดภัย และฤดูกาล หากถามค่าเข้า เวลาเปิด หรือช่องทางติดต่อให้ดู structuredFacts ที่แนบมาด้วย ซึ่งเป็นข้อมูลบันทึก ไม่ใช่สถานะสด",
     inputSchema:
       getParkKnowledgeInputSchema,
     execute: async (

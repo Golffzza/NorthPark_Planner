@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CancelTripButton } from "@/components/trips/cancel-trip-button";
+import { TripItinerary } from "@/components/trips/trip-itinerary";
 import { EvaluateLiveTripButton } from "@/components/trips/evaluate-live-trip-button";
 import { EvaluationHistoryList } from "@/components/evaluation/evaluation-history-list";
 import { FactorBreakdown } from "@/components/evaluation/factor-breakdown";
@@ -18,6 +19,7 @@ import {
 
 import { buildTripResultViewModel } from "@/lib/presenters/trip-result-view";
 import { getTripResultSnapshotData } from "@/lib/presenters/trip-result-snapshot-data";
+import { missingTripEvaluationFields } from "@/lib/services/trip-evaluation-readiness";
 
 import {
   getTripDetailForCurrentUser,
@@ -43,6 +45,12 @@ type TripResultPageProps = {
   params: Promise<{
     id: string;
   }>;
+};
+
+const travelFieldLabels: Record<string, string> = {
+  tripDate: "วันเดินทาง", departAt: "เวลาออกเดินทาง", originText: "จุดเริ่มต้น",
+  originLat: "พิกัดจุดเริ่มต้น", originLng: "พิกัดจุดเริ่มต้น",
+  transportMode: "พาหนะ", travelerCount: "จำนวนผู้เดินทาง",
 };
 
 type FactorKey =
@@ -314,6 +322,7 @@ export default async function TripResultPage({
       await getTripDetailForCurrentUser(
         id,
       );
+    const missingLiveFields = [...new Set(missingTripEvaluationFields(trip, "live").map((field) => travelFieldLabels[field] ?? field))];
 
     const hasPreviousEvaluation =
       trip.evaluations.length > 0;
@@ -364,10 +373,10 @@ export default async function TripResultPage({
                   </p>
 
                   <div className="mt-6 flex flex-wrap gap-3">
-                    <EvaluateLiveTripButton
+                    {missingLiveFields.length === 0 ? <EvaluateLiveTripButton
                       tripId={trip.id}
                       label="อัปเดตข้อมูลและประเมินใหม่"
-                    />
+                    /> : <p className="text-sm text-amber-600">เติมข้อมูลก่อนประเมิน: {missingLiveFields.join(", ")}</p>}
 
                     <Link
                       href={`/trips/${trip.id}/edit`}
@@ -380,6 +389,7 @@ export default async function TripResultPage({
               </div>
             </section>
 
+            <TripItinerary days={trip.itineraryDays ?? []} />
             <details className="soft-card group rounded-[28px] p-4 sm:p-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
                 <div>
@@ -438,18 +448,18 @@ export default async function TripResultPage({
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
-                อัปเดตข้อมูลสภาพอากาศ
-                เส้นทาง และช่วงเวลาล่าสุด
-                เพื่อให้ระบบประเมินแผนนี้
+                บันทึกแผนและกิจกรรมไว้แล้ว คุณสามารถเติมข้อมูลการเดินทางและประเมินความเหมาะสมภายหลังได้
               </p>
+
+              {missingLiveFields.length > 0 && <p className="mt-3 text-sm text-amber-600">ข้อมูลที่ต้องเติมก่อนประเมิน: {missingLiveFields.join(", ")}</p>}
 
               {trip.status !==
               "CANCELLED" ? (
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <EvaluateLiveTripButton
+                  {missingLiveFields.length === 0 && <EvaluateLiveTripButton
                     tripId={trip.id}
                     label="อัปเดตข้อมูลและประเมิน"
-                  />
+                  />}
 
                   <Link
                     href={`/trips/${trip.id}/edit`}
@@ -464,6 +474,7 @@ export default async function TripResultPage({
                 </p>
               )}
             </section>
+            <TripItinerary days={trip.itineraryDays ?? []} />
           </div>
         </AppShell>
       );
@@ -608,6 +619,7 @@ export default async function TripResultPage({
             }
           />
 
+          <TripItinerary days={trip.itineraryDays ?? []} />
           {/* HERO — decision first */}
           <section className="soft-card overflow-hidden rounded-[34px] p-5 sm:p-7 lg:p-8">
             <div className="grid items-center gap-7 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -843,13 +855,11 @@ export default async function TripResultPage({
                 </div>
 
                 <p className="mt-2 font-bold text-[var(--foreground)]">
-                  {formatThaiDate(
-                    trip.tripDate,
-                  )}
+                  {trip.tripDate ? formatThaiDate(trip.tripDate) : "ยังไม่ระบุ"}
                 </p>
 
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  ออก {trip.departAt} น.
+                  {trip.departAt ? `ออก ${trip.departAt} น.` : "ยังไม่ระบุเวลา"}
                 </p>
               </div>
 
@@ -896,13 +906,11 @@ export default async function TripResultPage({
                 </div>
 
                 <p className="mt-2 font-bold text-[var(--foreground)]">
-                  {getTransportModeLabel(
-                    trip.transportMode,
-                  )}
+                  {trip.transportMode ? getTransportModeLabel(trip.transportMode) : "ยังไม่ระบุ"}
                 </p>
 
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  {trip.travelerCount} คน
+                  {trip.travelerCount === null ? "ยังไม่ระบุจำนวนคน" : `${trip.travelerCount} คน`}
                 </p>
               </div>
 

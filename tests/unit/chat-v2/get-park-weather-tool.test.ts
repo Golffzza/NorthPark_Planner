@@ -1,0 +1,159 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { AssistantV2ConversationState } from "@/lib/chat-v2/state/conversation-state";
+import { createAssistantV2Tools } from "@/lib/chat-v2/tools";
+import { executeGetParkWeather } from "@/lib/chat-v2/tools/get-park-weather";
+import { createAssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
+import { OpenMeteoForecastNotAvailableYetError } from "@/lib/integrations/open-meteo/open-meteo-service";
+
+const mocks = vi.hoisted(() => ({ readPark: vi.fn(), fetchForecast: vi.fn() }));
+vi.mock("@/lib/services/park-service", async () => ({
+  ...await vi.importActual<typeof import("@/lib/services/park-service")>("@/lib/services/park-service"),
+  getParkDetail: mocks.readPark,
+}));
+vi.mock("@/lib/integrations/open-meteo/open-meteo-service", async () => ({
+  ...await vi.importActual<typeof import("@/lib/integrations/open-meteo/open-meteo-service")>("@/lib/integrations/open-meteo/open-meteo-service"),
+  fetchOpenMeteoWeatherSnapshot: mocks.fetchForecast,
+}));
+
+const options = { toolCallId: "weather", messages: [], context: {} };
+const park = {
+  id: "db-lan-sang", slug: "lan-sang", nameTh: "อุทยานแห่งชาติลานสาง",
+  latitude: 16.881, longitude: 99.14,
+};
+const forecast = {
+  source: "OPEN_METEO", timezone: "Asia/Bangkok",
+  forecastAt: new Date("2026-06-11T17:00:00.000Z"),
+  weatherCode: 63, weatherCondition: "LIGHT_RAIN",
+  precipitationMm: 4.5, temperatureC: 27.4, windSpeedKmh: 18.2,
+};
+
+function makeState(): AssistantV2ConversationState {
+  return {
+    id: "c1", ownerId: "u1", userConstraints: {}, currentResults: [],
+    selectedPark: { id: "lan-sang", slug: "lan-sang", name: park.nameTh },
+    lastComparedParks: [], recentMessages: [],
+    createdAt: 0, updatedAt: 0, expiresAt: 1000,
+  };
+}
+
+function toolFor(message: string, state = makeState()) {
+  return createAssistantV2Tools(createAssistantV2TurnContext(state, message)).getParkWeather;
+}
+
+describe("getParkWeather tool", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-10T00:00:00.000Z"));
+    mocks.readPark.mockResolvedValue(park);
+    mocks.fetchForecast.mockResolvedValue(forecast);
+  });
+
+  afterEach(() => vi.useRealTimers());
+
+  it("registers and reads a dated forecast for the selected park without mutating state", async () => {
+    const state = makeState();
+    const before = structuredClone(state);
+    const tools = createAssistantV2Tools(createAssistantV2TurnContext(state, "พรุ่งนี้ลานสางอากาศเป็นอย่างไร"));
+    expect(Object.keys(tools)).toContain("getParkWeather");
+    const result = await tools.getParkWeather.execute!({}, options);
+    expect(result).toMatchObject({
+      status: "OK", park: { slug: "lan-sang" }, dataKind: "DAILY_FORECAST",
+      isCurrentObservation: false, forecastDate: "2026-06-11",
+      source: "OPEN_METEO", providerIssuedAt: null,
+      coordinateVerification: "PASSED_INTERNAL_SCREENING",
+      precipitationSumMm: 4.5, temperatureMaxC: 27.4, windSpeedMaxKmh: 18.2,
+    });
+    expect(mocks.fetchForecast).toHaveBeenCalledWith(expect.objectContaining({
+      latitude: park.latitude, longitude: park.longitude, timezone: "Asia/Bangkok",
+      signal: expect.any(AbortSignal),
+    }));
+    expect(state).toEqual(before);
+  });
+
+  it("uses an explicitly named park instead of the previous Selected Park", async () => {
+    mocks.readPark.mockResolvedValueOnce({ ...park, id: "db-doi", slug: "doi-inthanon", nameTh: "อุทยานแห่งชาติดอยอินทนนท์" });
+    const state = makeState();
+    const before = structuredClone(state);
+    const result = await toolFor("ดอยอินทนนท์พรุ่งนี้ฝนตกไหม", state).execute!({}, options);
+    expect(result).toMatchObject({ status: "OK", park: { slug: "doi-inthanon" } });
+    expect(mocks.readPark).toHaveBeenCalledWith("doi-inthanon");
+    expect(state).toEqual(before);
+  });
+
+  it("asks only for a missing park or a date that the user left unclear", async () => {
+    const state = makeState();
+    state.selectedPark = undefined;
+    expect(await toolFor("พรุ่งนี้อากาศเป็นอย่างไร", state).execute!({}, options))
+      .toEqual({ status: "PARK_REQUIRED" });
+    expect(mocks.readPark).not.toHaveBeenCalled();
+
+    expect(await toolFor("ลานสางวันเสาร์อากาศเป็นอย่างไร").execute!({}, options))
+      .toEqual({ status: "DATE_REQUIRED" });
+    expect(mocks.fetchForecast).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid and past dates without a provider call", async () => {
+    expect(await toolFor("ลานสางวันที่ 2026-02-30").execute!({ forecastDate: "2026-02-30" }, options))
+      .toEqual({ status: "INVALID_DATE" });
+    expect(await toolFor("ลานสางวันที่ 2026-06-09").execute!({ forecastDate: "2026-06-09" }, options))
+      .toEqual({ status: "PAST_DATE_UNAVAILABLE", requestedDate: "2026-06-09" });
+    expect(mocks.readPark).not.toHaveBeenCalled();
+    expect(mocks.fetchForecast).not.toHaveBeenCalled();
+  });
+
+  it("blocks coordinates under review or outside valid ranges", async () => {
+    mocks.readPark.mockResolvedValueOnce({ ...park, slug: "nanthaburi" });
+    expect(await toolFor("นันทบุรีวันนี้อากาศเป็นอย่างไร").execute!({}, options))
+      .toMatchObject({ status: "COORDINATE_REVIEW_REQUIRED" });
+    mocks.readPark.mockResolvedValueOnce({ ...park, latitude: 999 });
+    expect(await toolFor("ลานสางวันนี้อากาศเป็นอย่างไร").execute!({}, options))
+      .toMatchObject({ status: "INVALID_COORDINATES" });
+    expect(mocks.fetchForecast).not.toHaveBeenCalled();
+  });
+
+  it("reports unsupported forecast dates and never fabricates a fallback", async () => {
+    mocks.fetchForecast.mockRejectedValueOnce(
+      new OpenMeteoForecastNotAvailableYetError("2026-07-10", "2026-06-25"),
+    );
+    const result = await toolFor("ลานสางวันที่ 2026-07-10").execute!({ forecastDate: "2026-07-10" }, options);
+    expect(result).toEqual({
+      status: "OUTSIDE_FORECAST_WINDOW", requestedDate: "2026-07-10", lastSupportedDate: "2026-06-25",
+    });
+    expect(result).not.toHaveProperty("weatherCondition");
+  });
+
+  it("keeps current conditions and historical snapshots separate from the daily forecast", async () => {
+    const current = await toolFor("ลานสางตอนนี้อากาศเป็นอย่างไร").execute!({}, options);
+    expect(current).toMatchObject({
+      status: "OK", requestedKind: "CURRENT_CONDITIONS",
+      dataKind: "DAILY_FORECAST", isCurrentObservation: false,
+    });
+    const historical = await toolFor("ทริปที่ไปลานสางครั้งก่อนอากาศเป็นอย่างไร").execute!({}, options);
+    expect(historical).toEqual({ status: "HISTORICAL_SNAPSHOT_UNAVAILABLE" });
+    const noPark = makeState();
+    noPark.selectedPark = undefined;
+    expect(await toolFor("ทริปครั้งก่อนอากาศเป็นอย่างไร", noPark).execute!({}, options))
+      .toEqual({ status: "HISTORICAL_SNAPSHOT_UNAVAILABLE" });
+    expect(mocks.fetchForecast).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports provider failure or bounded timeout without fabricated weather", async () => {
+    mocks.fetchForecast.mockRejectedValueOnce(new Error("Open-Meteo unavailable"));
+    const unavailable = await toolFor("ลานสางวันนี้อากาศเป็นอย่างไร").execute!({}, options);
+    expect(unavailable).toEqual({ status: "UPSTREAM_UNAVAILABLE" });
+
+    vi.useRealTimers();
+    mocks.fetchForecast.mockImplementationOnce(({ signal }: { signal: AbortSignal }) =>
+      new Promise((_resolve, reject) => signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true })),
+    );
+    const timedOut = await executeGetParkWeather("lan-sang", {}, "วันนี้", undefined, {
+      readPark: mocks.readPark,
+      fetchForecast: mocks.fetchForecast,
+      timeoutMs: 5,
+    });
+    expect(timedOut).toEqual({ status: "UPSTREAM_TIMEOUT" });
+    expect(timedOut).not.toHaveProperty("weatherCondition");
+  });
+});

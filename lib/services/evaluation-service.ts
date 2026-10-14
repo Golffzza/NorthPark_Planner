@@ -14,6 +14,7 @@ import type {
 import { mapEvaluationToDto } from "@/lib/mappers/evaluation-dto";
 
 import { explainTripEvaluation } from "@/lib/services/evaluation-explainer-service";
+import { assertTripEvaluationReady } from "@/lib/services/trip-evaluation-readiness";
 
 import { assertTripCanBeEvaluated, CancelledTripEvaluationError, getTripForCurrentUser, getTripIdForCurrentUser } from "@/lib/services/trip-service";
 
@@ -264,6 +265,7 @@ export async function evaluateTripForCurrentUser(
   const trip =
     await getTripForCurrentUser(tripId);
   assertTripCanBeEvaluated(trip);
+  assertTripEvaluationReady(trip, "manual");
 
   const evaluationInput: TripEvaluationInput = {
     weatherCondition: trip.weatherCondition,

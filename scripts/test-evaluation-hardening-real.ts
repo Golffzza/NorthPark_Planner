@@ -122,7 +122,7 @@ async function main() {
   console.log({
     tripId: before.id,
     status: before.status,
-    tripDate: before.tripDate.toISOString(),
+    tripDate: before.tripDate?.toISOString() ?? null,
     departAt: before.departAt,
     park: before.park.nameTh,
     parkHours: `${before.park.openTime} - ${before.park.closeTime}`,

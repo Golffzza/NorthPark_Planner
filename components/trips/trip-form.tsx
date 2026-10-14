@@ -65,13 +65,13 @@ function getInitialState(
   if (mode === "edit" && trip) {
     return {
       parkId: trip.park.id,
-      tripDate: toDateInputValue(trip.tripDate),
-      departAt: trip.departAt,
-      originText: trip.originText,
+      tripDate: trip.tripDate ? toDateInputValue(trip.tripDate) : "",
+      departAt: trip.departAt ?? "",
+      originText: trip.originText ?? "",
       originLat: trip.originLat !== null ? String(trip.originLat) : "",
       originLng: trip.originLng !== null ? String(trip.originLng) : "",
-      transportMode: trip.transportMode,
-      travelerCount: String(trip.travelerCount),
+      transportMode: trip.transportMode ?? "",
+      travelerCount: trip.travelerCount === null ? "" : String(trip.travelerCount),
       drivetrain: "2WD",
       engineType: "ICE",
       motorcycleType: "MANUAL_BIGBIKE",
@@ -79,8 +79,8 @@ function getInitialState(
       rentVehicleAtDestination: "NO",
       mountainExperience: "BEGINNER",
       coDriver: "SOLO",
-      weatherCondition: trip.weatherCondition,
-      estimatedTravelMinutes: String(trip.estimatedTravelMinutes),
+      weatherCondition: trip.weatherCondition ?? "",
+      estimatedTravelMinutes: trip.estimatedTravelMinutes === null ? "" : String(trip.estimatedTravelMinutes),
       mockSunsetTime: trip.mockSunsetTime ?? "",
       notes: trip.notes ?? "",
     };
@@ -326,7 +326,9 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
     key: Key,
     value: FormState[Key],
   ) {
-    setFormState((current) => ({ ...current, [key]: value }));
+    setFormState((current) => key === "originText"
+      ? { ...current, originText: String(value), originLat: "", originLng: "" }
+      : { ...current, [key]: value });
   }
 
   function handleSelectOriginPreset(
@@ -361,10 +363,7 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
       (position) => {
         setFormState((current) => ({
           ...current,
-          originText:
-            current.originText.trim().length > 0
-              ? current.originText
-              : "ตำแหน่งปัจจุบัน (GPS)",
+          originText: "ตำแหน่งปัจจุบัน (GPS)",
           originLat: position.coords.latitude.toFixed(6),
           originLng: position.coords.longitude.toFixed(6),
         }));
@@ -507,17 +506,17 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
       newFieldErrors.parkId = "กรุณาเลือกอุทยานแห่งชาติปลายทาง";
     }
 
-    if (!formState.tripDate || formState.tripDate.trim().length === 0) {
+    if (isCreateMode && (!formState.tripDate || formState.tripDate.trim().length === 0)) {
       missing.push("กรุณากำหนดวันที่เดินทาง");
       newFieldErrors.tripDate = "กรุณากำหนดวันที่เดินทาง";
     }
 
-    if (!formState.departAt || formState.departAt.trim().length === 0) {
+    if (isCreateMode && (!formState.departAt || formState.departAt.trim().length === 0)) {
       missing.push("กรุณาระบุเวลาออกเดินทาง");
       newFieldErrors.departAt = "กรุณาระบุเวลาออกเดินทาง";
     }
 
-    if (!formState.originText || formState.originText.trim().length === 0) {
+    if (isCreateMode && (!formState.originText || formState.originText.trim().length === 0)) {
       missing.push("กรุณาระบุจุดเริ่มต้นเดินทาง");
       newFieldErrors.originText = "กรุณาระบุจุดเริ่มต้นเดินทาง";
     }
@@ -544,18 +543,18 @@ export function TripForm({ mode, parks, initialParkId, trip }: TripFormProps) {
 
     const payload = {
       parkId: formState.parkId,
-      tripDate: formState.tripDate,
-      departAt: formState.departAt,
-      originText: formState.originText,
-      originLat: toOptionalNumber(formState.originLat),
-      originLng: toOptionalNumber(formState.originLng),
+      tripDate: formState.tripDate || null,
+      departAt: formState.departAt || null,
+      originText: formState.originText || null,
+      originLat: toOptionalNumber(formState.originLat) ?? null,
+      originLng: toOptionalNumber(formState.originLng) ?? null,
       transportMode:
         formState.transportMode === "TRAIN"
           ? "PUBLIC_TRANSPORT"
-          : formState.transportMode,
-      travelerCount: Number(formState.travelerCount),
-      weatherCondition: formState.weatherCondition,
-      estimatedTravelMinutes: Number(formState.estimatedTravelMinutes),
+          : formState.transportMode || null,
+      travelerCount: formState.travelerCount ? Number(formState.travelerCount) : null,
+      weatherCondition: formState.weatherCondition || null,
+      estimatedTravelMinutes: formState.estimatedTravelMinutes ? Number(formState.estimatedTravelMinutes) : null,
       mockSunsetTime: formState.mockSunsetTime || undefined,
       notes: formState.notes || undefined,
     };

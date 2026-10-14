@@ -9,6 +9,7 @@ type OpenMeteoSnapshotInput = {
   longitude: number;
   tripDate: Date;
   timezone?: string;
+  signal?: AbortSignal;
 };
 
 type OpenMeteoDailyResponse = {
@@ -357,6 +358,7 @@ export async function fetchOpenMeteoWeatherSnapshot(
       {
         method: "GET",
         cache: "no-store",
+        signal: input.signal,
         headers: {
           accept: "application/json",
         },

@@ -160,12 +160,12 @@ export function TripCard({ trip }: TripCardProps) {
             </div>
 
             <p className="mt-1.5 text-sm font-bold font-heading text-slate-900 dark:text-white">
-              {formatThaiDate(trip.tripDate)}
+              {trip.tripDate ? formatThaiDate(trip.tripDate) : "ยังไม่ระบุ"}
             </p>
 
             <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-600 dark:text-emerald-200/60">
               <Clock3 className="h-3 w-3 shrink-0" />
-              <span>ออก {trip.departAt} น.</span>
+              <span>{trip.departAt ? `ออก ${trip.departAt} น.` : "ยังไม่ระบุเวลา"}</span>
             </div>
           </div>
 
@@ -176,12 +176,12 @@ export function TripCard({ trip }: TripCardProps) {
             </div>
 
             <p className="mt-1.5 truncate text-sm font-bold font-heading text-slate-900 dark:text-white">
-              {getTransportModeLabel(trip.transportMode)}
+              {trip.transportMode ? getTransportModeLabel(trip.transportMode) : "ยังไม่ระบุ"}
             </p>
 
             <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-600 dark:text-emerald-200/60">
               <Users className="h-3 w-3 shrink-0" />
-              <span>{trip.travelerCount} คน</span>
+              <span>{trip.travelerCount === null ? "ยังไม่ระบุจำนวนคน" : `${trip.travelerCount} คน`}</span>
             </div>
           </div>
         </div>

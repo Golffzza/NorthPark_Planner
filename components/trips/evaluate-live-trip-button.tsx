@@ -10,8 +10,16 @@ type EvaluateLiveTripButtonProps = {
 
 type ApiErrorPayload = {
   error?: {
+    code?: string;
     message?: string;
+    missingFields?: string[];
   };
+};
+
+const fieldLabels: Record<string, string> = {
+  tripDate: "วันเดินทาง", departAt: "เวลาออกเดินทาง", originText: "จุดเริ่มต้น",
+  originLat: "พิกัดจุดเริ่มต้น", originLng: "พิกัดจุดเริ่มต้น",
+  transportMode: "พาหนะ", travelerCount: "จำนวนผู้เดินทาง",
 };
 
 async function runStep(url: string) {
@@ -31,6 +39,13 @@ async function runStep(url: string) {
     payload = undefined;
   }
 
+  if (payload?.error?.code === "incomplete_trip_information") {
+    const missing = [...new Set((payload.error.missingFields ?? []).map((field) => fieldLabels[field] ?? field))];
+    throw new Error(`กรุณาเติมข้อมูลก่อนประเมิน${missing.length ? `: ${missing.join(", ")}` : ""}`);
+  }
+  if (["weather_sync_unavailable", "route_sync_unavailable", "sunset_sync_unavailable"].includes(payload?.error?.code ?? "")) {
+    throw new Error("ยังดึงข้อมูลอากาศ เส้นทาง หรือเวลาพระอาทิตย์ตกจากบริการภายนอกไม่ได้ กรุณาลองใหม่ภายหลัง");
+  }
   throw new Error(payload?.error?.message ?? "ไม่สามารถประมวลผลข้อมูล live สำหรับทริปนี้ได้");
 }
 

@@ -42,7 +42,9 @@ describe("evaluateTripForCurrentUser", () => {
     tripServiceMock.getTripForCurrentUser.mockResolvedValue({
       id: "trip_1",
       userId: "user_1",
+      tripDate: new Date("2026-06-12T00:00:00.000Z"),
       departAt: "08:00",
+      originText: "เชียงใหม่",
       weatherCondition: "CLEAR",
       estimatedTravelMinutes: 120,
       mockSunsetTime: "18:30",

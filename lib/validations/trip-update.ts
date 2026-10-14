@@ -4,15 +4,15 @@ import { RequestValidationError, type ValidationIssue } from "@/lib/validations/
 
 export type TripUpdateInput = {
   parkId?: string;
-  tripDate?: Date;
-  departAt?: string;
-  originText?: string;
+  tripDate?: Date | null;
+  departAt?: string | null;
+  originText?: string | null;
   originLat?: number | null;
   originLng?: number | null;
-  transportMode?: TransportMode;
-  travelerCount?: number;
-  weatherCondition?: WeatherCondition;
-  estimatedTravelMinutes?: number;
+  transportMode?: TransportMode | null;
+  travelerCount?: number | null;
+  weatherCondition?: WeatherCondition | null;
+  estimatedTravelMinutes?: number | null;
   mockSunsetTime?: string;
   notes?: string;
 };
@@ -93,7 +93,9 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
   }
 
   if ("tripDate" in input) {
-    if (typeof input.tripDate !== "string" || input.tripDate.trim().length === 0) {
+    if (input.tripDate === null || input.tripDate === "") {
+      parsed.tripDate = null;
+    } else if (typeof input.tripDate !== "string" || input.tripDate.trim().length === 0) {
       issues.push({ field: "tripDate", message: "กรุณากำหนดวันที่เดินทาง", code: "invalid_type" });
     } else {
       const tripDate = new Date(input.tripDate);
@@ -106,7 +108,9 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
   }
 
   if ("departAt" in input) {
-    if (typeof input.departAt !== "string" || !TIME_PATTERN.test(input.departAt)) {
+    if (input.departAt === null || input.departAt === "") {
+      parsed.departAt = null;
+    } else if (typeof input.departAt !== "string" || !TIME_PATTERN.test(input.departAt)) {
       issues.push({ field: "departAt", message: "กรุณาระบุเวลาในรูปแบบ HH:MM (เช่น 07:00)", code: "invalid_format" });
     } else {
       parsed.departAt = input.departAt;
@@ -114,7 +118,9 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
   }
 
   if ("originText" in input) {
-    if (typeof input.originText !== "string" || input.originText.trim().length === 0) {
+    if (input.originText === null || input.originText === "") {
+      parsed.originText = null;
+    } else if (typeof input.originText !== "string" || input.originText.trim().length === 0) {
       issues.push({ field: "originText", message: "กรุณาระบุจุดเริ่มต้นเดินทาง", code: "required" });
     } else {
       parsed.originText = input.originText.trim();
@@ -136,7 +142,9 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
   }
 
   if ("transportMode" in input) {
-    if (typeof input.transportMode !== "string" || !isTransportMode(input.transportMode)) {
+    if (input.transportMode === null || input.transportMode === "") {
+      parsed.transportMode = null;
+    } else if (typeof input.transportMode !== "string" || !isTransportMode(input.transportMode)) {
       issues.push({
         field: "transportMode",
         message: `Must be one of: ${TRANSPORT_MODES.join(", ")}`,
@@ -148,7 +156,9 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
   }
 
   if ("travelerCount" in input) {
-    if (typeof input.travelerCount !== "number" || !Number.isInteger(input.travelerCount) || input.travelerCount < 1) {
+    if (input.travelerCount === null || input.travelerCount === "") {
+      parsed.travelerCount = null;
+    } else if (typeof input.travelerCount !== "number" || !Number.isInteger(input.travelerCount) || input.travelerCount < 1) {
       issues.push({
         field: "travelerCount",
         message: "Must be an integer greater than or equal to 1",
@@ -160,7 +170,9 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
   }
 
   if ("weatherCondition" in input) {
-    if (typeof input.weatherCondition !== "string" || !isWeatherCondition(input.weatherCondition)) {
+    if (input.weatherCondition === null || input.weatherCondition === "") {
+      parsed.weatherCondition = null;
+    } else if (typeof input.weatherCondition !== "string" || !isWeatherCondition(input.weatherCondition)) {
       issues.push({
         field: "weatherCondition",
         message: `Must be one of: ${WEATHER_CONDITIONS.join(", ")}`,
@@ -172,7 +184,9 @@ export function parseTripUpdateInput(input: unknown): TripUpdateInput {
   }
 
   if ("estimatedTravelMinutes" in input) {
-    if (
+    if (input.estimatedTravelMinutes === null || input.estimatedTravelMinutes === "") {
+      parsed.estimatedTravelMinutes = null;
+    } else if (
       typeof input.estimatedTravelMinutes !== "number" ||
       !Number.isInteger(input.estimatedTravelMinutes) ||
       input.estimatedTravelMinutes < 1

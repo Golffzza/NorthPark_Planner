@@ -12,6 +12,7 @@ import {
   assertTripCanBeEvaluated,
   getTripForCurrentUser,
 } from "@/lib/services/trip-service";
+import { assertTripEvaluationReady } from "@/lib/services/trip-evaluation-readiness";
 
 import {
   mapLatestSnapshotsToEvaluationInput,
@@ -114,9 +115,10 @@ function coordinatesMatch(
 }
 
 function formatCalendarDateInTimeZone(
-  date: Date,
+  date: Date | null,
   timeZone: string,
 ) {
+  if (!date) return null;
   const formatter = new Intl.DateTimeFormat(
     "en-CA",
     {
@@ -387,6 +389,7 @@ export async function evaluateLiveTripForCurrentUser(
   const trip =
     await getTripForCurrentUser(tripId);
   assertTripCanBeEvaluated(trip);
+  assertTripEvaluationReady(trip, "live");
 
   const [
     weatherSnapshot,

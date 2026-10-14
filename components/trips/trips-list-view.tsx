@@ -39,7 +39,7 @@ export function TripsListView({ trips }: TripsListViewProps) {
         const matchNameTh = trip.park.nameTh.toLowerCase().includes(query);
         const matchNameEn = trip.park.nameEn?.toLowerCase().includes(query) ?? false;
         const matchProvince = trip.park.province.toLowerCase().includes(query);
-        const matchOrigin = trip.originText.toLowerCase().includes(query);
+        const matchOrigin = (trip.originText ?? "").toLowerCase().includes(query);
         return matchNameTh || matchNameEn || matchProvince || matchOrigin;
       }
 

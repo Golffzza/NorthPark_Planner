@@ -38,16 +38,19 @@ describe("fetchOpenMeteoWeatherSnapshot", () => {
     );
 
     vi.stubGlobal("fetch", fetchMock);
+    const signal = new AbortController().signal;
 
     const snapshot = await fetchOpenMeteoWeatherSnapshot({
       latitude: 18.5897,
       longitude: 98.4875,
       tripDate: new Date("2026-06-12T00:00:00.000Z"),
+      signal,
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("https://api.open-meteo.com/v1/forecast?"),
       expect.objectContaining({
+        signal,
         headers: {
           accept: "application/json",
         },

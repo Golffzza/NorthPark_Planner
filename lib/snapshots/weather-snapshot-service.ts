@@ -71,6 +71,7 @@ function toCoordinateNumber(
 export async function syncWeatherSnapshotForCurrentUser(tripId: string) {
   const trip = await getTripForCurrentUser(tripId);
   assertTripCanBeEvaluated(trip);
+  if (!trip.tripDate) throw new TripSnapshotContextError("Trip date is required for weather sync");
   const latitude = toCoordinateNumber(trip.park.latitude);
   const longitude = toCoordinateNumber(trip.park.longitude);
 

@@ -27,8 +27,8 @@ export type NearbyParksFromOriginResult = {
 };
 
 /**
- * คำนวณระยะทางและเวลาขับรถโดยประมาณจากจุดศูนย์กลางจังหวัดไปยังอุทยานแห่งชาติ
- * โดยใช้ระยะทางจริง + ค่าชดเชยเส้นทางโค้งเขา (Winding factor ~1.25x สำหรับภาคเหนือ)
+ * ประมาณระยะทางและเวลาขับรถจากระยะเส้นตรงและตัวคูณเส้นทางโค้ง
+ * ไม่ใช่ระยะทางหรือเวลาเดินทางจากข้อมูลถนนจริง
  */
 export function findNearbyParksFromOrigin(
   originQuery: string | { lat: number; lng: number; name?: string },

@@ -28,6 +28,8 @@ describe("recommendations require activity-level evidence", () => {
     expect(result).toHaveLength(1);
     expect(result[0].reasons.join(" ")).toContain("200 เมตร");
     expect(result[0].reasons.join(" ")).toContain("หินลื่น");
+    expect(result[0].reasons.join(" ")).toContain("ความยากระดับง่าย");
+    expect(result[0].reasons.join(" ")).not.toContain("LOW");
     expect(recommendParks(parks, { province: "เชียงใหม่" })).toEqual([]);
   });
   it("respects exclusions and does not certify elderly accessibility", () => {

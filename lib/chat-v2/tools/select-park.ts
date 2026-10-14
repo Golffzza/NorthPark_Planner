@@ -3,7 +3,9 @@
 import { tool } from "ai";
 import { z } from "zod";
 
+import { findMentionedParks } from "@/lib/chat/core/park-catalog";
 import type { ParkReference } from "@/lib/chat/shared/contracts";
+import { setSelectedPark } from "@/lib/chat-v2/state/conversation-state";
 import type { AssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
 
 export const selectParkInputSchema = z.object({
@@ -88,7 +90,7 @@ export function executeSelectPark(
   return { selected: true, park: { ...matches[0] } };
 }
 
-function hasExplicitPositionReference(
+export function hasExplicitPositionReference(
   message: string,
   position: number,
 ): boolean {
@@ -103,16 +105,12 @@ function hasExplicitPositionReference(
     3: ["ที่สาม", "อันสาม", "ตัวที่สาม", "ข้อสาม", "อันดับสาม"],
   };
 
-  const numericReferences = [
-    `ที่${position}`,
-    `อัน${position}`,
-    `ตัวที่${position}`,
-    `ข้อ${position}`,
-    `อันดับ${position}`,
-  ];
+  const numericReferences = ["ที่", "อัน", "ตัวที่", "ข้อ", "อันดับ", "ลำดับ"];
 
-  return [...(thaiOrdinals[position] ?? []), ...numericReferences].some(
-    (reference) => normalized.includes(reference.replace(/\s+/g, "")),
+  return (thaiOrdinals[position] ?? []).some((reference) =>
+    normalized.includes(reference)
+  ) || numericReferences.some((prefix) =>
+    new RegExp(`${prefix}${position}(?!\\d)`).test(normalized)
   );
 }
 
@@ -123,9 +121,15 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
     inputSchema: selectParkInputSchema,
     execute: async (input) =>
       context.runExclusive(async (state) => {
+        if (input.position !== undefined && state.currentResultsOrderVerified === false) {
+          return {
+            selected: false as const,
+            reason: "AMBIGUOUS" as const,
+            candidates: state.currentResults.map((candidate) => ({ ...candidate })),
+          };
+        }
         if (
           input.position !== undefined &&
-          state.currentResults.length > 1 &&
           !hasExplicitPositionReference(context.currentMessage, input.position)
         ) {
           return {
@@ -140,7 +144,20 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
         const result = executeSelectPark(input, state.currentResults);
 
         if (result.selected) {
-          state.selectedPark = { ...result.park };
+          if (
+            input.position === undefined &&
+            !findMentionedParks(context.currentMessage).some(
+              (park) => park.id === result.park.id,
+            )
+          ) {
+            return {
+              selected: false as const,
+              reason: "AMBIGUOUS" as const,
+              candidates: state.currentResults.map((candidate) => ({ ...candidate })),
+            };
+          }
+
+          setSelectedPark(state, result.park);
         }
 
         return result;
