@@ -717,8 +717,10 @@ export function createConversationAwareAssistantV2Tools(
           || (!state.activePark && !state.informationParks?.length && state.selectedPark?.slug === park.park.slug);
         if (!alreadyActive) setInformationParks(state, [toReference(park.park)]);
         const displayedPosition = state.currentResults.findIndex((item) => item.slug === park.park.slug) + 1;
-        if (displayedPosition > 0 && state.currentResultsOrderVerified !== false
-          && isExplicitParkPositionChoice(message, displayedPosition)) {
+        if (displayedPosition > 0 && state.currentResultsOrderVerified === true
+          && (isExplicitParkPositionChoice(message, displayedPosition)
+            || (displayedPosition === state.currentResults.length
+              && /^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|ตัดสินใจไป)(?:อัน|ตัว|ข้อ|อันดับ|ลำดับ|ที่)?(?:ที่)?(?:สุดท้าย|ท้ายสุด)/.test(normalizeQuery(message))))) {
           setSelectedPark(state, toReference(park.park));
         }
         if (isNearbyDistanceQuestion(context.currentMessage)) {
