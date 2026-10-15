@@ -40,6 +40,23 @@ function makeState(): AssistantV2ConversationState {
 const options = { toolCallId: "test-call", messages: [], context: {} };
 
 describe("displayed park order", () => {
+  it("keeps the verified displayed order after a count-only search", () => {
+    const state = makeState();
+    const before = state.currentResults.map((park) => park.slug);
+    reconcileDisplayedParkResults(state, "ในเชียงใหม่มี 3 แห่งครับ", ["searchParks"], [{ operation: "COUNT" }]);
+    expect(state.currentResults.map((park) => park.slug)).toEqual(before);
+    expect(state.currentResultsOrderVerified).toBe(true);
+  });
+  it("uses a single actually displayed park as the next information subject", async () => {
+    const state = makeState();
+    reconcileDisplayedParkResults(state, `1. ${parks[2].name}`, ["recommendParks"]);
+    expect(state.informationParks?.map((park) => park.slug)).toEqual(["doi-suthep-pui"]);
+    const result = await createConversationAwareAssistantV2Tools(
+      createAssistantV2TurnContext(state, "ที่นั่นอยู่จังหวัดอะไร"),
+    ).getParkInfo.execute!({ topic: "province" }, options);
+    expect(result).toMatchObject({ found: true, park: { slug: "doi-suthep-pui" } });
+    expect(state.selectedPark?.slug).toBe("khun-khan");
+  });
   it("selects the second park the user saw when Gemini omits the first recommendation", async () => {
     const state = makeState();
     reconcileDisplayedParkResults(

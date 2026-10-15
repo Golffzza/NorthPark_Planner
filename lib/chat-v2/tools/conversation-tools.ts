@@ -13,6 +13,7 @@ import {
 } from "@/lib/chat/core/query-signals";
 
 import {
+  setInformationParks,
   setSelectedPark,
   type AssistantV2ConversationState,
 } from "@/lib/chat-v2/state/conversation-state";
@@ -47,8 +48,15 @@ import { executeSearchParks } from "@/lib/chat-v2/tools/search-parks";
 import {
   createSelectParkTool,
   hasExplicitPositionReference,
+  isExplicitParkPositionChoice,
 } from "@/lib/chat-v2/tools/select-park";
 import type { AssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
+import {
+  asksForDisplayedNearbyPlace,
+  isNearbyDiscoveryQuestion,
+  isNearbyDistanceQuestion,
+  resolveDisplayedNearbyPlace,
+} from "@/lib/chat-v2/application/displayed-nearby-results";
 
 const parkTopicSchema = z.enum([
   "province",
@@ -117,6 +125,16 @@ function isVagueNearbyPlaceName(name: string): boolean {
   return /^(?:ร้าน(?:อาหาร)?|คาเฟ่|ที่พัก|โรงแรม|ลานกางเต็นท์|สถานที่|ที่|แห่ง)?(?:นั้น|นี้|ที่เจอ|ที่พบ|ใกล้ๆ)?$/.test(normalizeQuery(name));
 }
 
+function nearbyCategoriesForQuestion(message: string, categories: z.infer<typeof nearbyCategorySchema>[]) {
+  if (!isNearbyDiscoveryQuestion(message)) return categories;
+  const requested: z.infer<typeof nearbyCategorySchema>[] = [];
+  if (/(?:ร้าน(?:อาหาร|กาแฟ)?|คาเฟ่)/.test(message)) requested.push("food");
+  if (/(?:ที่พัก|โรงแรม)/.test(message)) requested.push("accommodation");
+  if (/ลานกางเต็นท์/.test(message)) requested.push("campsite");
+  if (/จุดท่องเที่ยว/.test(message)) requested.push("attraction");
+  return requested.length ? requested : categories;
+}
+
 function nearbyPlaceReferenceRequired() {
   return {
     status: "PLACE_REFERENCE_REQUIRED" as const,
@@ -158,16 +176,7 @@ function setCurrentResults(
   // Tools may use this ranking within the turn. The final answer reconciles it
   // with the list actually shown before the conversation state is committed.
   state.currentResultsOrderVerified = true;
-
-  if (
-    state.selectedPark &&
-    !state.currentResults.some(
-      (park) => park.id === state.selectedPark?.id,
-    )
-  ) {
-    state.selectedPark = undefined;
-  }
-
+  setInformationParks(state, state.currentResults.slice(0, 2));
 }
 
 function referenceFailure(
@@ -293,6 +302,7 @@ function resolveParkNameFromState(
   const mentioned = findMentionedParks(currentMessage);
 
   if (mentioned.length > 1) {
+    setInformationParks(state, mentioned.map(toReference));
     return referenceFailure(
       state,
       "AMBIGUOUS_REFERENCE",
@@ -331,7 +341,16 @@ function resolveParkNameFromState(
     return { parkName: input.parkName };
   }
 
-  // คำถามต่อเนื่องต้องใช้อุทยานที่เลือกไว้
+  // The active subject is independent of the displayed recommendation list.
+  if (state.activePark) return { parkName: state.activePark.name };
+
+  // Older conversations may only have the information subject field.
+  if (state.informationParks?.length) {
+    return state.informationParks.length === 1
+      ? { parkName: state.informationParks[0].name }
+      : referenceFailure(state, "AMBIGUOUS_REFERENCE");
+  }
+
   if (state.selectedPark) {
     return {
       parkName: state.selectedPark.name,
@@ -411,18 +430,41 @@ export function createConversationAwareAssistantV2Tools(
   return {
     getParkWeather: tool({
       description:
-        "อ่านพยากรณ์อากาศรายวันจาก Open-Meteo สำหรับอุทยานที่ผู้ใช้ระบุหรือ Selected Park; ไม่ใช่สภาพอากาศที่ตรวจวัดขณะนี้ ไม่ใช่ snapshot ทริปย้อนหลัง และไม่ยืนยันสถานะเปิดปิดหรือความปลอดภัยของเส้นทาง",
+        "อ่านพยากรณ์อากาศรายวันจาก Open-Meteo สำหรับอุทยานที่ผู้ใช้ระบุหรืออุทยานที่กำลังพูดถึง; ไม่ใช่สภาพอากาศที่ตรวจวัดขณะนี้ ไม่ใช่ snapshot ทริปย้อนหลัง และไม่ยืนยันสถานะเปิดปิดหรือความปลอดภัยของเส้นทาง",
       inputSchema: getParkWeatherInputSchema,
-      execute: async (input) => {
+      execute: async (input) => context.runExclusive(async (state) => {
         if (asksForHistoricalWeather(context.currentMessage)) {
           return { status: "HISTORICAL_SNAPSHOT_UNAVAILABLE" as const };
         }
         const mentioned = findMentionedParks(context.currentMessage);
-        if (mentioned.length > 1) return { status: "AMBIGUOUS_PARK" as const };
-        const park = mentioned[0] ?? context.state.selectedPark;
-        if (!park) return { status: "PARK_REQUIRED" as const };
-        return executeGetParkWeather(park.slug, input, context.currentMessage, context.signal);
-      },
+        if (mentioned.length > 1) {
+          setInformationParks(state, mentioned.map(toReference));
+          state.pendingClarification = { intent: "WEATHER", question: context.currentMessage,
+            ...(input.forecastDate ? { forecastDate: input.forecastDate } : {}) };
+          return { status: "AMBIGUOUS_PARK" as const };
+        }
+        const discussed = state.informationParks;
+        const park = mentioned[0] ?? state.activePark
+          ?? (discussed?.length === 1 ? discussed[0] : !discussed?.length ? state.selectedPark : undefined);
+        if (!mentioned.length && !state.activePark && discussed && discussed.length > 1) {
+          state.pendingClarification = { intent: "WEATHER", question: context.currentMessage,
+            ...(input.forecastDate ? { forecastDate: input.forecastDate } : {}) };
+          return { status: "AMBIGUOUS_PARK" as const };
+        }
+        if (!park) {
+          state.pendingClarification = { intent: "WEATHER", question: context.currentMessage,
+            ...(input.forecastDate ? { forecastDate: input.forecastDate } : {}) };
+          return { status: "PARK_REQUIRED" as const };
+        }
+        const pending = state.pendingClarification?.intent === "WEATHER" ? state.pendingClarification : undefined;
+        state.pendingClarification = undefined;
+        setInformationParks(state, [toReference(park)]);
+        const result = await executeGetParkWeather(park.slug,
+          { forecastDate: pending?.forecastDate ?? input.forecastDate },
+          pending ? `${pending.question} ${context.currentMessage}` : context.currentMessage,
+          context.signal);
+        return result;
+      }),
     }),
     getTripEvaluation: tool({
       description:
@@ -438,7 +480,8 @@ export function createConversationAwareAssistantV2Tools(
       execute: async (input) =>
         context.runExclusive(async (state) => {
           const result = executeSearchParks({
-            province: findRequestedProvince(context.currentMessage) ?? input.province,
+            province: findRequestedProvince(context.currentMessage) ?? input.province
+              ?? (input.operation === "COUNT" ? state.userConstraints.province : undefined),
           });
 
           state.userConstraints = {
@@ -446,7 +489,7 @@ export function createConversationAwareAssistantV2Tools(
             province: result.province,
           };
 
-          setCurrentResults(state, result.parks);
+          if (input.operation !== "COUNT") setCurrentResults(state, result.parks);
 
           return result;
         }),
@@ -470,7 +513,7 @@ export function createConversationAwareAssistantV2Tools(
 
     getParkInfo: tool({
       description:
-        "ข้อมูลอุทยานที่มีโครงสร้าง: จังหวัด ข้อมูลพื้นฐาน เวลาเปิดปิดที่บันทึกไว้ (hours) ค่าเข้าที่บันทึกไว้ (fees) ที่อยู่/ช่องทางติดต่อ (contact) กิจกรรม และการกางเต็นท์ หากเป็นคำถามต่อเนื่องให้ใช้ Selected park; ข้อมูลบันทึกไม่ใช่สถานะสด",
+        "ข้อมูลอุทยานที่มีโครงสร้าง: จังหวัด ข้อมูลพื้นฐาน เวลาเปิดปิดที่บันทึกไว้ (hours) ค่าเข้าที่บันทึกไว้ (fees) ที่อยู่/ช่องทางติดต่อ (contact) กิจกรรม และการกางเต็นท์ หากเป็นคำถามต่อเนื่องให้ใช้อุทยานที่กำลังพูดถึง; ข้อมูลบันทึกไม่ใช่สถานะสด",
       inputSchema: statefulGetParkInfoInputSchema,
 
       execute: async (input) =>
@@ -491,7 +534,7 @@ export function createConversationAwareAssistantV2Tools(
           });
 
           if ("found" in result && result.found) {
-            setSelectedPark(state, result.park);
+            setInformationParks(state, [result.park]);
           }
 
           return result;
@@ -574,6 +617,7 @@ export function createConversationAwareAssistantV2Tools(
               result.comparison.parks.map(({ park }) =>
                 toReference(park),
               );
+            setInformationParks(state, state.lastComparedParks);
           }
 
           return result;
@@ -582,7 +626,7 @@ export function createConversationAwareAssistantV2Tools(
 
     getParkKnowledge: tool({
       description:
-        "ค้นข้อมูลอุทยานจาก RAG เช่น จุดเด่น เส้นทาง ห้องน้ำ ร้านอาหาร ที่พัก สิ่งอำนวยความสะดวก ความปลอดภัย การเดินทาง หรือการเตรียมตัว คำถามค่าเข้าและเวลาเปิดมี structuredFacts แนบให้ด้วย ถ้ามี Selected park ให้ใช้ชื่ออุทยานเดิม",
+        "ค้นข้อมูลอุทยานจาก RAG เช่น จุดเด่น เส้นทาง ห้องน้ำ ร้านอาหาร ที่พัก สิ่งอำนวยความสะดวก ความปลอดภัย การเดินทาง หรือการเตรียมตัว คำถามค่าเข้าและเวลาเปิดมี structuredFacts แนบให้ด้วย คำถามต่อเนื่องใช้อุทยานที่กำลังพูดถึงล่าสุด",
       inputSchema: statefulGetParkKnowledgeInputSchema,
 
       execute: async (input, options) =>
@@ -592,7 +636,7 @@ export function createConversationAwareAssistantV2Tools(
               !hasExplicitPositionReference(context.currentMessage, input.position)) &&
             findMentionedParks(context.currentMessage).length === 0 &&
             (asksGeneralKnowledge(context.currentMessage) ||
-              (!state.selectedPark && state.currentResults.length === 0 &&
+              (!state.selectedPark && !state.informationParks?.length && state.currentResults.length === 0 &&
                 (!input.parkName || !isParkNameInMessage(input.parkName, context.currentMessage))))
           ) {
             return executeGetParkKnowledge(
@@ -628,7 +672,7 @@ export function createConversationAwareAssistantV2Tools(
             "park" in result &&
             result.park
           ) {
-            setSelectedPark(state, result.park);
+            setInformationParks(state, [result.park]);
           }
 
           return result;
@@ -637,22 +681,63 @@ export function createConversationAwareAssistantV2Tools(
 
     findNearbyPlaces: tool({
       description:
-        "Find real nearby food, accommodation, campsites, attractions, or services from OpenStreetMap around the selected park. For a driving follow-up about a specific place, supply placeName only if the user explicitly named it; if the place cannot be identified, ask for its name. Keep straightLineDistanceMeters separate. Only report roadDistanceMeters and estimatedDrivingMinutes when routeStatus is OK. For NO_ROUTE, UNSUPPORTED, or UNAVAILABLE, say driving estimates are unavailable. Do not invent places or travel details.",
+        "Find real nearby food, accommodation, campsites, attractions, or services from OpenStreetMap around the park currently discussed. For a driving follow-up, call this tool even for a displayed ordinal such as ร้านแรก; the tool resolves only the places actually listed to the user. Supply placeName only if the user explicitly named it. If the place cannot be identified, ask for its name. Keep straightLineDistanceMeters separate. Only report roadDistanceMeters and estimatedDrivingMinutes when routeStatus is OK. For NO_ROUTE, UNSUPPORTED, or UNAVAILABLE, say driving estimates are unavailable. Do not invent places or travel details.",
       inputSchema: statefulNearbyPlacesInputSchema,
       execute: async (input) => context.runExclusive(async (state) => {
-        const resolved = resolveParkNameFromState(state, input, context.currentMessage);
+        const message = context.currentMessage;
+        const nearbyContext = state.nearbyResults;
+        const hasDisplayedName = nearbyContext?.places.some((place) =>
+          normalizeQuery(message).includes(normalizeQuery(place.name))) ?? false;
+        const isDisplayedFollowup = isNearbyDistanceQuestion(message)
+          && findMentionedParks(message).length === 0
+          && (asksForDisplayedNearbyPlace(message) || hasDisplayedName);
+        if (isDisplayedFollowup && !nearbyContext) return nearbyPlaceReferenceRequired();
+        if (isDisplayedFollowup && nearbyContext
+          && (state.informationParks?.length === 1
+            ? state.informationParks[0].slug !== nearbyContext.park.slug
+            : Boolean(state.selectedPark && state.selectedPark.slug !== nearbyContext.park.slug))
+          && !hasDisplayedName) {
+          return nearbyPlaceReferenceRequired();
+        }
+        const resolved = isDisplayedFollowup && nearbyContext
+          ? { parkName: nearbyContext.park.name }
+          : resolveParkNameFromState(state, input, message);
         if ("status" in resolved) return resolved;
         const park = resolveSinglePark(resolved.parkName);
         if (!park.found) return { status: park.ambiguous ? "AMBIGUOUS_PARK" as const : "PARK_NOT_FOUND" as const, candidates: park.candidates };
+        const alreadyActive = state.activePark?.slug === park.park.slug
+          || (!state.activePark && !state.informationParks?.length && state.selectedPark?.slug === park.park.slug);
+        if (!alreadyActive) setInformationParks(state, [toReference(park.park)]);
+        const displayedPosition = state.currentResults.findIndex((item) => item.slug === park.park.slug) + 1;
+        if (displayedPosition > 0 && state.currentResultsOrderVerified !== false
+          && isExplicitParkPositionChoice(message, displayedPosition)) {
+          setSelectedPark(state, toReference(park.park));
+        }
+        if (isNearbyDistanceQuestion(context.currentMessage)) {
+          const displayed = resolveDisplayedNearbyPlace(state, context.currentMessage, park.park.slug);
+          if (displayed) {
+            return {
+              status: "OK" as const,
+              referenceResolution: "DISPLAYED_RESULT" as const,
+              searchedPark: toReference(park.park),
+              places: [{ ...displayed }],
+              meta: { source: state.nearbyResults!.providerSource },
+            };
+          }
+          if (asksForDisplayedNearbyPlace(context.currentMessage) || (isDisplayedFollowup && hasDisplayedName)) {
+            return nearbyPlaceReferenceRequired();
+          }
+        }
         if ((needsExactNearbyPlace(context.currentMessage) && !input.placeName)
           || (input.placeName && isVagueNearbyPlaceName(input.placeName))
           || (input.placeName && !normalizeQuery(context.currentMessage).includes(normalizeQuery(input.placeName)))) {
           return nearbyPlaceReferenceRequired();
         }
         try {
+          const categories = nearbyCategoriesForQuestion(message, input.categories);
           const result = await searchNearbyPlacesForPark(
             park.park.slug,
-            { categories: input.categories, radiusMeters: input.radiusMeters ?? 3000, limit: input.limit ?? 10 },
+            { categories, radiusMeters: input.radiusMeters ?? 3000, limit: input.limit ?? 10 },
             {},
             context.signal,
           );
@@ -661,12 +746,14 @@ export function createConversationAwareAssistantV2Tools(
               normalizeQuery(place.name) === normalizeQuery(input.placeName!),
             );
             return matches.length === 1
-              ? { ...result, places: matches }
+              ? { ...result, places: matches, searchedPark: toReference(park.park),
+                  ...(isNearbyDistanceQuestion(context.currentMessage) ? { referenceResolution: "EXPLICIT_NAME" as const } : {}) }
               : nearbyPlaceReferenceRequired();
           }
           if (result.status === "EMPTY") {
             return {
               ...result,
+              searchedPark: toReference(park.park),
               interpretation: `ไม่พบรายการจาก OpenStreetMap ตามประเภทที่ค้นในรัศมี ${input.radiusMeters ?? 3000} เมตรรอบพิกัดอุทยาน ไม่ได้ยืนยันว่าไม่มีสถานที่จริง`,
             };
           }
@@ -676,7 +763,8 @@ export function createConversationAwareAssistantV2Tools(
               interpretation: "ยังตรวจรายชื่อสถานที่รอบอุทยานไม่ได้ เพราะบริการแผนที่ไม่ตอบในขณะนี้",
             };
           }
-          return result;
+          if (result.status === "OK") setInformationParks(state, [toReference(park.park)]);
+          return { ...result, searchedPark: toReference(park.park) };
         } catch {
           return { status: "UPSTREAM_UNAVAILABLE" as const, places: [], message: "ยังค้นสถานที่ใกล้อุทยานไม่ได้ กรุณาลองใหม่ภายหลัง" };
         }
@@ -710,6 +798,16 @@ export function createConversationAwareAssistantV2Tools(
               missing: ["parkName"] as const,
               message:
                 "อยากจัดทริปที่อุทยานแห่งไหนครับ?",
+            };
+          }
+
+          if (mentioned.length === 0 && state.selectedPark && state.informationParks?.length
+            && /(?:ที่นั่น|ที่นั้น|ที่นี่|อุทยานนั้น|อุทยานนี้|แถวนั้น|แถวนี้|แห่งนั้น)/.test(context.currentMessage)
+            && (state.informationParks.length !== 1 || state.informationParks[0].slug !== state.selectedPark.slug)) {
+            return {
+              status: "NEEDS_CLARIFICATION" as const,
+              missing: ["parkName"] as const,
+              message: "อยากจัดทริปที่อุทยานแห่งไหนครับ?",
             };
           }
 

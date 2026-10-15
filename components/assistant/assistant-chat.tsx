@@ -35,6 +35,7 @@ import {
 } from "./chat-messages";
 import { readAssistantV2Stream } from "./assistant-stream";
 import { AiTripDraftPanel } from "./ai-trip-draft-panel";
+import { readAssistantTripDraft } from "./trip-draft-requests";
 import { NearbyAttribution } from "./nearby-attribution";
 import type { AssistantV2DraftTrip } from "@/lib/chat-v2/state/conversation-state";
 
@@ -603,11 +604,8 @@ export function AssistantChat() {
         throw new Error("ผู้ช่วยไม่ได้ส่งข้อความตอบกลับ");
       }
       try {
-        const draftResponse = await fetch(`/api/v2/assistant/trip-draft?conversationId=${encodeURIComponent(nextConversationId)}`, { signal: abort.signal });
-        if (draftResponse.ok && thisRequest === requestVersion.current) {
-          const body = await draftResponse.json();
-          setDraftTrip(body.data ?? null);
-        }
+        const latestDraft = await readAssistantTripDraft(nextConversationId, abort.signal);
+        if (thisRequest === requestVersion.current) setDraftTrip(latestDraft);
       } catch {
         // Chat response remains usable if the draft panel cannot refresh.
       }

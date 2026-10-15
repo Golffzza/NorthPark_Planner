@@ -25,7 +25,13 @@ import {
 
 import { createAssistantV2Tools } from "@/lib/chat-v2/tools";
 import { createAssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
+import { isExplicitNamedParkChoice } from "@/lib/chat-v2/tools/select-park";
+import { finalizeWeatherClarificationAnswer } from "@/lib/chat-v2/application/weather-answer-guard";
 import { reconcileDisplayedParkResults } from "@/lib/chat-v2/application/displayed-park-results";
+import {
+  finalizeNearbyFollowupAnswer,
+  reconcileDisplayedNearbyResults,
+} from "@/lib/chat-v2/application/displayed-nearby-results";
 import { getChatMessageMaxLength } from "@/lib/chat/shared/limits";
 import { findMentionedParks } from "@/lib/chat/core/park-catalog";
 
@@ -42,11 +48,27 @@ function requestsParkRecommendations(message: string): boolean {
   return /แนะนำ\s*(?:อุทยาน|ที่เที่ยว|สถานที่)|(?:อุทยาน|ที่เที่ยว).{0,30}(?:น่าเที่ยว|ไหนดี|แนะนำ)|ไปไหนดี|ที่ไหนน่าเที่ยว|recommend.{0,30}parks?/i.test(normalized);
 }
 
+function isBareParkNameAnswer(message: string): boolean {
+  const mentioned = findMentionedParks(message);
+  if (mentioned.length !== 1) return false;
+  const normalized = message.trim().toLocaleLowerCase("th-TH")
+    .replace(/(?:ครับ|ค่ะ|คะ|นะ|อะ)$/, "").replace(/[\s\-–—]/g, "");
+  const full = mentioned[0].name.toLocaleLowerCase("th-TH").replace(/[\s\-–—]/g, "");
+  return normalized === full || normalized === full.replace(/^อุทยานแห่งชาติ/, "");
+}
+
 export function prepareAssistantV2Step({
   stepNumber,
 }: {
   stepNumber: number;
-}, message = "") {
+}, message = "", state?: AssistantV2ConversationState) {
+  if (stepNumber === 0 && state?.pendingClarification?.intent === "WEATHER"
+    && isBareParkNameAnswer(message)) {
+    return { toolChoice: { type: "tool" as const, toolName: "getParkWeather" as const } };
+  }
+  if (stepNumber === 0 && isExplicitNamedParkChoice(message)) {
+    return { toolChoice: { type: "tool" as const, toolName: "selectPark" as const } };
+  }
   if (stepNumber === 0 && requestsParkRecommendations(message)) {
     return {
       toolChoice: { type: "tool" as const, toolName: "recommendParks" as const },
@@ -192,6 +214,16 @@ export function buildAssistantV2StateSummary(
         : "NONE"
     }`,
 
+    `Active information park: ${state.activePark
+      ? `${state.activePark.name} (${state.activePark.slug})` : "NONE"}`,
+
+    `Last information park context: ${state.informationParks?.length
+      ? state.informationParks.map((park) => `${park.name} (${park.slug})`).join(" | ")
+      : "NONE"}`,
+
+    `Pending clarification: ${state.pendingClarification?.intent === "WEATHER"
+      ? `WEATHER for: ${state.pendingClarification.question}` : "NONE"}`,
+
     `Last compared parks: ${
       state.lastComparedParks.length
         ? state.lastComparedParks
@@ -202,6 +234,11 @@ export function buildAssistantV2StateSummary(
 
     "Current draft trip (authoritative):",
     formatDraftTrip(state),
+
+    "Last displayed nearby places (names and order only; use findNearbyPlaces for distance):",
+    state.nearbyResults?.places.length
+      ? `${state.nearbyResults.park.name}: ${state.nearbyResults.places.map((place, index) => `${index + 1}. ${place.name}`).join(" | ")}`
+      : "NONE",
 
     "Small recent conversation history (not authoritative for facts):",
     recentHistory,
@@ -264,6 +301,10 @@ export class ChatV2Application {
       async (state) => {
         const startedAt = performance.now();
 
+        if (state.pendingClarification && !isBareParkNameAnswer(message)) {
+          state.pendingClarification = undefined;
+        }
+
         const turnContext = createAssistantV2TurnContext(
           state,
           message,
@@ -287,13 +328,15 @@ export class ChatV2Application {
               : ASSISTANT_V2_TEMPERATURE,
 
           stopWhen: stepCountIs(6),
-          prepareStep: (step) => prepareAssistantV2Step(step, message),
+          prepareStep: (step) => prepareAssistantV2Step(step, message, state),
           abortSignal: signal,
         });
 
-        const finalMessage = sanitizeAssistantV2Text(
-          result.text,
-        );
+        const stepToolResults = result.steps.flatMap((step) => step.toolResults)
+          .map((toolResult) => ({ toolName: toolResult.toolName, output: toolResult.output }));
+        const finalMessage = sanitizeAssistantV2Text(finalizeWeatherClarificationAnswer(
+          finalizeNearbyFollowupAnswer(result.text, stepToolResults, message), stepToolResults,
+        ));
 
         if (!finalMessage) {
           throw new Error("EMPTY_ASSISTANT_RESPONSE");
@@ -324,13 +367,12 @@ export class ChatV2Application {
                 : {}),
             }));
 
-        const toolsUsed = [
-          ...new Set(
-            toolCalls.map((toolCall) => toolCall.toolName),
-          ),
-        ];
+        const toolNamesInOrder = toolCalls.map((toolCall) => toolCall.toolName);
+        const toolsUsed = [...new Set(toolNamesInOrder)];
 
-        reconcileDisplayedParkResults(state, finalMessage, toolsUsed);
+        reconcileDisplayedParkResults(state, finalMessage, toolNamesInOrder,
+          toolCalls.map((toolCall) => toolCall.input));
+        reconcileDisplayedNearbyResults(state, finalMessage, stepToolResults);
 
         assistantV2ConversationStore.appendRecentTurn(
           state,
@@ -390,6 +432,9 @@ export class ChatV2Application {
     };
 
     try {
+      if (state.pendingClarification && !isBareParkNameAnswer(message)) {
+        state.pendingClarification = undefined;
+      }
       const turnContext = createAssistantV2TurnContext(
         state,
         message,
@@ -413,7 +458,7 @@ export class ChatV2Application {
             : ASSISTANT_V2_TEMPERATURE,
 
         stopWhen: stepCountIs(6),
-        prepareStep: (step) => prepareAssistantV2Step(step, message),
+        prepareStep: (step) => prepareAssistantV2Step(step, message, state),
         abortSignal: signal,
 
         onFinish({ text, steps, finishReason }) {
@@ -421,9 +466,11 @@ export class ChatV2Application {
             if (["error", "length", "content-filter"].includes(finishReason)) {
               return;
             }
-            const finalMessage = sanitizeAssistantV2Text(
-              text,
-            );
+            const stepToolResults = steps.flatMap((step) => step.toolResults)
+              .map((toolResult) => ({ toolName: toolResult.toolName, output: toolResult.output }));
+            const finalMessage = sanitizeAssistantV2Text(finalizeWeatherClarificationAnswer(
+              finalizeNearbyFollowupAnswer(text, stepToolResults, message), stepToolResults,
+            ));
 
             if (!finalMessage) {
               console.error(
@@ -436,11 +483,10 @@ export class ChatV2Application {
               return;
             }
 
-            reconcileDisplayedParkResults(
-              state,
-              finalMessage,
-              steps.flatMap((step) => step.toolCalls.map((call) => call.toolName)),
-            );
+            const toolCalls = steps.flatMap((step) => step.toolCalls);
+            reconcileDisplayedParkResults(state, finalMessage,
+              toolCalls.map((call) => call.toolName), toolCalls.map((call) => call.input));
+            reconcileDisplayedNearbyResults(state, finalMessage, stepToolResults);
 
             assistantV2ConversationStore.appendRecentTurn(
               state,

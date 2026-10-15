@@ -11,8 +11,15 @@ import {
   chatV2Application,
   sanitizeAssistantV2Text,
 } from "@/lib/chat-v2/application/chat-v2-application";
+import { finalizeWeatherClarificationAnswer } from "@/lib/chat-v2/application/weather-answer-guard";
 import { AssistantV2ConversationExpiredError } from "@/lib/chat-v2/state/conversation-state";
 import { nearbyAttributionSource } from "@/lib/chat-v2/application/nearby-attribution";
+import {
+  asksForDisplayedNearbyPlace,
+  finalizeNearbyFollowupAnswer,
+  isNearbyDiscoveryQuestion,
+  isNearbyDistanceQuestion,
+} from "@/lib/chat-v2/application/displayed-nearby-results";
 import { getChatMessageMaxLength } from "@/lib/chat/shared/limits";
 
 export const runtime = "nodejs";
@@ -100,6 +107,9 @@ export async function POST(request: Request) {
     );
 
     const encoder = new TextEncoder();
+    let bufferNearbyFollowup = asksForDisplayedNearbyPlace(parsed.data.message)
+      || isNearbyDistanceQuestion(parsed.data.message)
+      || isNearbyDiscoveryQuestion(parsed.data.message);
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         const send = (event: Record<string, string>) => {
@@ -109,7 +119,17 @@ export async function POST(request: Request) {
         try {
           for await (const part of result.fullStream) {
             if (part.type === "text-delta") {
-              send({ type: "text", text: part.text });
+              if (!bufferNearbyFollowup) send({ type: "text", text: part.text });
+            } else if (part.type === "tool-result" && part.toolName === "findNearbyPlaces") {
+              const output = part.output as { status?: string; referenceResolution?: string } | undefined;
+              if (output?.status === "PLACE_REFERENCE_REQUIRED" || output?.status === "EMPTY"
+                || output?.status?.startsWith("UPSTREAM_")
+                || output?.referenceResolution) bufferNearbyFollowup = true;
+            } else if (part.type === "tool-result" && part.toolName === "getParkWeather") {
+              const output = part.output as { status?: string } | undefined;
+              if (output?.status === "AMBIGUOUS_PARK" || output?.status === "PARK_REQUIRED") {
+                bufferNearbyFollowup = true;
+              }
             } else if (part.type === "error" || part.type === "abort") {
               send({ type: "error", message: "คำตอบขาดตอน กรุณาลองอีกครั้ง" });
               return;
@@ -117,17 +137,19 @@ export async function POST(request: Request) {
               finished = !["error", "length", "content-filter"].includes(part.finishReason);
             }
           }
+          const steps = finished ? await result.steps : [];
+          const stepToolResults = steps.flatMap((step) => step.toolResults.map((toolResult) => ({
+            toolName: toolResult.toolName, output: toolResult.output,
+          })));
           const finalText = finished
-            ? sanitizeAssistantV2Text(await result.text)
+            ? sanitizeAssistantV2Text(finalizeWeatherClarificationAnswer(finalizeNearbyFollowupAnswer(
+                await result.text,
+                stepToolResults,
+                parsed.data.message,
+              ), stepToolResults))
             : "";
           if (finalText) {
-            const steps = await result.steps;
-            const nearbySource = nearbyAttributionSource(
-              steps.flatMap((step) => step.toolResults.map((toolResult) => ({
-                toolName: toolResult.toolName,
-                output: toolResult.output,
-              }))),
-            );
+            const nearbySource = nearbyAttributionSource(stepToolResults);
             send({ type: "done", text: finalText, ...(nearbySource ? { nearbySource } : {}) });
           } else {
             send({ type: "error", message: "คำตอบขาดตอน กรุณาลองอีกครั้ง" });

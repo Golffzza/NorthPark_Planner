@@ -31,6 +31,68 @@ function toolsFor(state: AssistantV2ConversationState, message: string) {
 const options = { toolCallId: "test-call", messages: [], context: {} };
 
 describe("Assistant V2 conversation tools state", () => {
+  it("keeps a selected Chiang Rai park active after a count question", async () => {
+    const state = makeState();
+    const doi = getParkCatalog().find((park) => park.slug === "doi-luang")!;
+    const khun = getParkCatalog().find((park) => park.slug === "khun-chae")!;
+    state.currentResults = [doi, khun];
+    state.currentResultsOrderVerified = true;
+    state.informationParks = [doi, khun];
+    state.userConstraints.province = "เชียงราย";
+    await toolsFor(state, "แล้วมันมีทั้งหมดกี่ที่อะ")
+      .searchParks.execute!({ operation: "COUNT" }, options);
+    expect(state.currentResults.map((park) => park.slug)).toEqual(["doi-luang", "khun-chae"]);
+    expect(state.currentResultsOrderVerified).toBe(true);
+    expect(state.userConstraints.province).toBe("เชียงราย");
+
+    const selected = await toolsFor(state, "ไปดอยหลวง")
+      .selectPark.execute!({}, options);
+    expect(selected).toMatchObject({ selected: true, park: { slug: "doi-luang" } });
+    expect(state.selectedPark?.slug).toBe("doi-luang");
+    expect(state.activePark?.slug).toBe("doi-luang");
+    expect((await toolsFor(state, "ที่นั่นอยู่จังหวัดอะไร")
+      .getParkInfo.execute!({ topic: "province" }, options)))
+      .toMatchObject({ found: true, park: { slug: "doi-luang" } });
+  });
+
+  it("carries A to B to a pronoun, explicit selection, and an evidenced draft across turns", async () => {
+    const state = makeState();
+    const a = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
+    const b = getParkCatalog().find((park) => park.slug === "doi-suthep-pui")!;
+    expect(await toolsFor(state, `${a.name} อยู่จังหวัดอะไร`).getParkInfo.execute!({ topic: "province" }, options))
+      .toMatchObject({ found: true, park: { slug: a.slug } });
+    expect(await toolsFor(state, `${b.name} อยู่จังหวัดอะไร`).getParkInfo.execute!({ topic: "province" }, options))
+      .toMatchObject({ found: true, park: { slug: b.slug } });
+    expect(await toolsFor(state, "ที่นั่นมีค่าเข้าไหม").getParkInfo.execute!({ topic: "fees" }, options))
+      .toMatchObject({ found: true, park: { slug: b.slug } });
+    expect(state.selectedPark).toBeUndefined();
+
+    expect(await toolsFor(state, `เลือก${b.name}`).selectPark.execute!({ parkName: b.name }, options))
+      .toMatchObject({ selected: true, park: { slug: b.slug } });
+    const findByParkSlugs = vi.spyOn(knowledgeRetriever, "findByParkSlugs").mockResolvedValue([{
+      id: "verified-activity", documentId: "verified-doc", slug: b.slug,
+      parkTitle: b.name, title: "กิจกรรมที่มีหลักฐาน", section: "attraction:WATERFALL:1",
+      content: "สถานที่: กิจกรรมที่มีหลักฐาน\n- **summary:** ข้อมูลจากเอกสารทดสอบ",
+      similarity: 0.9, rankScore: 1,
+    }]);
+    try {
+      expect(await toolsFor(state, "ช่วยจัดทริป 2 วัน").planTrip.execute!({ durationDays: 2 }, options))
+        .toMatchObject({ status: "OK", draftTrip: { park: { slug: b.slug } } });
+      expect(findByParkSlugs).toHaveBeenCalledWith([b.slug]);
+      expect(state.draftTrip).toMatchObject({ revision: 1, park: { slug: b.slug } });
+      expect(state.draftTrip?.verifiedActivities).toEqual([
+        { name: "กิจกรรมที่มีหลักฐาน", sourceReference: "verified-doc:verified-activity" },
+      ]);
+      const before = structuredClone(state.draftTrip);
+      expect(await toolsFor(state, `${a.name} อยู่จังหวัดอะไร`).getParkInfo.execute!({ topic: "province" }, options))
+        .toMatchObject({ found: true, park: { slug: a.slug } });
+      expect(state.selectedPark?.slug).toBe(b.slug);
+      expect(state.draftTrip).toEqual(before);
+    } finally {
+      findByParkSlugs.mockRestore();
+    }
+  });
+
   it("does not confuse a two-digit ordinal with its first digit", () => {
     expect(hasExplicitPositionReference("ที่10", 1)).toBe(false);
     expect(hasExplicitPositionReference("ที่10", 10)).toBe(true);
@@ -80,8 +142,70 @@ describe("Assistant V2 conversation tools state", () => {
       .getParkInfo.execute!({ parkName: "ดอยสุเทพ", topic: "province" }, options);
 
     expect(result).toMatchObject({ found: true, park: { slug: "doi-suthep-pui" } });
-    expect(state.selectedPark?.slug).toBe("doi-suthep-pui");
+    expect(state.selectedPark?.slug).toBe("doi-inthanon");
+    expect(state.informationParks?.map((park) => park.slug)).toEqual(["doi-suthep-pui"]);
     expect(state.draftTrip?.park.slug).toBe("doi-inthanon");
+  });
+
+  it("follows the last information park across turns without selecting it", async () => {
+    const state = makeState();
+    const a = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
+    state.selectedPark = a;
+    await toolsFor(state, "ดอยสุเทพ-ปุยอยู่จังหวัดอะไร")
+      .getParkInfo.execute!({ topic: "province" }, options);
+    const followup = await toolsFor(state, "ที่นั่นมีค่าเข้าไหม")
+      .getParkInfo.execute!({ topic: "fees" }, options);
+    expect(followup).toMatchObject({ found: true, park: { slug: "doi-suthep-pui" } });
+    expect(state.selectedPark?.slug).toBe(a.slug);
+  });
+
+  it("follows a park discussed without any selected park, but does not plan it implicitly", async () => {
+    const state = makeState();
+    await toolsFor(state, "ลานสางอยู่จังหวัดอะไร")
+      .getParkInfo.execute!({ topic: "province" }, options);
+    expect((await toolsFor(state, "ที่นั่นมีค่าเข้าไหม")
+      .getParkInfo.execute!({ topic: "fees" }, options))).toMatchObject({ found: true, park: { slug: "lan-sang" } });
+    expect((await toolsFor(state, "ช่วยจัดทริป 2 วัน")
+      .planTrip.execute!({ durationDays: 2 }, options))).toMatchObject({ status: "NEEDS_CLARIFICATION" });
+    expect(state.selectedPark).toBeUndefined();
+    expect(state.draftTrip).toBeUndefined();
+  });
+
+  it("does not plan the selected park when 'there' refers to another discussed park", async () => {
+    const state = makeState();
+    state.selectedPark = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
+    await toolsFor(state, "ลานสางอยู่จังหวัดอะไร").getParkInfo.execute!({ topic: "province" }, options);
+    const result = await toolsFor(state, "ช่วยจัดทริปที่นั่น 2 วัน")
+      .planTrip.execute!({ durationDays: 2 }, options);
+    expect(result).toMatchObject({ status: "NEEDS_CLARIFICATION", missing: ["parkName"] });
+    expect(state.selectedPark?.slug).toBe("doi-inthanon");
+    expect(state.draftTrip).toBeUndefined();
+  });
+
+  it("asks again after discussing multiple parks instead of falling back to the selection", async () => {
+    const state = makeState();
+    state.selectedPark = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
+    await toolsFor(state, "ดอยอินทนนท์กับดอยสุเทพ-ปุย ที่ไหนกางเต็นท์ได้")
+      .getParkInfo.execute!({ topic: "camping" }, options);
+    expect((await toolsFor(state, "ที่นั่นมีค่าเข้าไหม")
+      .getParkInfo.execute!({ topic: "fees" }, options)))
+      .toMatchObject({ status: "REFERENCE_ERROR", reason: "AMBIGUOUS_REFERENCE" });
+  });
+
+  it("selects an explicitly named park outside current results", async () => {
+    const state = makeState();
+    const result = await toolsFor(state, "เลือกแจ้ซ้อน")
+      .selectPark.execute!({ parkName: "แจ้ซ้อน" }, options);
+    expect(result).toMatchObject({ selected: true, park: { slug: "chae-son" } });
+    expect(state.selectedPark?.slug).toBe("chae-son");
+  });
+
+  it("does not select a park from a negated choice", async () => {
+    const state = makeState();
+    const result = await toolsFor(state, "ไม่เลือกแจ้ซ้อน")
+      .selectPark.execute!({ parkName: "แจ้ซ้อน" }, options);
+    expect(result).toMatchObject({ selected: false, reason: "AMBIGUOUS" });
+    expect(state.selectedPark).toBeUndefined();
   });
 
   it("answers a fee follow-up from the selected park without falling back to another park", async () => {
@@ -272,6 +396,28 @@ describe("Assistant V2 conversation tools state", () => {
     }
   });
 
+  it("answers RAG about another park without changing selection or draft", async () => {
+    const state = makeState();
+    const selected = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
+    state.selectedPark = selected;
+    state.draftTrip = { park: selected, durationDays: 1, companions: [], activities: [], days: [] };
+    const beforeDraft = structuredClone(state.draftTrip);
+    const findByParkSlugs = vi.spyOn(knowledgeRetriever, "findByParkSlugs").mockResolvedValue([{
+      id: "chunk-1", documentId: "doc-1", slug: "lan-sang", parkTitle: "ลานสาง",
+      title: "ภาพรวม", section: "overview", content: "ข้อมูลทดสอบจากเอกสาร",
+      similarity: 1, rankScore: 1,
+    }]);
+    try {
+      const result = await toolsFor(state, "ลานสางเป็นยังไง").getParkKnowledge.execute!(
+        { question: "ลานสางเป็นยังไง" }, options,
+      );
+      expect(result).toMatchObject({ status: "OK", park: { slug: "lan-sang" } });
+      expect(state.informationParks?.[0].slug).toBe("lan-sang");
+      expect(state.selectedPark?.slug).toBe("doi-inthanon");
+      expect(state.draftTrip).toEqual(beforeDraft);
+    } finally { findByParkSlugs.mockRestore(); }
+  });
+
   it("clears a previous province when recommendations expand to all northern parks", async () => {
     const state = makeState();
     state.userConstraints.province = "เชียงราย";
@@ -285,7 +431,7 @@ describe("Assistant V2 conversation tools state", () => {
     }
   });
 
-  it("clears stale selection but preserves an unsaved draft when a search changes province", async () => {
+  it("keeps the user's selection and unsaved draft when a search changes province", async () => {
     const state = makeState();
     const oldPark = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
     state.selectedPark = oldPark;
@@ -302,7 +448,7 @@ describe("Assistant V2 conversation tools state", () => {
 
     expect(state.userConstraints.province).toBe("ตาก");
     expect(state.currentResults.every((park) => park.slug !== oldPark.slug)).toBe(true);
-    expect(state.selectedPark).toBeUndefined();
+    expect(state.selectedPark?.slug).toBe("doi-inthanon");
     expect(state.draftTrip?.park.slug).toBe("doi-inthanon");
   });
 
@@ -391,12 +537,14 @@ describe("Assistant V2 conversation tools state", () => {
       province: state.userConstraints.province,
       resultCount: state.currentResults.length,
       selectedPark: state.selectedPark?.slug,
+      informationPark: state.informationParks?.[0]?.slug,
     }));
 
     expect(persisted).toEqual({
       province: "เชียงใหม่",
       resultCount: expect.any(Number),
-      selectedPark: "doi-inthanon",
+      selectedPark: undefined,
+      informationPark: "doi-inthanon",
     });
     expect(persisted.resultCount).toBeGreaterThan(0);
   });

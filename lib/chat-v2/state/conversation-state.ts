@@ -4,6 +4,7 @@ import type {
   AssistantConstraints,
   ParkReference,
 } from "@/lib/chat/shared/contracts";
+import type { NearbyPlace, NearbySearchResult } from "@/lib/services/nearby-places-service";
 
 const DEFAULT_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_RECENT_MESSAGES = 6;
@@ -34,6 +35,12 @@ export type AssistantV2DraftTrip = {
   notes?: string;
 };
 
+export type AssistantV2NearbyResults = {
+  park: ParkReference;
+  providerSource: NearbySearchResult["meta"]["source"];
+  places: NearbyPlace[];
+};
+
 export type AssistantV2ConversationState = {
   id: string;
   ownerId: string;
@@ -41,8 +48,14 @@ export type AssistantV2ConversationState = {
   currentResults: ParkReference[];
   currentResultsOrderVerified?: boolean;
   selectedPark?: ParkReference;
+  /** Current subject for information tools; independent of the trip selection and displayed list. */
+  activePark?: ParkReference;
+  /** Last park(s) discussed for read-only questions; multiple parks require clarification. */
+  informationParks?: ParkReference[];
+  pendingClarification?: { intent: "WEATHER"; question: string; forecastDate?: string };
   lastComparedParks: ParkReference[];
   draftTrip?: AssistantV2DraftTrip;
+  nearbyResults?: AssistantV2NearbyResults;
   recentMessages: AssistantV2RecentMessage[];
   createdAt: number;
   updatedAt: number;
@@ -58,6 +71,16 @@ export function setSelectedPark(
     slug: park.slug,
     name: park.name,
   };
+  setInformationParks(state, [state.selectedPark]);
+}
+
+export function setInformationParks(
+  state: AssistantV2ConversationState,
+  parks: ParkReference[],
+): void {
+  state.informationParks = parks.map(cloneParkReference);
+  if (parks.length === 1) state.activePark = cloneParkReference(parks[0]);
+  else state.activePark = undefined;
 }
 
 export class AssistantV2ConversationExpiredError extends Error {
@@ -121,6 +144,11 @@ function cloneState(
           selectedPark: cloneParkReference(state.selectedPark),
         }
       : {}),
+    ...(state.activePark ? { activePark: cloneParkReference(state.activePark) } : {}),
+    ...(state.informationParks
+      ? { informationParks: state.informationParks.map(cloneParkReference) }
+      : {}),
+    ...(state.pendingClarification ? { pendingClarification: { ...state.pendingClarification } } : {}),
     lastComparedParks: state.lastComparedParks.map(
       cloneParkReference,
     ),
@@ -128,6 +156,9 @@ function cloneState(
       ? {
           draftTrip: structuredClone(state.draftTrip),
         }
+      : {}),
+    ...(state.nearbyResults
+      ? { nearbyResults: structuredClone(state.nearbyResults) }
       : {}),
     recentMessages: state.recentMessages.map(
       (message) => ({ ...message }),

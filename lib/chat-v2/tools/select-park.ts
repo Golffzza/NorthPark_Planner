@@ -20,7 +20,7 @@ export const selectParkInputSchema = z.object({
     .trim()
     .min(1)
     .optional()
-    .describe("ชื่ออุทยานที่ต้องตรงกับรายการใน Current results เท่านั้น"),
+    .describe("ชื่ออุทยานที่ผู้ใช้ระบุชัดเจน หรือชื่อใน Current results"),
 });
 
 type SelectParkInput = z.infer<typeof selectParkInputSchema>;
@@ -114,13 +114,38 @@ export function hasExplicitPositionReference(
   );
 }
 
+export function isExplicitParkPositionChoice(message: string, position: number): boolean {
+  const normalized = message.trim().toLocaleLowerCase("th-TH").replace(/\s+/g, "");
+  if (/ห่างจากอุทยาน/.test(normalized)) return false;
+  const choice = normalized.match(/^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|ตัดสินใจไป)(?:อัน|ตัว|ข้อ|อันดับ|ลำดับ|ที่)(?:ที่)?(?:แรก|หนึ่ง|สอง|สาม|สี่|ห้า|\d+)/);
+  return Boolean(choice && hasExplicitPositionReference(choice[0], position));
+}
+
+export function isExplicitNamedParkChoice(message: string): boolean {
+  const mentioned = findMentionedParks(message);
+  if (mentioned.length !== 1) return false;
+  const normalizedMessage = normalize(message);
+  const commands = ["ไป", "อยากไป", "เลือก", "เอา", "ตัดสินใจไป",
+    "ขอเลือก", "ขอเอา", "จะเลือก", "อยากเลือก"];
+  return [normalize(mentioned[0].name),
+    normalize(mentioned[0].name).replace(/^อุทยานแห่งชาติ/, "")].some((name) =>
+    commands.some((command) => normalizedMessage.startsWith(`${command}${name}`)
+      && /^(?:อะ|ครับ|ค่ะ|นะ|เลย)?$/.test(normalizedMessage.slice(`${command}${name}`.length))));
+}
+
 export function createSelectParkTool(context: AssistantV2TurnContext) {
   return tool({
     description:
-      "เลือกอุทยานจาก Current results เท่านั้น ใช้เมื่อผู้ใช้บอกว่าเอาที่หนึ่ง/ที่สอง ห้ามค้นทั้ง catalog หรือเดาอันดับแรก",
+      "เลือกอุทยานเมื่อผู้ใช้สั่งเลือกชัดเจน ด้วยชื่อที่ระบุเองหรืออันดับใน Current results ห้ามเดาอันดับแรก",
     inputSchema: selectParkInputSchema,
     execute: async (input) =>
       context.runExclusive(async (state) => {
+        if (/(?:ไม่|อย่า|ยังไม่)(?:เลือก|เอา|ตัดสินใจไป)/.test(normalize(context.currentMessage))) {
+          return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
+        }
+        if (findMentionedParks(context.currentMessage).length > 1) {
+          return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
+        }
         if (input.position !== undefined && state.currentResultsOrderVerified === false) {
           return {
             selected: false as const,
@@ -130,7 +155,7 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
         }
         if (
           input.position !== undefined &&
-          !hasExplicitPositionReference(context.currentMessage, input.position)
+          !isExplicitParkPositionChoice(context.currentMessage, input.position)
         ) {
           return {
             selected: false as const,
@@ -141,7 +166,19 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
           };
         }
 
-        const result = executeSelectPark(input, state.currentResults);
+        const mentioned = findMentionedParks(context.currentMessage);
+        const namedChoice = isExplicitNamedParkChoice(context.currentMessage);
+        if (input.position === undefined && !namedChoice) {
+          return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
+        }
+        const explicitNameSelection = input.position === undefined
+          && namedChoice
+          && mentioned.length === 1
+          && (!input.parkName || (findMentionedParks(input.parkName).length === 1
+            && findMentionedParks(input.parkName)[0].id === mentioned[0].id));
+        const result = explicitNameSelection
+          ? { selected: true as const, park: { id: mentioned[0].id, slug: mentioned[0].slug, name: mentioned[0].name } }
+          : executeSelectPark(input, state.currentResults);
 
         if (result.selected) {
           if (

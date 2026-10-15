@@ -1,7 +1,7 @@
 // ./lib/chat-v2/application/displayed-park-results.ts
 
 import type { ParkReference } from "@/lib/chat/shared/contracts";
-import type { AssistantV2ConversationState } from "@/lib/chat-v2/state/conversation-state";
+import { setInformationParks, type AssistantV2ConversationState } from "@/lib/chat-v2/state/conversation-state";
 
 const LIST_TOOLS = new Set(["recommendParks", "searchParks", "findNearbyParks", "compareParks"]);
 
@@ -58,9 +58,14 @@ export function reconcileDisplayedParkResults(
   state: AssistantV2ConversationState,
   finalMessage: string,
   toolNames: string[],
+  toolInputs: unknown[] = [],
 ): void {
-  const lastListTool = [...toolNames].reverse().find((name) => LIST_TOOLS.has(name));
+  const lastListIndex = toolNames.findLastIndex((name) => LIST_TOOLS.has(name));
+  const lastListTool = toolNames[lastListIndex];
   if (!lastListTool) return;
+  const input = toolInputs[lastListIndex];
+  if (lastListTool === "searchParks" && input && typeof input === "object"
+    && "operation" in input && input.operation === "COUNT") return;
 
   const candidates = lastListTool === "compareParks"
     ? state.lastComparedParks
@@ -70,4 +75,7 @@ export function reconcileDisplayedParkResults(
   // Keep candidates for explicit name selection, but never trust their raw order.
   state.currentResults = (displayed ?? candidates).map((park) => ({ ...park }));
   state.currentResultsOrderVerified = Boolean(displayed);
+  if (displayed && toolNames[toolNames.length - 1] === lastListTool) {
+    setInformationParks(state, displayed.slice(0, 2));
+  }
 }

@@ -5,8 +5,10 @@ import { createAssistantV2Tools } from "@/lib/chat-v2/tools";
 import { executeGetParkWeather } from "@/lib/chat-v2/tools/get-park-weather";
 import { createAssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
 import { OpenMeteoForecastNotAvailableYetError } from "@/lib/integrations/open-meteo/open-meteo-service";
+import { getParkCatalog } from "@/lib/chat/core/park-catalog";
 
 const mocks = vi.hoisted(() => ({ readPark: vi.fn(), fetchForecast: vi.fn() }));
+const nearbySearch = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/services/park-service", async () => ({
   ...await vi.importActual<typeof import("@/lib/services/park-service")>("@/lib/services/park-service"),
   getParkDetail: mocks.readPark,
@@ -14,6 +16,10 @@ vi.mock("@/lib/services/park-service", async () => ({
 vi.mock("@/lib/integrations/open-meteo/open-meteo-service", async () => ({
   ...await vi.importActual<typeof import("@/lib/integrations/open-meteo/open-meteo-service")>("@/lib/integrations/open-meteo/open-meteo-service"),
   fetchOpenMeteoWeatherSnapshot: mocks.fetchForecast,
+}));
+vi.mock("@/lib/services/nearby-places-service", async () => ({
+  ...await vi.importActual<typeof import("@/lib/services/nearby-places-service")>("@/lib/services/nearby-places-service"),
+  searchNearbyPlacesForPark: nearbySearch,
 }));
 
 const options = { toolCallId: "weather", messages: [], context: {} };
@@ -48,6 +54,8 @@ describe("getParkWeather tool", () => {
     vi.setSystemTime(new Date("2026-06-10T00:00:00.000Z"));
     mocks.readPark.mockResolvedValue(park);
     mocks.fetchForecast.mockResolvedValue(forecast);
+    nearbySearch.mockResolvedValue({ status: "EMPTY", places: [],
+      meta: { categories: ["accommodation"], radiusMeters: 3000, source: "GEOAPIFY_PLACES" } });
   });
 
   afterEach(() => vi.useRealTimers());
@@ -69,7 +77,9 @@ describe("getParkWeather tool", () => {
       latitude: park.latitude, longitude: park.longitude, timezone: "Asia/Bangkok",
       signal: expect.any(AbortSignal),
     }));
-    expect(state).toEqual(before);
+    expect(state.selectedPark).toEqual(before.selectedPark);
+    expect(state.draftTrip).toEqual(before.draftTrip);
+    expect(state.informationParks?.[0].slug).toBe("lan-sang");
   });
 
   it("uses an explicitly named park instead of the previous Selected Park", async () => {
@@ -79,7 +89,90 @@ describe("getParkWeather tool", () => {
     const result = await toolFor("ดอยอินทนนท์พรุ่งนี้ฝนตกไหม", state).execute!({}, options);
     expect(result).toMatchObject({ status: "OK", park: { slug: "doi-inthanon" } });
     expect(mocks.readPark).toHaveBeenCalledWith("doi-inthanon");
-    expect(state).toEqual(before);
+    expect(state.selectedPark).toEqual(before.selectedPark);
+    expect(state.draftTrip).toEqual(before.draftTrip);
+    expect(state.informationParks?.[0].slug).toBe("doi-inthanon");
+  });
+
+  it("uses the last discussed park for a weather follow-up while preserving the draft", async () => {
+    mocks.readPark.mockResolvedValueOnce({ ...park, id: "db-doi", slug: "doi-inthanon", nameTh: "อุทยานแห่งชาติดอยอินทนนท์" });
+    const state = makeState();
+    state.informationParks = [{ id: "doi-inthanon", slug: "doi-inthanon", name: "อุทยานแห่งชาติดอยอินทนนท์" }];
+    state.draftTrip = { park: state.selectedPark!, durationDays: 1, companions: [], activities: [], days: [] };
+    const before = structuredClone(state.draftTrip);
+    expect(await toolFor("ที่นั่นพรุ่งนี้ฝนตกไหม", state).execute!({}, options))
+      .toMatchObject({ status: "OK", park: { slug: "doi-inthanon" } });
+    expect(state.selectedPark?.slug).toBe("lan-sang");
+    expect(state.draftTrip).toEqual(before);
+  });
+
+  it("uses the active selected park despite a previously displayed pair", async () => {
+    const state = makeState();
+    const doi = getParkCatalog().find((item) => item.slug === "doi-luang")!;
+    const khun = getParkCatalog().find((item) => item.slug === "khun-chae")!;
+    state.selectedPark = doi;
+    state.activePark = doi;
+    state.informationParks = [doi, khun];
+    state.currentResults = [doi, khun];
+    state.draftTrip = { park: doi, durationDays: 1, companions: [], activities: [], days: [] };
+    const draft = structuredClone(state.draftTrip);
+    mocks.readPark.mockResolvedValueOnce({ ...park, slug: "doi-luang", nameTh: doi.name });
+    expect(await toolFor("แล้วอากาศที่นั่นเป็นไงบ้าง", state).execute!({}, options))
+      .toMatchObject({ status: "OK", park: { slug: "doi-luang" } });
+    expect(state.selectedPark).toMatchObject({ slug: "doi-luang" });
+    expect(state.activePark?.slug).toBe("doi-luang");
+    expect(state.draftTrip).toEqual(draft);
+  });
+
+  it("keeps a weather clarification pending and treats a short park name as information only", async () => {
+    const state = makeState();
+    const doi = getParkCatalog().find((item) => item.slug === "doi-luang")!;
+    const khun = getParkCatalog().find((item) => item.slug === "khun-chae")!;
+    state.selectedPark = doi;
+    state.informationParks = [doi, khun];
+    state.activePark = undefined;
+    const ambiguous = await toolFor("ดอยหลวงกับขุนแจ พรุ่งนี้ที่ไหนอากาศเป็นไง", state).execute!({}, options);
+    expect(ambiguous).toMatchObject({ status: "AMBIGUOUS_PARK" });
+    expect(state.pendingClarification).toMatchObject({ intent: "WEATHER" });
+    expect(await createAssistantV2Tools(createAssistantV2TurnContext(state, "ขุนแจ"))
+      .selectPark.execute!({ parkName: "ขุนแจ" }, options))
+      .toMatchObject({ selected: false });
+    mocks.readPark.mockResolvedValueOnce({ ...park, slug: "khun-chae", nameTh: khun.name });
+    const answer = await toolFor("ขุนแจ", state).execute!({}, options);
+    expect(answer).toMatchObject({ status: "OK", park: { slug: "khun-chae" }, forecastDate: "2026-06-11" });
+    expect(state.selectedPark).toMatchObject({ slug: "doi-luang" });
+    expect(state.activePark).toMatchObject({ slug: "khun-chae" });
+    expect(state.pendingClarification).toBeUndefined();
+    expect(await createAssistantV2Tools(createAssistantV2TurnContext(state, "ที่พักล่ะ"))
+      .findNearbyPlaces.execute!({ categories: ["accommodation"], radiusMeters: 3000, limit: 10 }, options))
+      .toMatchObject({ status: "EMPTY", searchedPark: { slug: "khun-chae" } });
+  });
+
+  it("uses the selected park for Nearby, then follows explicitly discussed weather park", async () => {
+    const state = makeState();
+    const doi = getParkCatalog().find((item) => item.slug === "doi-luang")!;
+    const khun = getParkCatalog().find((item) => item.slug === "khun-chae")!;
+    state.selectedPark = doi;
+    state.activePark = doi;
+    state.informationParks = [doi, khun];
+    state.currentResults = [doi, khun];
+    state.draftTrip = { park: doi, durationDays: 1, companions: [], activities: [], days: [] };
+    const draft = structuredClone(state.draftTrip);
+    const tools = (message: string) => createAssistantV2Tools(createAssistantV2TurnContext(state, message));
+    expect(await tools("มีที่พักใกล้ ๆ ไหม").findNearbyPlaces.execute!(
+      { categories: ["accommodation"], radiusMeters: 3000, limit: 10 }, options))
+      .toMatchObject({ status: "EMPTY", searchedPark: { slug: "doi-luang" } });
+    expect(nearbySearch).toHaveBeenLastCalledWith("doi-luang", expect.anything(), {}, undefined);
+    mocks.readPark.mockResolvedValueOnce({ ...park, slug: "khun-chae", nameTh: khun.name });
+    expect(await tools("ขุนแจพรุ่งนี้อากาศเป็นไง").getParkWeather.execute!({}, options))
+      .toMatchObject({ status: "OK", park: { slug: "khun-chae" } });
+    expect(await tools("ที่พักแถวนั้นล่ะ").findNearbyPlaces.execute!(
+      { categories: ["accommodation"], radiusMeters: 3000, limit: 10 }, options))
+      .toMatchObject({ status: "EMPTY", searchedPark: { slug: "khun-chae" } });
+    expect(nearbySearch).toHaveBeenLastCalledWith("khun-chae", expect.anything(), {}, undefined);
+    expect(state.selectedPark?.slug).toBe("doi-luang");
+    expect(state.activePark?.slug).toBe("khun-chae");
+    expect(state.draftTrip).toEqual(draft);
   });
 
   it("asks only for a missing park or a date that the user left unclear", async () => {
