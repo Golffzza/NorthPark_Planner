@@ -118,7 +118,7 @@ describe("getParkWeather tool", () => {
     mocks.readPark.mockResolvedValueOnce({ ...park, slug: first.slug, nameTh: first.name });
     const answer = await toolFor("ที่แรกฝนเยอะไหม", state).execute!({}, options);
     expect(answer).toMatchObject({ status: "OK", park: { slug: "chae-son" } });
-    expect(state.activePark?.slug).toBe("chae-son");
+    expect(state.informationParks?.map((item) => item.slug)).toEqual(["chae-son"]);
     expect(state.selectedPark).toEqual(selectedBefore);
   });
 
