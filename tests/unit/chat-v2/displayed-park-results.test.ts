@@ -40,6 +40,16 @@ function makeState(): AssistantV2ConversationState {
 const options = { toolCallId: "test-call", messages: [], context: {} };
 
 describe("displayed park order", () => {
+  it("retains all displayed parks as ambiguous information subjects, not only the first two", () => {
+    const state = makeState();
+    reconcileDisplayedParkResults(state,
+      parks.map((park, index) => `${index + 1}. ${park.name}`).join("\n"),
+      ["recommendParks"]);
+    expect(state.informationParks?.map((park) => park.slug)).toEqual(parks.map((park) => park.slug));
+    expect(state.activePark).toBeUndefined();
+    expect(state.selectedPark?.slug).toBe(parks[0].slug);
+  });
+
   it("keeps the verified displayed order after a count-only search", () => {
     const state = makeState();
     const before = state.currentResults.map((park) => park.slug);
