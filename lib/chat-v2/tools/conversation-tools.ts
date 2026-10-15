@@ -444,26 +444,21 @@ export function createConversationAwareAssistantV2Tools(
         if (asksForHistoricalWeather(context.currentMessage)) {
           return { status: "HISTORICAL_SNAPSHOT_UNAVAILABLE" as const };
         }
-        const mentioned = findMentionedParks(context.currentMessage);
-        if (mentioned.length > 1) {
-          setInformationParks(state, mentioned.map(toReference));
+        // Weather and information/Nearby tools resolve the same displayed
+        // position, explicit name and active information subject.
+        const resolved = resolveParkNameFromState(state, {}, context.currentMessage);
+        if ("status" in resolved) {
           state.pendingClarification = { intent: "WEATHER", question: context.currentMessage,
             ...(input.forecastDate ? { forecastDate: input.forecastDate } : {}) };
-          return { status: "AMBIGUOUS_PARK" as const };
+          return { status: resolved.reason === "NO_PARK_CONTEXT" ? "PARK_REQUIRED" as const : "AMBIGUOUS_PARK" as const };
         }
-        const discussed = state.informationParks;
-        const park = mentioned[0] ?? state.activePark
-          ?? (discussed?.length === 1 ? discussed[0] : !discussed?.length ? state.selectedPark : undefined);
-        if (!mentioned.length && !state.activePark && discussed && discussed.length > 1) {
+        const parkResolution = resolveSinglePark(resolved.parkName);
+        if (!parkResolution.found) {
           state.pendingClarification = { intent: "WEATHER", question: context.currentMessage,
             ...(input.forecastDate ? { forecastDate: input.forecastDate } : {}) };
-          return { status: "AMBIGUOUS_PARK" as const };
+          return { status: parkResolution.ambiguous ? "AMBIGUOUS_PARK" as const : "PARK_REQUIRED" as const };
         }
-        if (!park) {
-          state.pendingClarification = { intent: "WEATHER", question: context.currentMessage,
-            ...(input.forecastDate ? { forecastDate: input.forecastDate } : {}) };
-          return { status: "PARK_REQUIRED" as const };
-        }
+        const park = parkResolution.park;
         const pending = state.pendingClarification?.intent === "WEATHER" ? state.pendingClarification : undefined;
         state.pendingClarification = undefined;
         setInformationParks(state, [toReference(park)]);
