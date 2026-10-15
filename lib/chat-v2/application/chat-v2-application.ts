@@ -474,7 +474,7 @@ export class ChatV2Application {
             }
             const stepToolResults = steps.flatMap((step) => step.toolResults)
               .map((toolResult) => ({ toolName: toolResult.toolName, output: toolResult.output }));
-            const finalMessage = sanitizeAssistantV2Text(finalizeTripPlanAnswer(finalizeWeatherClarificationAnswer(
+            const finalMessage = sanitizeAssistantV2Text(finalizeParkSelectionAnswer(finalizeTripPlanAnswer(finalizeWeatherClarificationAnswer(
               finalizeNearbyFollowupAnswer(text, stepToolResults, message), stepToolResults), stepToolResults), stepToolResults, state,
             ));
 
