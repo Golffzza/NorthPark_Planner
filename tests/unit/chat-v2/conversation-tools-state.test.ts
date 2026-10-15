@@ -264,6 +264,24 @@ describe("Assistant V2 conversation tools state", () => {
     expect(state.selectedPark?.slug).toBe(suthep.slug);
   });
 
+  it("selects a single recommended park even when activePark is unset", async () => {
+    const state = makeState();
+    const doi = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
+    const huai = getParkCatalog().find((park) => park.slug === "huai-nam-dang")!;
+    state.currentResults = [doi, huai];
+    state.currentResultsOrderVerified = true;
+    state.informationParks = [doi, huai];
+    state.activePark = undefined;
+    state.recentMessages = [
+      { role: "assistant", content: `ถ้าให้เลือกเพียงแห่งเดียว ผมขอแนะนำ ${doi.name} ครับ` },
+    ];
+    const result = await toolsFor(state, "เอาที่แนะนำเมื่อกี้แหละ")
+      .selectPark.execute!({ position: 2, parkName: huai.name }, options);
+    expect(result).toMatchObject({ selected: true, park: { slug: "doi-inthanon" } });
+    expect(state.selectedPark?.slug).toBe("doi-inthanon");
+    expect(state.informationParks?.map((park) => park.slug)).toEqual(["doi-inthanon"]);
+  });
+
   it("refuses a contextual choice when the recent answer lists multiple parks", async () => {
     const state = makeState();
     const doi = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
