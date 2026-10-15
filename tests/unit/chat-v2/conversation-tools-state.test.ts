@@ -491,6 +491,7 @@ describe("Assistant V2 conversation tools state", () => {
     state.currentResults = getParkCatalog().filter((park) =>
       ["doi-inthanon", "doi-suthep-pui"].includes(park.slug)
     );
+    state.currentResultsOrderVerified = true;
     state.draftTrip = {
       park: state.currentResults[0],
       durationDays: 1,
