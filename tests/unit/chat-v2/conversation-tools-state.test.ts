@@ -219,6 +219,33 @@ describe("Assistant V2 conversation tools state", () => {
     expect(state.selectedPark?.slug).toBe("chae-son");
   });
 
+  it("switches to the verified second park without modifying an existing draft", async () => {
+    const state = makeState();
+    state.currentResults = ["chae-son", "doi-khun-tan", "doi-chong"].map((slug) =>
+      getParkCatalog().find((park) => park.slug === slug)!);
+    state.currentResultsOrderVerified = true;
+    state.selectedPark = state.currentResults[0];
+    state.draftTrip = { park: state.currentResults[0], durationDays: 1, companions: [], activities: [], days: [] };
+
+    const result = await toolsFor(state, "เปลี่ยนอันที่สองได้ไหม")
+      .selectPark.execute!({ position: 2 }, options);
+    expect(result).toMatchObject({ selected: true, park: { slug: "doi-khun-tan" } });
+    expect(state.selectedPark?.slug).toBe("doi-khun-tan");
+    expect(state.informationParks?.map((park) => park.slug)).toEqual(["doi-khun-tan"]);
+    expect(state.draftTrip?.park.slug).toBe("chae-son");
+  });
+
+  it("does not select the second park for an information-only request", async () => {
+    const state = makeState();
+    state.currentResults = ["chae-son", "doi-khun-tan"].map((slug) =>
+      getParkCatalog().find((park) => park.slug === slug)!);
+    state.currentResultsOrderVerified = true;
+    const result = await toolsFor(state, "อันที่สองมีอะไรน่าสนใจ")
+      .selectPark.execute!({ position: 2 }, options);
+    expect(result).toMatchObject({ selected: false });
+    expect(state.selectedPark).toBeUndefined();
+  });
+
   it("does not select a park from a negated choice", async () => {
     const state = makeState();
     const result = await toolsFor(state, "ไม่เลือกแจ้ซ้อน")
