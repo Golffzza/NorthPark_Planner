@@ -12,6 +12,7 @@ import {
   sanitizeAssistantV2Text,
 } from "@/lib/chat-v2/application/chat-v2-application";
 import { finalizeWeatherClarificationAnswer } from "@/lib/chat-v2/application/weather-answer-guard";
+import { finalizeTripPlanAnswer } from "@/lib/chat-v2/application/trip-plan-answer-guard";
 import { AssistantV2ConversationExpiredError } from "@/lib/chat-v2/state/conversation-state";
 import { nearbyAttributionSource } from "@/lib/chat-v2/application/nearby-attribution";
 import {
@@ -142,11 +143,11 @@ export async function POST(request: Request) {
             toolName: toolResult.toolName, output: toolResult.output,
           })));
           const finalText = finished
-            ? sanitizeAssistantV2Text(finalizeWeatherClarificationAnswer(finalizeNearbyFollowupAnswer(
+            ? sanitizeAssistantV2Text(finalizeTripPlanAnswer(finalizeWeatherClarificationAnswer(finalizeNearbyFollowupAnswer(
                 await result.text,
                 stepToolResults,
                 parsed.data.message,
-              ), stepToolResults))
+              ), stepToolResults), stepToolResults))
             : "";
           if (finalText) {
             const nearbySource = nearbyAttributionSource(stepToolResults);
