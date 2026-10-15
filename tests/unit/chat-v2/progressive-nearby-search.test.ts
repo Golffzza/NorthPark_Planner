@@ -38,6 +38,8 @@ describe("progressive nearby search", () => {
     expect(search.mock.calls.map((call) => call[1].categories)).toEqual([
       ["food", "accommodation"], ["accommodation"], ["accommodation"],
     ]);
+    expect(output).toMatchObject({ status: "OK", places: expect.any(Array) });
+    if (!("meta" in output && "places" in output)) throw new Error("missing result");
     expect(output.places).toHaveLength(6);
     expect(output.places.map((item) => item.osmId)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(output.meta?.radiusMeters).toBe(20000);
