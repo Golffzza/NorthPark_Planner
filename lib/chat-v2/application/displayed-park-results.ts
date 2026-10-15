@@ -76,6 +76,6 @@ export function reconcileDisplayedParkResults(
   state.currentResults = (displayed ?? candidates).map((park) => ({ ...park }));
   state.currentResultsOrderVerified = Boolean(displayed);
   if (displayed && toolNames[toolNames.length - 1] === lastListTool) {
-    setInformationParks(state, displayed.slice(0, 2));
+    setInformationParks(state, displayed);
   }
 }
