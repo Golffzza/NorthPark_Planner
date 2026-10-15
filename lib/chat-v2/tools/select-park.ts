@@ -134,6 +134,24 @@ export function isExplicitNamedParkChoice(message: string): boolean {
       && /^(?:(?:อะ|ครับ|ค่ะ|นะ|เลย)*)(?:$|(?:แล้ว|และ|มี|ช่วย|ขอ|อยาก|ส่วน|พร้อม))/.test(normalizedMessage.slice(`${command}${name}`.length))));
 }
 
+/**
+ * A contextual choice is safe only when the latest assistant answer identifies
+ * exactly one park and it matches the current active information subject.
+ * Never guess from a ranked multi-park recommendation.
+ */
+export function resolveContextualParkChoice(
+  message: string,
+  state: AssistantV2TurnContext["state"],
+): ParkReference | undefined {
+  const normalized = normalize(message);
+  if (!/^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|เปลี่ยน(?:ไป|เป็น)?)(?:ที่แนะนำ|อันที่แนะนำ|แห่งที่แนะนำ|ที่บอก|อันที่บอก)(?:เมื่อกี้|ก่อนหน้า|ไปเมื่อกี้)(?:แหละ|เลย|นะ|ครับ|ค่ะ|อะ|ได้ไหม)*$/.test(normalized)) return undefined;
+  const latestAssistant = [...state.recentMessages].reverse().find((item) => item.role === "assistant");
+  if (!latestAssistant || !state.activePark) return undefined;
+  const mentioned = findMentionedParks(latestAssistant.content);
+  if (mentioned.length !== 1 || mentioned[0].slug !== state.activePark.slug) return undefined;
+  return { ...state.activePark };
+}
+
 export function createSelectParkTool(context: AssistantV2TurnContext) {
   return tool({
     description:
@@ -171,7 +189,10 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
 
         const mentioned = findMentionedParks(context.currentMessage);
         const namedChoice = isExplicitNamedParkChoice(context.currentMessage);
-        if (requestedPosition === undefined && !namedChoice) {
+        const contextualChoice = requestedPosition === undefined && !namedChoice
+          ? resolveContextualParkChoice(context.currentMessage, state)
+          : undefined;
+        if (requestedPosition === undefined && !namedChoice && !contextualChoice) {
           return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
         }
         const explicitNameSelection = requestedPosition === undefined
@@ -179,13 +200,15 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
           && mentioned.length === 1
           && (!input.parkName || (findMentionedParks(input.parkName).length === 1
             && findMentionedParks(input.parkName)[0].id === mentioned[0].id));
-        const result = explicitNameSelection
-          ? { selected: true as const, park: { id: mentioned[0].id, slug: mentioned[0].slug, name: mentioned[0].name } }
-          : executeSelectPark({ ...input, position: requestedPosition }, state.currentResults);
+        const result = contextualChoice
+          ? { selected: true as const, park: contextualChoice }
+          : explicitNameSelection
+            ? { selected: true as const, park: { id: mentioned[0].id, slug: mentioned[0].slug, name: mentioned[0].name } }
+            : executeSelectPark({ ...input, position: requestedPosition }, state.currentResults);
 
         if (result.selected) {
           if (
-            requestedPosition === undefined &&
+            requestedPosition === undefined && !contextualChoice &&
             !findMentionedParks(context.currentMessage).some(
               (park) => park.id === result.park.id,
             )
