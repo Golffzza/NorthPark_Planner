@@ -75,6 +75,30 @@ describe("displayed park order", () => {
     expect(state.selectedPark?.slug).toBe("doi-suthep-pui");
   });
 
+  it("selects the last displayed park when user says ไปอันสุดท้าย, without changing the draft", async () => {
+    const state = makeState();
+    reconcileDisplayedParkResults(
+      state,
+      `1. ${parks[1].name}\n2. ${parks[0].name}\n3. ${parks[2].name}`,
+      ["recommendParks"],
+    );
+    const result = await createConversationAwareAssistantV2Tools(
+      createAssistantV2TurnContext(state, "ไปอันสุดท้ายเลย แล้วมีที่พักใกล้ ๆ ไหม"),
+    ).selectPark.execute!({ position: 3 }, options);
+    expect(result).toMatchObject({ selected: true, park: { slug: "doi-suthep-pui" } });
+    expect(state.activePark?.slug).toBe("doi-suthep-pui");
+    expect(state.draftTrip?.park.slug).toBe("khun-khan");
+  });
+
+  it("rejects last-place selection when displayed order is unverified", async () => {
+    const state = makeState();
+    state.currentResultsOrderVerified = false;
+    const result = await createConversationAwareAssistantV2Tools(
+      createAssistantV2TurnContext(state, "ไปอันสุดท้าย"),
+    ).selectPark.execute!({ position: 3 }, options);
+    expect(result).toMatchObject({ selected: false, reason: "AMBIGUOUS" });
+  });
+
   it("uses displayed order when Gemini reorders results", () => {
     const state = makeState();
     reconcileDisplayedParkResults(
