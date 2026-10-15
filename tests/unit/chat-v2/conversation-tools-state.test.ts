@@ -158,7 +158,7 @@ describe("Assistant V2 conversation tools state", () => {
     const first = await toolsFor(state, "ที่แรกน่าสนใจ เล่าเพิ่มหน่อย")
       .getParkInfo.execute!({ position: 1, topic: "province" }, options);
     expect(first).toMatchObject({ found: true, park: { slug: "chae-son" } });
-    expect(state.activePark?.slug).toBe("chae-son");
+    expect(state.informationParks?.map((park) => park.slug)).toEqual(["chae-son"]);
     expect(state.selectedPark).toBeUndefined();
 
     const followup = await toolsFor(state, "แถวนั้นมีค่าเข้าไหม")
