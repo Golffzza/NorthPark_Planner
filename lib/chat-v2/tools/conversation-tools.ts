@@ -811,6 +811,17 @@ export function createConversationAwareAssistantV2Tools(
             };
           }
 
+          // A previous information question can change Active Park without changing
+          // the selected destination. Never silently create a trip for the old
+          // selected park when the two subjects disagree.
+          if (mentioned.length === 0 && state.selectedPark && state.activePark
+            && state.activePark.slug !== state.selectedPark.slug) {
+            return {
+              status: "NEEDS_CLARIFICATION" as const,
+              missing: ["parkName"] as const,
+              message: `ต้องการวางแผนที่${state.selectedPark.name} (อุทยานที่เลือกไว้) หรือ${state.activePark.name} (อุทยานที่เพิ่งพูดถึง) ครับ?`,
+            };
+          }
           if (mentioned.length === 0 && state.selectedPark && state.informationParks?.length
             && /(?:ที่นั่น|ที่นั้น|ที่นี่|อุทยานนั้น|อุทยานนี้|แถวนั้น|แถวนี้|แห่งนั้น)/.test(context.currentMessage)
             && (state.informationParks.length !== 1 || state.informationParks[0].slug !== state.selectedPark.slug)) {
