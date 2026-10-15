@@ -7,12 +7,12 @@ function place(id: number, category: NearbyCategory, meters: number): NearbyPlac
   return { id: String(id), osmType: "node", osmId: id, osmUrl: `https://www.openstreetmap.org/node/${id}`,
     name: `Place ${id}`, category, lat: 18, lng: 100, straightLineDistanceMeters: meters, source: "OPENSTREETMAP" };
 }
-function result(radiusMeters: number, categories: NearbyCategory[], places: NearbyPlace[]): NearbySearchResult {
-  return { status: places.length ? "OK" : "EMPTY", places, meta: {
+function result(radiusMeters: number, categories: NearbyCategory[], places: NearbyPlace[]) {
+  return { status: places.length ? "OK" as const : "EMPTY" as const, park: { id: "park", slug: "park", name: "Park" }, places, meta: {
     center: { lat: 18, lng: 100 }, radiusMeters, categories, limit: 20,
     searchScope: "AROUND_PARK_COORDINATE", distanceMethod: "STRAIGHT_LINE",
     source: "OPENSTREETMAP_OVERPASS", coverageNote: "OSM", cached: false,
-  } };
+  } satisfies NearbySearchResult["meta"] };
 }
 type Search = typeof searchNearbyPlacesForPark;
 
@@ -54,7 +54,7 @@ describe("progressive nearby search", () => {
   });
 
   it("does not confuse provider errors with empty results", async () => {
-    const search = vi.fn(async () => ({ status: "UPSTREAM_TIMEOUT" as const, places: [] }));
+    const search = vi.fn(async () => ({ status: "UPSTREAM_TIMEOUT" as const, park: { id: "park", slug: "park", name: "Park" }, places: [], meta: result(3000, ["food"], []).meta }));
     const output = await searchNearbyPlacesProgressivelyForPark("park", { categories: ["food"], radiusMeters: 3000, limit: 10 }, undefined, search as Search);
     expect(output.status).toBe("UPSTREAM_TIMEOUT");
     expect(search).toHaveBeenCalledTimes(1);
