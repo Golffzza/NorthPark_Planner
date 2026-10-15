@@ -144,7 +144,7 @@ export function resolveContextualParkChoice(
   state: AssistantV2TurnContext["state"],
 ): ParkReference | undefined {
   const normalized = normalize(message);
-  if (!/^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|เปลี่ยน(?:ไป|เป็น)?)(?:ที่แนะนำ|อันที่แนะนำ|แห่งที่แนะนำ|ที่บอก|อันที่บอก)(?:เมื่อกี้|ก่อนหน้า|ไปเมื่อกี้)(?:แหละ|เลย|นะ|ครับ|ค่ะ|อะ|ได้ไหม)*$/.test(normalized)) return undefined;
+  if (!/^(?:งั้น|ถ้างั้น)?(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|เปลี่ยน(?:ไป|เป็น)?)(?:ที่แนะนำ|อันที่แนะนำ|แห่งที่แนะนำ|ที่บอก|อันที่บอก)(?:เมื่อกี้|ก่อนหน้า|ไปเมื่อกี้)(?:แหละ|เลย|นะ|ครับ|ค่ะ|อะ|ได้ไหม)*$/.test(normalized)) return undefined;
   const latestAssistant = [...state.recentMessages].reverse().find((item) => item.role === "assistant");
   if (!latestAssistant) return undefined;
   const mentioned = findMentionedParks(latestAssistant.content);
@@ -165,6 +165,22 @@ export function resolveContextualParkChoice(
       const normalizedLine = normalize(line);
       return normalizedLine.includes(name) || normalizedLine.includes(shortName);
     }));
+  // Thai comparison answers often phrase the single recommendation as:
+  // "หากให้เลือก...ระหว่าง 2 แห่งนี้ [park] จะมีความโดดเด่น..."
+  // Accept only an explicit one-choice framing and exactly one named park
+  // before the next contrast ("ในขณะที่").
+  if (recommendations.length === 0) {
+    const firstContrast = latestAssistant.content.split(/ในขณะที่|ส่วนอีกแห่ง|แต่อีกแห่ง/)[0];
+    if (/หากให้เลือก|ถ้าให้เลือก|ถ้าต้องเลือก/.test(firstContrast)) {
+      const afterChoice = firstContrast.split(/ระหว่าง(?:\\s|\\d|สอง|ทั้ง|[ก-๙])*แห่งนี้/).at(-1) ?? "";
+      const choiceNames = mentioned.filter((park) => {
+        const full = normalize(park.name);
+        const short = full.replace(/^อุทยานแห่งชาติ/, "");
+        return normalize(afterChoice).includes(full) || normalize(afterChoice).includes(short);
+      });
+      if (choiceNames.length === 1) recommendations.push(choiceNames[0]);
+    }
+  }
   if (recommendations.length !== 1) return undefined;
   const park = recommendations[0];
   return { id: park.id, slug: park.slug, name: park.name };
