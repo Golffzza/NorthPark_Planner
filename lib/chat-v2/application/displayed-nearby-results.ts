@@ -168,6 +168,13 @@ export function finalizeNearbyFollowupAnswer(finalMessage: string, toolResults: 
       ? `ในรัศมี ${radius!.toLocaleString("en-US")} เมตร` : "ในรัศมีที่ค้น";
     return `ยังไม่พบข้อมูล${subject}จากผลค้นหา${scope} รอบจุดอ้างอิงของ${parkName ?? "อุทยาน"} ผลค้นหานี้ยังยืนยันสภาพพื้นที่ทั้งหมดไม่ได้ครับ`;
   }
+  if (output?.status === "OK" && !output.referenceResolution) {
+    const places = (output.places ?? []).filter(isPlace);
+    const distant = places.filter((place) => place.straightLineDistanceMeters > 5000);
+    if (distant.length) {
+      return `${finalMessage}\n\nหมายเหตุ: พบสถานที่บางแห่งห่างจากจุดอ้างอิงอุทยานเกิน 5 กม. (ระยะเส้นตรง ไม่ใช่ระยะขับรถ) จึงควรตรวจสอบเส้นทางและเผื่อเวลาเดินทางก่อนเลือกครับ`;
+    }
+  }
   if (output?.status !== "OK" || !["DISPLAYED_RESULT", "EXPLICIT_NAME"].includes(output.referenceResolution ?? "")) return finalMessage;
   const place = output.places?.length === 1 && isPlace(output.places[0]) ? output.places[0] : undefined;
   if (!place) return "ขอชื่อร้านหรือสถานที่ที่ต้องการทราบระยะทางก่อนครับ";
