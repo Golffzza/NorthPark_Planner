@@ -48,6 +48,8 @@ export type AssistantV2ConversationState = {
   currentResults: ParkReference[];
   currentResultsOrderVerified?: boolean;
   selectedPark?: ParkReference;
+  /** Explicit single recommendation from the last assistant answer; not a user selection. */
+  recommendedPark?: ParkReference;
   /** Current subject for information tools; independent of the trip selection and displayed list. */
   activePark?: ParkReference;
   /** Last park(s) discussed for read-only questions; multiple parks require clarification. */
@@ -139,6 +141,7 @@ function cloneState(
     ...state,
     userConstraints: structuredClone(state.userConstraints),
     currentResults: state.currentResults.map(cloneParkReference),
+    ...(state.recommendedPark ? { recommendedPark: cloneParkReference(state.recommendedPark) } : {}),
     ...(state.selectedPark
       ? {
           selectedPark: cloneParkReference(state.selectedPark),
