@@ -25,7 +25,7 @@ import {
 
 import { createAssistantV2Tools } from "@/lib/chat-v2/tools";
 import { createAssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
-import { isExplicitNamedParkChoice } from "@/lib/chat-v2/tools/select-park";
+import { isExplicitNamedParkChoice, resolveContextualParkChoice } from "@/lib/chat-v2/tools/select-park";
 import { finalizeWeatherClarificationAnswer } from "@/lib/chat-v2/application/weather-answer-guard";
 import { finalizeTripPlanAnswer } from "@/lib/chat-v2/application/trip-plan-answer-guard";
 import { finalizeParkSelectionAnswer } from "@/lib/chat-v2/application/park-selection-answer-guard";
@@ -69,7 +69,8 @@ export function prepareAssistantV2Step({
     && isBareParkNameAnswer(message)) {
     return { toolChoice: { type: "tool" as const, toolName: "getParkWeather" as const } };
   }
-  if (stepNumber === 0 && isExplicitNamedParkChoice(message)) {
+  if (stepNumber === 0 && (isExplicitNamedParkChoice(message)
+    || (state && resolveContextualParkChoice(message, state)))) {
     return { toolChoice: { type: "tool" as const, toolName: "selectPark" as const } };
   }
   if (stepNumber === 0 && requestsParkRecommendations(message)) {
