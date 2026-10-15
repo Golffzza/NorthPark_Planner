@@ -554,6 +554,27 @@ describe("Assistant V2 conversation tools state", () => {
     expect(state.draftTrip?.park.id).toBe(state.currentResults[0].id);
   });
 
+  it("does not overwrite an unsaved draft after switching the selected park", async () => {
+    const state = makeState();
+    const oldPark = getParkCatalog().find((park) => park.slug === "chae-son")!;
+    const newPark = getParkCatalog().find((park) => park.slug === "doi-khun-tan")!;
+    state.currentResults = [oldPark, newPark];
+    state.currentResultsOrderVerified = true;
+    state.selectedPark = oldPark;
+    state.draftTrip = { park: oldPark, durationDays: 1, companions: [], activities: [], days: [] };
+    const before = structuredClone(state.draftTrip);
+
+    const selected = await toolsFor(state, "เปลี่ยนอันที่สองได้ไหม")
+      .selectPark.execute!({ position: 2 }, options);
+    expect(selected).toMatchObject({ selected: true, park: { slug: "doi-khun-tan" } });
+
+    const planned = await toolsFor(state, "ช่วยจัดทริป 1 วัน")
+      .planTrip.execute!({ durationDays: 1 }, options);
+    expect(planned).toMatchObject({ status: "DRAFT_EXISTS", draftTrip: { park: { slug: "chae-son" } } });
+    expect(state.selectedPark?.slug).toBe("doi-khun-tan");
+    expect(state.draftTrip).toEqual(before);
+  });
+
   it("does not let a model select a result the user did not choose", async () => {
     const state = makeState();
     state.currentResults = [getParkCatalog().find((park) => park.slug === "doi-inthanon")!];
