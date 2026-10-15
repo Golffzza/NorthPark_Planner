@@ -116,7 +116,8 @@ export function hasExplicitPositionReference(
 
 export function isExplicitParkPositionChoice(message: string, position: number): boolean {
   const normalized = message.trim().toLocaleLowerCase("th-TH").replace(/\s+/g, "");
-  if (/ห่างจากอุทยาน/.test(normalized)) return false;
+  if (/(?:ไม่|อย่า|ยังไม่)(?:เลือก|เอา|ไป)/.test(normalized)) return false;
+  // A choice may be followed by another request in the same turn.
   const choice = normalized.match(/^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|ตัดสินใจไป)(?:อัน|ตัว|ข้อ|อันดับ|ลำดับ|ที่)(?:ที่)?(?:แรก|หนึ่ง|สอง|สาม|สี่|ห้า|\d+)/);
   return Boolean(choice && hasExplicitPositionReference(choice[0], position));
 }
@@ -146,7 +147,9 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
         if (findMentionedParks(context.currentMessage).length > 1) {
           return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
         }
-        if (input.position !== undefined && state.currentResultsOrderVerified === false) {
+        const lastChoice = /^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|ตัดสินใจไป)(?:อัน|ตัว|ข้อ|อันดับ|ลำดับ|ที่)?(?:ที่)?(?:สุดท้าย|ท้ายสุด)/.test(normalize(context.currentMessage));
+        const requestedPosition = lastChoice ? state.currentResults.length : input.position;
+        if (requestedPosition !== undefined && state.currentResultsOrderVerified !== true) {
           return {
             selected: false as const,
             reason: "AMBIGUOUS" as const,
@@ -154,8 +157,8 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
           };
         }
         if (
-          input.position !== undefined &&
-          !isExplicitParkPositionChoice(context.currentMessage, input.position)
+          requestedPosition !== undefined &&
+          !lastChoice && !isExplicitParkPositionChoice(context.currentMessage, requestedPosition)
         ) {
           return {
             selected: false as const,
@@ -168,21 +171,21 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
 
         const mentioned = findMentionedParks(context.currentMessage);
         const namedChoice = isExplicitNamedParkChoice(context.currentMessage);
-        if (input.position === undefined && !namedChoice) {
+        if (requestedPosition === undefined && !namedChoice) {
           return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
         }
-        const explicitNameSelection = input.position === undefined
+        const explicitNameSelection = requestedPosition === undefined
           && namedChoice
           && mentioned.length === 1
           && (!input.parkName || (findMentionedParks(input.parkName).length === 1
             && findMentionedParks(input.parkName)[0].id === mentioned[0].id));
         const result = explicitNameSelection
           ? { selected: true as const, park: { id: mentioned[0].id, slug: mentioned[0].slug, name: mentioned[0].name } }
-          : executeSelectPark(input, state.currentResults);
+          : executeSelectPark({ ...input, position: requestedPosition }, state.currentResults);
 
         if (result.selected) {
           if (
-            input.position === undefined &&
+            requestedPosition === undefined &&
             !findMentionedParks(context.currentMessage).some(
               (park) => park.id === result.park.id,
             )
