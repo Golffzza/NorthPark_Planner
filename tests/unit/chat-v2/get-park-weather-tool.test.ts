@@ -106,6 +106,22 @@ describe("getParkWeather tool", () => {
     expect(state.draftTrip).toEqual(before);
   });
 
+  it("resolves the verified first displayed park for Weather without changing selection", async () => {
+    const state = makeState();
+    const first = getParkCatalog().find((item) => item.slug === "chae-son")!;
+    const second = getParkCatalog().find((item) => item.slug === "doi-khun-tan")!;
+    state.currentResults = [first, second];
+    state.currentResultsOrderVerified = true;
+    state.informationParks = [first, second];
+    state.activePark = undefined;
+    const selectedBefore = structuredClone(state.selectedPark);
+    mocks.readPark.mockResolvedValueOnce({ ...park, slug: first.slug, nameTh: first.name });
+    const answer = await toolFor("ที่แรกฝนเยอะไหม", state).execute!({}, options);
+    expect(answer).toMatchObject({ status: "OK", park: { slug: "chae-son" } });
+    expect(state.activePark?.slug).toBe("chae-son");
+    expect(state.selectedPark).toEqual(selectedBefore);
+  });
+
   it("uses the active selected park despite a previously displayed pair", async () => {
     const state = makeState();
     const doi = getParkCatalog().find((item) => item.slug === "doi-luang")!;
