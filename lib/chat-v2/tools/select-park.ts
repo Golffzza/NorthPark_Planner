@@ -148,8 +148,25 @@ export function resolveContextualParkChoice(
   const latestAssistant = [...state.recentMessages].reverse().find((item) => item.role === "assistant");
   if (!latestAssistant) return undefined;
   const mentioned = findMentionedParks(latestAssistant.content);
-  if (mentioned.length !== 1) return undefined;
-  const park = mentioned[0];
+  if (mentioned.length === 0) return undefined;
+  if (mentioned.length === 1) {
+    const park = mentioned[0];
+    return { id: park.id, slug: park.slug, name: park.name };
+  }
+
+  // A comparison may mention several parks while explicitly recommending
+  // exactly one. Require a clear recommendation sentence, not mere ordering.
+  const recommendationLines = latestAssistant.content.split(/[\\n.!?。！？]/)
+    .filter((line) => /(?:ขอแนะนำ|แนะนำให้เลือก|เหมาะที่สุด|ตัวเลือกที่ดีที่สุด)/.test(line));
+  const recommendations = mentioned.filter((park) =>
+    recommendationLines.some((line) => {
+      const name = normalize(park.name);
+      const shortName = name.replace(/^อุทยานแห่งชาติ/, "");
+      const normalizedLine = normalize(line);
+      return normalizedLine.includes(name) || normalizedLine.includes(shortName);
+    }));
+  if (recommendations.length !== 1) return undefined;
+  const park = recommendations[0];
   return { id: park.id, slug: park.slug, name: park.name };
 }
 
