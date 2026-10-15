@@ -23,7 +23,7 @@ export type NearbyCategory = z.infer<typeof nearbyCategorySchema>;
 
 export const nearbySearchSchema = z.object({
   categories: z.array(nearbyCategorySchema).min(1).max(5),
-  radiusMeters: z.number().int().min(500).max(5000).default(3000),
+  radiusMeters: z.number().int().min(500).max(20000).default(3000),
   limit: z.number().int().min(1).max(20).default(10),
 }).strict();
 export type NearbySearchOptions = z.input<typeof nearbySearchSchema>;
