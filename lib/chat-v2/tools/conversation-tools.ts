@@ -34,8 +34,8 @@ import {
 import { resolveSinglePark } from "@/lib/chat-v2/tools/park-resolution";
 import {
   nearbyCategorySchema,
-  searchNearbyPlacesForPark,
 } from "@/lib/services/nearby-places-service";
+import { searchNearbyPlacesProgressivelyForPark } from "@/lib/services/progressive-nearby-search";
 import {
   executePlanTrip,
   planTripInputSchema,
@@ -111,7 +111,7 @@ const statefulNearbyPlacesInputSchema = z.object({
   position: z.number().int().positive().optional(),
   placeName: z.string().trim().min(1).optional().describe("Exact nearby place name explicitly supplied by the user when asking about a particular place"),
   categories: z.array(nearbyCategorySchema).min(1).max(5),
-  radiusMeters: z.number().int().min(500).max(5000).default(3000),
+  radiusMeters: z.number().int().min(500).max(20000).default(3000),
   limit: z.number().int().min(1).max(20).default(10),
 });
 
@@ -745,10 +745,9 @@ export function createConversationAwareAssistantV2Tools(
         }
         try {
           const categories = nearbyCategoriesForQuestion(message, input.categories);
-          const result = await searchNearbyPlacesForPark(
+          const result = await searchNearbyPlacesProgressivelyForPark(
             park.park.slug,
             { categories, radiusMeters: input.radiusMeters ?? 3000, limit: input.limit ?? 10 },
-            {},
             context.signal,
           );
           if (input.placeName && result.status === "OK") {
@@ -764,7 +763,7 @@ export function createConversationAwareAssistantV2Tools(
             return {
               ...result,
               searchedPark: toReference(park.park),
-              interpretation: `ไม่พบรายการจาก OpenStreetMap ตามประเภทที่ค้นในรัศมี ${input.radiusMeters ?? 3000} เมตรรอบพิกัดอุทยาน ไม่ได้ยืนยันว่าไม่มีสถานที่จริง`,
+              interpretation: `ไม่พบรายการจาก OpenStreetMap ตามประเภทที่ค้นในรัศมี ${result.meta?.radiusMeters ?? input.radiusMeters ?? 3000} เมตรรอบพิกัดอุทยาน ไม่ได้ยืนยันว่าไม่มีสถานที่จริง`,
             };
           }
           if (result.status.startsWith("UPSTREAM_")) {
