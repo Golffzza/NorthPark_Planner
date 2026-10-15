@@ -339,7 +339,7 @@ export class ChatV2Application {
         const stepToolResults = result.steps.flatMap((step) => step.toolResults)
           .map((toolResult) => ({ toolName: toolResult.toolName, output: toolResult.output }));
         const finalMessage = sanitizeAssistantV2Text(finalizeParkSelectionAnswer(finalizeTripPlanAnswer(finalizeWeatherClarificationAnswer(
-          finalizeNearbyFollowupAnswer(result.text, stepToolResults, message), stepToolResults), stepToolResults, state,
+          finalizeNearbyFollowupAnswer(result.text, stepToolResults, message), stepToolResults), stepToolResults), stepToolResults, state,
         ));
 
         if (!finalMessage) {
@@ -475,7 +475,7 @@ export class ChatV2Application {
             const stepToolResults = steps.flatMap((step) => step.toolResults)
               .map((toolResult) => ({ toolName: toolResult.toolName, output: toolResult.output }));
             const finalMessage = sanitizeAssistantV2Text(finalizeTripPlanAnswer(finalizeWeatherClarificationAnswer(
-              finalizeNearbyFollowupAnswer(text, stepToolResults, message), stepToolResults), stepToolResults, state,
+              finalizeNearbyFollowupAnswer(text, stepToolResults, message), stepToolResults), stepToolResults), stepToolResults, state,
             ));
 
             if (!finalMessage) {
