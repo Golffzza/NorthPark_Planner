@@ -130,8 +130,9 @@ function nearbyCategoriesForQuestion(message: string, categories: z.infer<typeof
   const requested: z.infer<typeof nearbyCategorySchema>[] = [];
   if (/(?:ร้าน(?:อาหาร|กาแฟ)?|คาเฟ่)/.test(message)) requested.push("food");
   if (/(?:ที่พัก|โรงแรม)/.test(message)) requested.push("accommodation");
-  if (/ลานกางเต็นท์/.test(message)) requested.push("campsite");
-  if (/จุดท่องเที่ยว/.test(message)) requested.push("attraction");
+  if (/(?:ลานกางเต็นท์|ลานเต็นท์|ที่กางเต็นท์)/.test(message)) requested.push("campsite");
+  if (/(?:จุดท่องเที่ยว|ที่เที่ยว|สถานที่ท่องเที่ยว|จุดชมวิว)/.test(message)) requested.push("attraction");
+  if (/(?:ปั๊ม(?:น้ำมัน)?|สถานีบริการน้ำมัน|ร้านสะดวกซื้อ|เซเว่น)/.test(message)) requested.push("service");
   return requested.length ? requested : categories;
 }
 
@@ -314,6 +315,13 @@ function resolveParkNameFromState(
     return {
       parkName: mentioned[0].name,
     };
+  }
+
+  // Resolve the last park from the verified user-visible list, never an unseen tool ranking.
+  if (/(?:อัน|ตัว|ข้อ|อันดับ|ลำดับ|ที่)(?:สุดท้าย|ท้ายสุด)/.test(normalizeQuery(currentMessage))) {
+    if (state.currentResultsOrderVerified !== true) return referenceFailure(state, "AMBIGUOUS_REFERENCE");
+    const last = state.currentResults.at(-1);
+    return last ? { parkName: last.name } : referenceFailure(state, "NO_PARK_CONTEXT");
   }
 
   const mentionedPositions = Array.from(
