@@ -31,6 +31,7 @@ import { finalizeTripPlanAnswer } from "@/lib/chat-v2/application/trip-plan-answ
 import { finalizeParkSelectionAnswer } from "@/lib/chat-v2/application/park-selection-answer-guard";
 import { snapshotAssistantV2Context, traceAssistantV2Turn } from "@/lib/chat-v2/application/dev-turn-trace";
 import { reconcileDisplayedParkResults } from "@/lib/chat-v2/application/displayed-park-results";
+import { reconcileRecommendedPark } from "@/lib/chat-v2/application/recommendation-decision";
 import {
   finalizeNearbyFollowupAnswer,
   reconcileDisplayedNearbyResults,
@@ -378,6 +379,7 @@ export class ChatV2Application {
         reconcileDisplayedParkResults(state, finalMessage, toolNamesInOrder,
           toolCalls.map((toolCall) => toolCall.input));
         reconcileDisplayedNearbyResults(state, finalMessage, stepToolResults);
+            reconcileRecommendedPark(state, message, finalMessage);
         traceAssistantV2Turn("after", snapshotAssistantV2Context(state), stepToolResults);
 
         assistantV2ConversationStore.appendRecentTurn(
@@ -494,6 +496,7 @@ export class ChatV2Application {
             reconcileDisplayedParkResults(state, finalMessage,
               toolCalls.map((call) => call.toolName), toolCalls.map((call) => call.input));
             reconcileDisplayedNearbyResults(state, finalMessage, stepToolResults);
+            reconcileRecommendedPark(state, message, finalMessage);
             traceAssistantV2Turn("after", snapshotAssistantV2Context(state), stepToolResults);
 
             assistantV2ConversationStore.appendRecentTurn(
