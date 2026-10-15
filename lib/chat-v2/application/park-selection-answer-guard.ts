@@ -6,7 +6,7 @@ type ToolResult = { toolName: string; output: unknown };
 export function finalizeParkSelectionAnswer(
   text: string,
   results: ToolResult[],
-  state: AssistantV2ConversationState,
+  state?: AssistantV2ConversationState,
 ): string {
   const selections = results.filter((result) => result.toolName === "selectPark");
   if (!selections.length) return text;
@@ -22,9 +22,9 @@ export function finalizeParkSelectionAnswer(
   }
   const park = "park" in last ? last.park : undefined;
   if (!park || typeof park !== "object" || !("slug" in park)
-    || typeof park.slug !== "string" || state.selectedPark?.slug !== park.slug) {
+    || typeof park.slug !== "string" || (state && state.selectedPark?.slug !== park.slug)) {
     return "ยังยืนยันการเลือกอุทยานไม่ได้ครับ กรุณาลองเลือกอีกครั้ง";
   }
   // Prevent fabricated selection claims even if the model chose other wording.
-  return `เลือก${state.selectedPark.name}เรียบร้อยครับ`;
+  return `เลือก${state?.selectedPark?.name ?? ("name" in park && typeof park.name === "string" ? park.name : "อุทยานที่ระบุ")}เรียบร้อยครับ`;
 }
