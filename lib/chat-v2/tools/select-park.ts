@@ -131,7 +131,7 @@ export function isExplicitNamedParkChoice(message: string): boolean {
   return [normalize(mentioned[0].name),
     normalize(mentioned[0].name).replace(/^อุทยานแห่งชาติ/, "")].some((name) =>
     commands.some((command) => normalizedMessage.startsWith(`${command}${name}`)
-      && /^(?:อะ|ครับ|ค่ะ|นะ|เลย)?$/.test(normalizedMessage.slice(`${command}${name}`.length))));
+      && /^(?:(?:อะ|ครับ|ค่ะ|นะ|เลย)*)(?:$|(?:แล้ว|และ|มี|ช่วย|ขอ|อยาก|ส่วน|พร้อม))/.test(normalizedMessage.slice(`${command}${name}`.length))));
 }
 
 export function createSelectParkTool(context: AssistantV2TurnContext) {
