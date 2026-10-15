@@ -302,7 +302,6 @@ export class ChatV2Application {
       ownerId,
       async (state) => {
         const startedAt = performance.now();
-    traceAssistantV2Turn("before", snapshotAssistantV2Context(state));
         traceAssistantV2Turn("before", snapshotAssistantV2Context(state));
 
         if (state.pendingClarification && !isBareParkNameAnswer(message)) {
@@ -424,6 +423,7 @@ export class ChatV2Application {
 
     const state = turn.state;
     const startedAt = performance.now();
+    traceAssistantV2Turn("before", snapshotAssistantV2Context(state));
 
     let released = false;
 
