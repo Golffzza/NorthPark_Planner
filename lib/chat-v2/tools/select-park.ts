@@ -116,9 +116,9 @@ export function hasExplicitPositionReference(
 
 export function isExplicitParkPositionChoice(message: string, position: number): boolean {
   const normalized = message.trim().toLocaleLowerCase("th-TH").replace(/\s+/g, "");
-  if (/(?:ไม่|อย่า|ยังไม่)(?:เลือก|เอา|ไป)/.test(normalized)) return false;
+  if (/(?:ไม่|อย่า|ยังไม่)(?:เลือก|เอา|ไป|เปลี่ยน)/.test(normalized)) return false;
   // A choice may be followed by another request in the same turn.
-  const choice = normalized.match(/^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|ตัดสินใจไป)(?:อัน|ตัว|ข้อ|อันดับ|ลำดับ|ที่)(?:ที่)?(?:แรก|หนึ่ง|สอง|สาม|สี่|ห้า|\d+)/);
+  const choice = normalized.match(/^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|ตัดสินใจไป|เปลี่ยน(?:ไป|เป็น)?|ขอเปลี่ยน(?:ไป|เป็น)?)(?:อัน|ตัว|ข้อ|อันดับ|ลำดับ|ที่)(?:ที่)?(?:แรก|หนึ่ง|สอง|สาม|สี่|ห้า|\d+)/);
   return Boolean(choice && hasExplicitPositionReference(choice[0], position));
 }
 
@@ -127,7 +127,7 @@ export function isExplicitNamedParkChoice(message: string): boolean {
   if (mentioned.length !== 1) return false;
   const normalizedMessage = normalize(message);
   const commands = ["ไป", "อยากไป", "เลือก", "เอา", "ตัดสินใจไป",
-    "ขอเลือก", "ขอเอา", "จะเลือก", "อยากเลือก"];
+    "ขอเลือก", "ขอเอา", "จะเลือก", "อยากเลือก", "เปลี่ยนเป็น", "เปลี่ยนไป", "ขอเปลี่ยนเป็น", "ขอเปลี่ยนไป"];
   return [normalize(mentioned[0].name),
     normalize(mentioned[0].name).replace(/^อุทยานแห่งชาติ/, "")].some((name) =>
     commands.some((command) => normalizedMessage.startsWith(`${command}${name}`)
@@ -141,7 +141,7 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
     inputSchema: selectParkInputSchema,
     execute: async (input) =>
       context.runExclusive(async (state) => {
-        if (/(?:ไม่|อย่า|ยังไม่)(?:เลือก|เอา|ตัดสินใจไป)/.test(normalize(context.currentMessage))) {
+        if (/(?:ไม่|อย่า|ยังไม่)(?:เลือก|เอา|ตัดสินใจไป|เปลี่ยน)/.test(normalize(context.currentMessage))) {
           return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
         }
         if (findMentionedParks(context.currentMessage).length > 1) {
