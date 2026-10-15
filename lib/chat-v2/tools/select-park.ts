@@ -144,7 +144,8 @@ export function resolveContextualParkChoice(
   state: AssistantV2TurnContext["state"],
 ): ParkReference | undefined {
   const normalized = normalize(message);
-  if (!/^(?:งั้น|ถ้างั้น)?(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|เปลี่ยน(?:ไป|เป็น)?)(?:ที่แนะนำ|อันที่แนะนำ|แห่งที่แนะนำ|ที่บอก|อันที่บอก)(?:เมื่อกี้|ก่อนหน้า|ไปเมื่อกี้)(?:แหละ|เลย|นะ|ครับ|ค่ะ|อะ|ได้ไหม)*$/.test(normalized)) return undefined;
+  if (!/^(?:งั้น|ถ้างั้น)?(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|เปลี่ยน(?:ไป|เป็น)?)(?:(?:ที่แนะนำ|อันที่แนะนำ|แห่งที่แนะนำ|ที่บอก|อันที่บอก)(?:เมื่อกี้|ก่อนหน้า|ไปเมื่อกี้)|(?:อันนี้|ที่นี่|แห่งนี้|ที่ว่ามา|ที่เหมาะสุด))(?:แหละ|เลย|นะ|ครับ|ค่ะ|อะ|ได้ไหม)*$/.test(normalized)) return undefined;
+  if (state.recommendedPark) return { ...state.recommendedPark };
   const latestAssistant = [...state.recentMessages].reverse().find((item) => item.role === "assistant");
   if (!latestAssistant) return undefined;
   const mentioned = findMentionedParks(latestAssistant.content);
