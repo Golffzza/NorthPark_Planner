@@ -9,6 +9,16 @@ describe("trip planning answer guard", () => {
     expect(answer).toContain("ยังไม่ได้สร้างแผนใหม่");
   });
 
+  it("names the existing draft park instead of claiming a new destination was planned", () => {
+    const answer = finalizeTripPlanAnswer("จัดทริปที่ดอยขุนตาลเรียบร้อย", [
+      { toolName: "planTrip", output: { status: "DRAFT_EXISTS",
+        draftTrip: { park: { id: "chae-son", slug: "chae-son", name: "อุทยานแห่งชาติแจ้ซ้อน" } } } },
+    ]);
+    expect(answer).toContain("อุทยานแห่งชาติแจ้ซ้อน");
+    expect(answer).toContain("ยังไม่ได้สร้างแผนใหม่");
+    expect(answer).not.toContain("จัดทริปที่ดอยขุนตาลเรียบร้อย");
+  });
+
   it("asks the confirmed clarification question instead of claiming a new draft", () => {
     expect(finalizeTripPlanAnswer("จัดให้แล้ว", [
       { toolName: "planTrip", output: { status: "NEEDS_CLARIFICATION", message: "อุทยาน A หรือ B ครับ?" } },
