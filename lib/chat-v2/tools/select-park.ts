@@ -136,8 +136,8 @@ export function isExplicitNamedParkChoice(message: string): boolean {
 
 /**
  * A contextual choice is safe only when the latest assistant answer identifies
- * exactly one park and it matches the current active information subject.
- * Never guess from a ranked multi-park recommendation.
+ * exactly one park. The answer itself is evidence even when an information
+ * tool did not update activePark. Never guess from a multi-park answer.
  */
 export function resolveContextualParkChoice(
   message: string,
@@ -146,10 +146,11 @@ export function resolveContextualParkChoice(
   const normalized = normalize(message);
   if (!/^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|เปลี่ยน(?:ไป|เป็น)?)(?:ที่แนะนำ|อันที่แนะนำ|แห่งที่แนะนำ|ที่บอก|อันที่บอก)(?:เมื่อกี้|ก่อนหน้า|ไปเมื่อกี้)(?:แหละ|เลย|นะ|ครับ|ค่ะ|อะ|ได้ไหม)*$/.test(normalized)) return undefined;
   const latestAssistant = [...state.recentMessages].reverse().find((item) => item.role === "assistant");
-  if (!latestAssistant || !state.activePark) return undefined;
+  if (!latestAssistant) return undefined;
   const mentioned = findMentionedParks(latestAssistant.content);
-  if (mentioned.length !== 1 || mentioned[0].slug !== state.activePark.slug) return undefined;
-  return { ...state.activePark };
+  if (mentioned.length !== 1) return undefined;
+  const park = mentioned[0];
+  return { id: park.id, slug: park.slug, name: park.name };
 }
 
 export function createSelectParkTool(context: AssistantV2TurnContext) {
@@ -166,7 +167,10 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
           return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
         }
         const lastChoice = /^(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|ตัดสินใจไป)(?:อัน|ตัว|ข้อ|อันดับ|ลำดับ|ที่)?(?:ที่)?(?:สุดท้าย|ท้ายสุด)/.test(normalize(context.currentMessage));
-        const requestedPosition = lastChoice ? state.currentResults.length : input.position;
+        const recentChoice = resolveContextualParkChoice(context.currentMessage, state);
+        // A model-supplied position is not evidence when the user instead
+        // refers to a uniquely named recent recommendation.
+        const requestedPosition = recentChoice ? undefined : lastChoice ? state.currentResults.length : input.position;
         if (requestedPosition !== undefined && state.currentResultsOrderVerified !== true) {
           return {
             selected: false as const,
@@ -190,7 +194,7 @@ export function createSelectParkTool(context: AssistantV2TurnContext) {
         const mentioned = findMentionedParks(context.currentMessage);
         const namedChoice = isExplicitNamedParkChoice(context.currentMessage);
         const contextualChoice = requestedPosition === undefined && !namedChoice
-          ? resolveContextualParkChoice(context.currentMessage, state)
+          ? recentChoice
           : undefined;
         if (requestedPosition === undefined && !namedChoice && !contextualChoice) {
           return { selected: false as const, reason: "AMBIGUOUS" as const, candidates: state.currentResults.map((candidate) => ({ ...candidate })) };
