@@ -43,6 +43,8 @@ export async function searchNearbyPlacesProgressivelyForPark(
       failedStatus = result.status;
       break;
     }
+    // Without verified search-scope metadata, do not claim a wider search.
+    if (!("meta" in result) || !result.meta) return result;
     completedRadii.push(radiusMeters);
     lastSuccess = result as NearbySearchResult;
     for (const place of result.places) {
