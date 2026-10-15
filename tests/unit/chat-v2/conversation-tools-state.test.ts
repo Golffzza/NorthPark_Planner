@@ -282,6 +282,23 @@ describe("Assistant V2 conversation tools state", () => {
     expect(state.informationParks?.map((park) => park.slug)).toEqual(["doi-inthanon"]);
   });
 
+  it("accepts 'งั้นเอาที่บอกเมื่อกี้เลย' after a clearly preferred park in a comparison", async () => {
+    const state = makeState();
+    const khun = getParkCatalog().find((park) => park.slug === "khun-chae")!;
+    const luang = getParkCatalog().find((park) => park.slug === "doi-luang")!;
+    state.currentResults = [khun, luang];
+    state.currentResultsOrderVerified = true;
+    state.informationParks = [khun, luang];
+    state.recentMessages = [{
+      role: "assistant",
+      content: `หากให้เลือกอุทยานที่เหมาะกับทริปครอบครัวระหว่าง 2 แห่งนี้ ${khun.name} จะมีความโดดเด่นเรื่องจุดชมวิวและน้ำตก\nในขณะที่ ${luang.name} เหมาะกับการเดินป่าระยะไกล`,
+    }];
+    const result = await toolsFor(state, "งั้นเอาที่บอกเมื่อกี้เลย")
+      .selectPark.execute!({ parkName: luang.name }, options);
+    expect(result).toMatchObject({ selected: true, park: { slug: "khun-chae" } });
+    expect(state.selectedPark?.slug).toBe("khun-chae");
+  });
+
   it("refuses a contextual choice when the recent answer lists multiple parks", async () => {
     const state = makeState();
     const doi = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
