@@ -246,6 +246,39 @@ describe("Assistant V2 conversation tools state", () => {
     expect(state.selectedPark).toBeUndefined();
   });
 
+  it("selects the uniquely recommended active park from a contextual reply", async () => {
+    const state = makeState();
+    const doi = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
+    const suthep = getParkCatalog().find((park) => park.slug === "doi-suthep-pui")!;
+    state.currentResults = [doi, suthep];
+    state.currentResultsOrderVerified = true;
+    state.activePark = suthep;
+    state.informationParks = [suthep];
+    state.recentMessages = [
+      { role: "user", content: "ที่ไหนเหมาะที่สุด" },
+      { role: "assistant", content: `แนะนำ${suthep.name} เพราะเหมาะกับการเที่ยวสบาย ๆ` },
+    ];
+    const result = await toolsFor(state, "เอาที่แนะนำเมื่อกี้แหละ")
+      .selectPark.execute!({}, options);
+    expect(result).toMatchObject({ selected: true, park: { slug: suthep.slug } });
+    expect(state.selectedPark?.slug).toBe(suthep.slug);
+  });
+
+  it("refuses a contextual choice when the recent answer lists multiple parks", async () => {
+    const state = makeState();
+    const doi = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
+    const suthep = getParkCatalog().find((park) => park.slug === "doi-suthep-pui")!;
+    state.currentResults = [doi, suthep];
+    state.currentResultsOrderVerified = true;
+    state.activePark = suthep;
+    state.informationParks = [suthep];
+    state.recentMessages = [{ role: "assistant", content: `อาจเลือก${doi.name}หรือ${suthep.name}` }];
+    const result = await toolsFor(state, "เอาที่แนะนำเมื่อกี้แหละ")
+      .selectPark.execute!({ parkName: suthep.name }, options);
+    expect(result).toMatchObject({ selected: false });
+    expect(state.selectedPark).toBeUndefined();
+  });
+
   it("does not select a park from a negated choice", async () => {
     const state = makeState();
     const result = await toolsFor(state, "ไม่เลือกแจ้ซ้อน")
