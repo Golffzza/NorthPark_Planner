@@ -147,6 +147,25 @@ describe("Assistant V2 conversation tools state", () => {
     expect(state.draftTrip?.park.slug).toBe("doi-inthanon");
   });
 
+  it("resolves the first displayed park as information context without selecting it", async () => {
+    const state = makeState();
+    state.currentResults = ["chae-son", "doi-khun-tan", "tham-pha-thai"].map((slug) =>
+      getParkCatalog().find((park) => park.slug === slug)!);
+    state.currentResultsOrderVerified = true;
+    state.informationParks = [...state.currentResults];
+    state.activePark = undefined;
+
+    const first = await toolsFor(state, "ที่แรกน่าสนใจ เล่าเพิ่มหน่อย")
+      .getParkInfo.execute!({ position: 1, topic: "province" }, options);
+    expect(first).toMatchObject({ found: true, park: { slug: "chae-son" } });
+    expect(state.activePark?.slug).toBe("chae-son");
+    expect(state.selectedPark).toBeUndefined();
+
+    const followup = await toolsFor(state, "แถวนั้นมีค่าเข้าไหม")
+      .getParkInfo.execute!({ topic: "fees" }, options);
+    expect(followup).toMatchObject({ found: true, park: { slug: "chae-son" } });
+  });
+
   it("follows the last information park across turns without selecting it", async () => {
     const state = makeState();
     const a = getParkCatalog().find((park) => park.slug === "doi-inthanon")!;
