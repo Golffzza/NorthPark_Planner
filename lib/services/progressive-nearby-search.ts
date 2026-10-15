@@ -1,4 +1,4 @@
-import type { NearbyCategory, NearbyPlace } from "@/lib/services/nearby-places-service";
+import type { NearbyCategory, NearbyPlace, NearbySearchResult } from "@/lib/services/nearby-places-service";
 import { searchNearbyPlacesForPark } from "@/lib/services/nearby-places-service";
 
 const RADII = [3000, 5000, 20000] as const;
@@ -27,7 +27,7 @@ export async function searchNearbyPlacesProgressivelyForPark(
   );
   const completedRadii: number[] = [];
   let finalResult: Awaited<ReturnType<Search>> | undefined;
-  let lastSuccess: Extract<Awaited<ReturnType<Search>>, { status: "OK" | "EMPTY" }> | undefined;
+  let lastSuccess: NearbySearchResult | undefined;
   let failedStatus: string | undefined;
 
   for (const radiusMeters of radii) {
@@ -44,7 +44,7 @@ export async function searchNearbyPlacesProgressivelyForPark(
       break;
     }
     completedRadii.push(radiusMeters);
-    lastSuccess = result;
+    lastSuccess = result as NearbySearchResult;
     for (const place of result.places) {
       const bucket = found.get(place.category);
       if (bucket) bucket.set(`${place.osmType}:${place.osmId}`, place);
