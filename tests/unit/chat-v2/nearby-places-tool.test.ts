@@ -42,7 +42,7 @@ describe("AI V2 nearby places tool", () => {
       status: "EMPTY",
       interpretation: expect.stringContaining("ไม่พบรายการจาก OpenStreetMap"),
     });
-    expect(search).toHaveBeenCalledWith("lan-sang", { categories: ["food"], radiusMeters: 3000, limit: 10 }, {}, undefined);
+    expect(search).toHaveBeenCalledWith("lan-sang", { categories: ["food"], radiusMeters: 3000, limit: 20 }, {}, undefined);
     expect(current).toEqual(before);
   });
 
@@ -75,7 +75,7 @@ describe("AI V2 nearby places tool", () => {
       }
       expect(result).toMatchObject({ status: "EMPTY" });
       expect(search).toHaveBeenLastCalledWith("khun-khan", {
-        categories: ["accommodation"], radiusMeters: 3000, limit: 10,
+        categories: ["accommodation"], radiusMeters: 3000, limit: 20,
       }, {}, undefined);
       expect(current.selectedPark?.slug).toBe("khun-khan");
       expect(current.draftTrip).toEqual(beforeDraft);
