@@ -148,7 +148,7 @@ export async function POST(request: Request) {
                 await result.text,
                 stepToolResults,
                 parsed.data.message,
-              ), stepToolResults), stepToolResults))
+              ), stepToolResults), stepToolResults), stepToolResults))
             : "";
           if (finalText) {
             const nearbySource = nearbyAttributionSource(stepToolResults);
