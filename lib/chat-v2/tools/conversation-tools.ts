@@ -177,7 +177,7 @@ function setCurrentResults(
   // Tools may use this ranking within the turn. The final answer reconciles it
   // with the list actually shown before the conversation state is committed.
   state.currentResultsOrderVerified = true;
-  setInformationParks(state, state.currentResults.slice(0, 2));
+  setInformationParks(state, state.currentResults);
 }
 
 function referenceFailure(
