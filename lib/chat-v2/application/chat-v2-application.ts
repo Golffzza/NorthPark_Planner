@@ -27,6 +27,7 @@ import { createAssistantV2Tools } from "@/lib/chat-v2/tools";
 import { createAssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
 import { isExplicitNamedParkChoice } from "@/lib/chat-v2/tools/select-park";
 import { finalizeWeatherClarificationAnswer } from "@/lib/chat-v2/application/weather-answer-guard";
+import { finalizeTripPlanAnswer } from "@/lib/chat-v2/application/trip-plan-answer-guard";
 import { reconcileDisplayedParkResults } from "@/lib/chat-v2/application/displayed-park-results";
 import {
   finalizeNearbyFollowupAnswer,
@@ -334,8 +335,8 @@ export class ChatV2Application {
 
         const stepToolResults = result.steps.flatMap((step) => step.toolResults)
           .map((toolResult) => ({ toolName: toolResult.toolName, output: toolResult.output }));
-        const finalMessage = sanitizeAssistantV2Text(finalizeWeatherClarificationAnswer(
-          finalizeNearbyFollowupAnswer(result.text, stepToolResults, message), stepToolResults,
+        const finalMessage = sanitizeAssistantV2Text(finalizeTripPlanAnswer(finalizeWeatherClarificationAnswer(
+          finalizeNearbyFollowupAnswer(result.text, stepToolResults, message), stepToolResults), stepToolResults,
         ));
 
         if (!finalMessage) {
@@ -468,8 +469,8 @@ export class ChatV2Application {
             }
             const stepToolResults = steps.flatMap((step) => step.toolResults)
               .map((toolResult) => ({ toolName: toolResult.toolName, output: toolResult.output }));
-            const finalMessage = sanitizeAssistantV2Text(finalizeWeatherClarificationAnswer(
-              finalizeNearbyFollowupAnswer(text, stepToolResults, message), stepToolResults,
+            const finalMessage = sanitizeAssistantV2Text(finalizeTripPlanAnswer(finalizeWeatherClarificationAnswer(
+              finalizeNearbyFollowupAnswer(text, stepToolResults, message), stepToolResults), stepToolResults,
             ));
 
             if (!finalMessage) {
