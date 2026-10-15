@@ -28,6 +28,7 @@ import { createAssistantV2TurnContext } from "@/lib/chat-v2/tools/turn-context";
 import { isExplicitNamedParkChoice } from "@/lib/chat-v2/tools/select-park";
 import { finalizeWeatherClarificationAnswer } from "@/lib/chat-v2/application/weather-answer-guard";
 import { finalizeTripPlanAnswer } from "@/lib/chat-v2/application/trip-plan-answer-guard";
+import { snapshotAssistantV2Context, traceAssistantV2Turn } from "@/lib/chat-v2/application/dev-turn-trace";
 import { reconcileDisplayedParkResults } from "@/lib/chat-v2/application/displayed-park-results";
 import {
   finalizeNearbyFollowupAnswer,
@@ -301,6 +302,8 @@ export class ChatV2Application {
       ownerId,
       async (state) => {
         const startedAt = performance.now();
+    traceAssistantV2Turn("before", snapshotAssistantV2Context(state));
+        traceAssistantV2Turn("before", snapshotAssistantV2Context(state));
 
         if (state.pendingClarification && !isBareParkNameAnswer(message)) {
           state.pendingClarification = undefined;
@@ -374,6 +377,7 @@ export class ChatV2Application {
         reconcileDisplayedParkResults(state, finalMessage, toolNamesInOrder,
           toolCalls.map((toolCall) => toolCall.input));
         reconcileDisplayedNearbyResults(state, finalMessage, stepToolResults);
+        traceAssistantV2Turn("after", snapshotAssistantV2Context(state), stepToolResults);
 
         assistantV2ConversationStore.appendRecentTurn(
           state,
@@ -488,6 +492,7 @@ export class ChatV2Application {
             reconcileDisplayedParkResults(state, finalMessage,
               toolCalls.map((call) => call.toolName), toolCalls.map((call) => call.input));
             reconcileDisplayedNearbyResults(state, finalMessage, stepToolResults);
+            traceAssistantV2Turn("after", snapshotAssistantV2Context(state), stepToolResults);
 
             assistantV2ConversationStore.appendRecentTurn(
               state,
