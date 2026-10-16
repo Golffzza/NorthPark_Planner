@@ -181,3 +181,103 @@ export async function fetchOpenMeteoHourlyForecast(input: HourlyForecastRequest)
     input.signal?.removeEventListener("abort", onAbort);
   }
 }
+
+export type HourlyBatchPoint = { latitude: number; longitude: number; at: Date };
+export type HourlyBatchResult = { status: "OK" | "UNAVAILABLE"; forecast: HourlyForecast | null;
+  errorCode?: HourlyWeatherErrorCode; point: HourlyBatchPoint; index: number };
+export const MAX_HOURLY_BATCH_COORDINATES = 5;
+
+function gridDistanceMeters(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }): number {
+  const radians = Math.PI / 180;
+  const deltaLat = (b.latitude - a.latitude) * radians;
+  const deltaLng = (b.longitude - a.longitude) * radians;
+  const h = Math.sin(deltaLat / 2) ** 2 + Math.cos(a.latitude * radians)
+    * Math.cos(b.latitude * radians) * Math.sin(deltaLng / 2) ** 2;
+  return 12_742_000 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** One bounded HTTP request; response array position and returned grid proximity must both agree. */
+export async function fetchOpenMeteoHourlyBatch(points: readonly HourlyBatchPoint[], options: {
+  now?: Date; signal?: AbortSignal;
+} = {}): Promise<{ results: HourlyBatchResult[]; httpRequests: number; uniqueCoordinates: number }> {
+  const now = options.now ?? new Date();
+  if (points.length < 1 || points.length > MAX_HOURLY_BATCH_COORDINATES || !Number.isFinite(now.getTime())
+    || points.some((point) => !validCoordinate(point.latitude, point.longitude)
+      || !Number.isFinite(point.at?.getTime()) || point.at < now)) {
+    throw new HourlyWeatherError("INVALID_INPUT");
+  }
+  const lastDayEnd = Date.parse(`${now.toISOString().slice(0, 10)}T00:00:00Z`) + 16 * 86_400_000;
+  const endHour = (at: Date) => Math.floor(at.getTime() / 3_600_000) * 3_600_000 + 3_600_000;
+  if (points.some((point) => endHour(point.at) >= lastDayEnd)) {
+    throw new HourlyWeatherError("OUTSIDE_FORECAST_WINDOW");
+  }
+  const unique: Array<{ latitude: number; longitude: number; indices: number[] }> = [];
+  points.forEach((point, index) => {
+    const entry = unique.find((item) => item.latitude === point.latitude && item.longitude === point.longitude);
+    if (entry) entry.indices.push(index);
+    else unique.push({ latitude: point.latitude, longitude: point.longitude, indices: [index] });
+  });
+  const earliest = Math.min(...points.map((point) => point.at.getTime()));
+  const latestHour = Math.max(...points.map((point) => endHour(point.at)));
+  const base = (process.env.OPEN_METEO_BASE_URL || "https://api.open-meteo.com").replace(/\/+$/, "");
+  const url = new URL("/v1/forecast", base);
+  url.searchParams.set("latitude", unique.map((point) => point.latitude).join(","));
+  url.searchParams.set("longitude", unique.map((point) => point.longitude).join(","));
+  url.searchParams.set("hourly", "precipitation,wind_gusts_10m,weather_code");
+  url.searchParams.set("timezone", "GMT");
+  url.searchParams.set("precipitation_unit", "mm");
+  url.searchParams.set("wind_speed_unit", "kmh");
+  url.searchParams.set("start_date", new Date(earliest).toISOString().slice(0, 10));
+  url.searchParams.set("end_date", new Date(latestHour).toISOString().slice(0, 10));
+  const unavailable = (code: HourlyWeatherErrorCode, httpRequests: number) => ({
+    results: points.map((point, index): HourlyBatchResult =>
+      ({ status: "UNAVAILABLE", forecast: null, errorCode: code, point, index })),
+    httpRequests, uniqueCoordinates: unique.length,
+  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6_000);
+  const onAbort = () => controller.abort();
+  options.signal?.addEventListener("abort", onAbort, { once: true });
+  let requested = false;
+  try {
+    if (options.signal?.aborted) return unavailable("UPSTREAM_TIMEOUT", 0);
+    requested = true;
+    const response = await fetch(url.toString(), { method: "GET", cache: "no-store", signal: controller.signal,
+      headers: { accept: "application/json" } });
+    if (response.status === 429) return unavailable("RATE_LIMITED", 1);
+    if (!response.ok) return unavailable("UPSTREAM_UNAVAILABLE", 1);
+    const raw = await response.json() as unknown;
+    const payloads = unique.length === 1 && !Array.isArray(raw) ? [raw] : raw;
+    if (!Array.isArray(payloads) || payloads.length !== unique.length) {
+      return unavailable("INVALID_RESPONSE", 1);
+    }
+    const results: HourlyBatchResult[] = new Array(points.length);
+    unique.forEach((entry, position) => {
+      const rawEntry = payloads[position];
+      try {
+        const firstAt = new Date(Math.min(...entry.indices.map((index) => points[index].at.getTime())));
+        const lastAt = new Date(Math.max(...entry.indices.map((index) => points[index].at.getTime())));
+        const forecast = normalizeOpenMeteoHourlyResponse(rawEntry, new Date(), {
+          latitude: entry.latitude, longitude: entry.longitude, from: firstAt, to: lastAt,
+        });
+        // 25 km is a project review bound for a provider grid cell, not a location identity guarantee.
+        if (gridDistanceMeters(entry, { latitude: forecast.provenance.gridLatitude,
+          longitude: forecast.provenance.gridLongitude }) > 25_000
+          || forecast.rows[0].endAt.getTime() > endHour(firstAt)
+          || forecast.rows[forecast.rows.length - 1].endAt.getTime() < endHour(lastAt)) {
+          throw new HourlyWeatherError("INVALID_RESPONSE");
+        }
+        entry.indices.forEach((index) => { results[index] = { status: "OK", forecast, point: points[index], index }; });
+      } catch {
+        entry.indices.forEach((index) => { results[index] = { status: "UNAVAILABLE", forecast: null,
+          errorCode: "INVALID_RESPONSE", point: points[index], index }; });
+      }
+    });
+    return { results, httpRequests: 1, uniqueCoordinates: unique.length };
+  } catch {
+    return unavailable(controller.signal.aborted ? "UPSTREAM_TIMEOUT" : "UPSTREAM_UNAVAILABLE", requested ? 1 : 0);
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", onAbort);
+  }
+}

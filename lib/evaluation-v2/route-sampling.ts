@@ -157,6 +157,8 @@ export type RoutePassageSample = RouteCoordinate & {
 export type RouteSamplingPlan = {
   status: "SUFFICIENT" | "INSUFFICIENT_COVERAGE" | "TIMING_UNAVAILABLE";
   samples: RoutePassageSample[];
+  departureAt: Date;
+  arrivalAt: Date;
   samplingIntervalSeconds: number | null;
   coverage: { requestLimit: number; sampledSpanSeconds: number; maxTemporalGapSeconds: number | null;
     maxSpatialGapMeters: number | null; routeDurationSeconds: number; routeDistanceMeters: number };
@@ -164,6 +166,39 @@ export type RouteSamplingPlan = {
   timingMethod: RouteTimingMethod;
   estimatedPassageTimeAllowed: boolean;
 };
+
+/** Locate a passage point on provider geometry, never on the origin-to-destination chord. */
+export function locateRoutePassageAtElapsed(route: EvaluationRoute, departureAt: Date,
+  elapsedSeconds: number): RoutePassageSample {
+  if (!Number.isFinite(departureAt.getTime()) || !Number.isFinite(elapsedSeconds)
+    || elapsedSeconds < 0 || elapsedSeconds > route.durationSeconds
+    || route.geometry.length - 1 !== route.segmentDurationsSeconds.length) {
+    throw new Error("Invalid route passage time");
+  }
+  let consumed = 0;
+  let segmentIndex = route.segmentDurationsSeconds.length - 1;
+  let fraction = 1;
+  if (elapsedSeconds === 0) { segmentIndex = 0; fraction = 0; }
+  else if (elapsedSeconds < route.durationSeconds) {
+    for (let index = 0; index < route.segmentDurationsSeconds.length; index += 1) {
+      const segmentSeconds = route.segmentDurationsSeconds[index];
+      if (elapsedSeconds <= consumed + segmentSeconds || index === route.segmentDurationsSeconds.length - 1) {
+        segmentIndex = index;
+        fraction = segmentSeconds > 0 ? Math.min(1, Math.max(0, (elapsedSeconds - consumed) / segmentSeconds)) : 0;
+        break;
+      }
+      consumed += segmentSeconds;
+    }
+  }
+  const from = route.geometry[segmentIndex];
+  const to = route.geometry[segmentIndex + 1];
+  const distanceFromStartMeters = route.segmentDistancesMeters.slice(0, segmentIndex)
+    .reduce((sum, value) => sum + value, 0) + route.segmentDistancesMeters[segmentIndex] * fraction;
+  return { lat: from.lat + (to.lat - from.lat) * fraction,
+    lng: from.lng + (to.lng - from.lng) * fraction,
+    passageAt: new Date(departureAt.getTime() + elapsedSeconds * 1000), elapsedSeconds,
+    timingMethod: route.timingMethod, segmentIndex, distanceFromStartMeters };
+}
 
 /** At most five forecast requests. An estimated passage time requires explicit caller opt-in. */
 export function buildRouteSamplingPlan(route: EvaluationRoute, departureAt: Date, options: {
@@ -184,47 +219,25 @@ export function buildRouteSamplingPlan(route: EvaluationRoute, departureAt: Date
     throw new Error("Invalid route segment timing");
   }
   const policy = { ...ROUTE_WEATHER_SAMPLING_POLICY, maxWeatherRequests: maxSamples };
+  const arrivalAt = new Date(departureAt.getTime() + route.durationSeconds * 1_000);
   const permitted = route.timingMethod === "OSRM_ANNOTATION" || options.allowEstimatedPassageTime === true;
   const base = { requestLimit: maxSamples, sampledSpanSeconds: 0, maxTemporalGapSeconds: null,
     maxSpatialGapMeters: null, routeDurationSeconds: route.durationSeconds, routeDistanceMeters: route.distanceMeters };
   if (!permitted) return { status: "TIMING_UNAVAILABLE", samples: [], samplingIntervalSeconds: null,
-    coverage: base, policy, timingMethod: route.timingMethod, estimatedPassageTimeAllowed: false };
+    coverage: base, policy, departureAt, arrivalAt,
+    timingMethod: route.timingMethod, estimatedPassageTimeAllowed: false };
   const count = Math.min(maxSamples, Math.max(3,
     Math.ceil(Math.max(route.durationSeconds / ROUTE_WEATHER_SAMPLING_POLICY.maxTemporalGapSeconds,
       route.distanceMeters / ROUTE_WEATHER_SAMPLING_POLICY.maxSpatialGapMeters)) + 1));
-  const samples = Array.from({ length: count }, (_, sampleIndex): RoutePassageSample => {
-    const elapsedSeconds = route.durationSeconds * sampleIndex / (count - 1);
-    let consumed = 0;
-    let segmentIndex = route.segmentDurationsSeconds.length - 1;
-    let fraction = 1;
-    if (sampleIndex === 0) { segmentIndex = 0; fraction = 0; }
-    else if (sampleIndex < count - 1) {
-      for (let index = 0; index < route.segmentDurationsSeconds.length; index += 1) {
-        const segmentSeconds = route.segmentDurationsSeconds[index];
-        if (elapsedSeconds <= consumed + segmentSeconds || index === route.segmentDurationsSeconds.length - 1) {
-          segmentIndex = index;
-          fraction = segmentSeconds > 0 ? Math.min(1, Math.max(0, (elapsedSeconds - consumed) / segmentSeconds)) : 0;
-          break;
-        }
-        consumed += segmentSeconds;
-      }
-    }
-    const from = route.geometry[segmentIndex];
-    const to = route.geometry[segmentIndex + 1];
-    const distanceFromStartMeters = route.segmentDistancesMeters.slice(0, segmentIndex)
-      .reduce((sum, value) => sum + value, 0) + route.segmentDistancesMeters[segmentIndex] * fraction;
-    return { lat: from.lat + (to.lat - from.lat) * fraction,
-      lng: from.lng + (to.lng - from.lng) * fraction,
-      passageAt: new Date(departureAt.getTime() + elapsedSeconds * 1000), elapsedSeconds,
-      timingMethod: route.timingMethod, segmentIndex, distanceFromStartMeters };
-  });
+  const samples = Array.from({ length: count }, (_, sampleIndex): RoutePassageSample =>
+    locateRoutePassageAtElapsed(route, departureAt, route.durationSeconds * sampleIndex / (count - 1)));
   const samplingIntervalSeconds = route.durationSeconds / (count - 1);
   const maxSpatialGapMeters = Math.max(...samples.slice(1).map((sample, index) =>
     sample.distanceFromStartMeters - samples[index].distanceFromStartMeters));
   return { status: samplingIntervalSeconds <= ROUTE_WEATHER_SAMPLING_POLICY.maxTemporalGapSeconds
       && maxSpatialGapMeters <= ROUTE_WEATHER_SAMPLING_POLICY.maxSpatialGapMeters
       ? "SUFFICIENT" : "INSUFFICIENT_COVERAGE",
-    samples, samplingIntervalSeconds, policy, timingMethod: route.timingMethod,
+    samples, samplingIntervalSeconds, policy, departureAt, arrivalAt, timingMethod: route.timingMethod,
     estimatedPassageTimeAllowed: options.allowEstimatedPassageTime === true,
     coverage: { ...base, sampledSpanSeconds: route.durationSeconds,
       maxTemporalGapSeconds: samplingIntervalSeconds, maxSpatialGapMeters } };
