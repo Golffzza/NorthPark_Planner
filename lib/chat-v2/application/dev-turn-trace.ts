@@ -3,6 +3,7 @@ import type { AssistantV2ConversationState } from "@/lib/chat-v2/state/conversat
 type ToolOutcome = { toolName: string; output: unknown };
 type StateSnapshot = {
   selectedPark?: string;
+  recommendedPark?: string;
   activePark?: string;
   informationParkCount: number;
   displayedParkCount: number;
@@ -13,6 +14,7 @@ type StateSnapshot = {
 export function snapshotAssistantV2Context(state: AssistantV2ConversationState): StateSnapshot {
   return {
     selectedPark: state.selectedPark?.slug,
+    recommendedPark: state.recommendedPark?.slug,
     activePark: state.activePark?.slug,
     informationParkCount: state.informationParks?.length ?? 0,
     displayedParkCount: state.currentResults.length,
