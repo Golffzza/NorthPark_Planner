@@ -448,6 +448,52 @@ describe("Assistant V2 conversation tools state", () => {
     expect(state.draftTrip).toBeUndefined();
   });
 
+  it("keeps the new selected park when explicitly discarding an old park draft", async () => {
+    const state = makeState();
+    const oldPark = getParkCatalog().find((park) => park.slug === "chae-son")!;
+    const newPark = getParkCatalog().find((park) => park.slug === "doi-khun-tan")!;
+    state.currentResults = [oldPark, newPark];
+    state.currentResultsOrderVerified = true;
+    state.selectedPark = oldPark;
+    state.draftTrip = {
+      draftId: "old-draft", revision: 1, park: oldPark,
+      durationDays: 1, companions: [], activities: [], days: [],
+    };
+
+    const selection = await toolsFor(state, "เปลี่ยนอันที่สองได้ไหม")
+      .selectPark.execute!({ position: 2 }, options);
+    expect(selection).toMatchObject({ selected: true, park: { slug: "doi-khun-tan" } });
+    expect(state.draftTrip?.park.slug).toBe("chae-son");
+
+    const blocked = await toolsFor(state, "ช่วยจัดทริปใหม่ 1 วัน")
+      .planTrip.execute!({ durationDays: 1 }, options);
+    expect(blocked).toMatchObject({ status: "DRAFT_EXISTS" });
+    expect(state.draftTrip?.draftId).toBe("old-draft");
+
+    const discarded = await toolsFor(state, "ยกเลิกแผน")
+      .discardTripDraft.execute!({}, options);
+    expect(discarded).toMatchObject({ status: "DISCARDED" });
+    expect(state.draftTrip).toBeUndefined();
+    expect(state.selectedPark?.slug).toBe("doi-khun-tan");
+    expect(state.activePark?.slug).toBe("doi-khun-tan");
+    expect(await toolsFor(state, "ขอดูแผนร่าง")
+      .reviewTripDraft.execute!({}, options)).toMatchObject({ status: "NO_DRAFT" });
+  });
+
+  it("refuses to discard a saved trip and leaves all conversation context intact", async () => {
+    const state = makeState();
+    const park = getParkCatalog().find((entry) => entry.slug === "doi-inthanon")!;
+    state.selectedPark = park;
+    state.draftTrip = {
+      draftId: "draft-1", savedTripId: "trip-1", revision: 2,
+      park, durationDays: 2, companions: [], activities: [], days: [],
+    };
+    const before = structuredClone(state);
+    expect(await toolsFor(state, "ยกเลิกแผน")
+      .discardTripDraft.execute!({}, options)).toMatchObject({ status: "ALREADY_SAVED" });
+    expect(state).toEqual(before);
+  });
+
   it("keeps general tourism questions available to RAG without choosing a model supplied park", async () => {
     const state = makeState();
     const retrieve = vi.spyOn(knowledgeRetriever, "retrieve").mockResolvedValue({
