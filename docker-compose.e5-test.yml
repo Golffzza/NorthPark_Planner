@@ -1,7 +1,7 @@
 # Disposable local E5.4 PostgreSQL. Never connect this container to production networks.
 services:
   e5-postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: e5_fixture
       POSTGRES_PASSWORD: e5_local_fixture_only
