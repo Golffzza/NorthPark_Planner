@@ -1,5 +1,5 @@
 import "server-only";
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import type { EvidenceRecord, EvidenceReview } from "./trusted-evidence";
 import type { EvidenceAuditEvent, EvidenceRepository, EvidenceRevision } from "./evidence-data-contract";
 
@@ -48,6 +48,24 @@ export function createPrismaEvidenceRepository(db: PrismaEvidenceDb): EvidenceRe
       return rows.map(row => ({ eventId: row.id, revisionId: row.revisionId,
         actorUserId: row.actorUserId, action: row.action, occurredAt: row.occurredAt,
         note: row.note }));
+    },
+  };
+}
+
+/** Production candidate: revisions and audit are read in ONE repeatable-read transaction.
+ * Never use the legacy two-call reader for scoring or real approval decisions.
+ */
+export function createPrismaConsistentEvidenceRepository(db: PrismaClient): EvidenceRepository {
+  const legacy = createPrismaEvidenceRepository(db);
+  return {
+    ...legacy,
+    async loadConsistentSnapshot(parkId: string) {
+      return db.$transaction(async (tx) => {
+        const reader = createPrismaEvidenceRepository(tx);
+        const revisions = await reader.loadRevisions(parkId);
+        const events = await reader.loadAuditEvents(parkId);
+        return { revisions, events };
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
     },
   };
 }
