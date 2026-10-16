@@ -58,6 +58,20 @@ enum WeatherCondition {
   STORM
 }
 
+enum ParkEvidenceKind {
+  ENTRANCE
+  SCHEDULE
+  PERMISSION
+  LAST_MILE
+}
+
+enum ParkEvidenceAction {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
 model User {
   id          String   @id @default(cuid())
   lineUserId  String?  @unique
@@ -68,6 +82,10 @@ model User {
   lineAccount LineAccount?
   sessions    UserSession[]
   trips       Trip[]
+  evidenceRevisions ParkEvidenceRevision[] @relation("EvidenceRecordedBy")
+  evidenceAuditEvents ParkEvidenceAuditEvent[] @relation("EvidenceActor")
+  evidenceAuthorities ParkEvidenceAuthority[] @relation("EvidenceAuthorityUser")
+  evidenceGrants ParkEvidenceAuthority[] @relation("EvidenceAuthorityGrantor")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -121,6 +139,8 @@ model Park {
   isActive      Boolean          @default(true)
   attractions   ParkAttraction[]
   warnings      ParkWarning[]
+  evidenceRevisions ParkEvidenceRevision[]
+  evidenceAuthorities ParkEvidenceAuthority[]
   trips         Trip[]
   knowledgeDocuments KnowledgeDocument[]
   createdAt     DateTime         @default(now())
@@ -387,4 +407,55 @@ model KnowledgeChunk {
 
   @@unique([documentId, ordinal])
   @@index([documentId])
+}
+
+/** E5.3: additive, candidate-only registry. Do not backfill Park center/hours as verified. */
+model ParkEvidenceRevision {
+  id String @id @default(cuid())
+  parkId String
+  park Park @relation(fields: [parkId], references: [id], onDelete: Restrict)
+  kind ParkEvidenceKind
+  entityKey String
+  payload Json
+  supersedesId String? @unique
+  supersedes ParkEvidenceRevision? @relation("EvidenceRevisionChain", fields: [supersedesId], references: [id], onDelete: Restrict)
+  supersededBy ParkEvidenceRevision? @relation("EvidenceRevisionChain")
+  recordedById String
+  recordedBy User @relation("EvidenceRecordedBy", fields: [recordedById], references: [id], onDelete: Restrict)
+  recordedAt DateTime @default(now())
+  auditEvents ParkEvidenceAuditEvent[]
+
+  @@index([parkId, kind, entityKey])
+  @@index([parkId, recordedAt])
+}
+
+model ParkEvidenceAuditEvent {
+  id String @id @default(cuid())
+  revisionId String
+  revision ParkEvidenceRevision @relation(fields: [revisionId], references: [id], onDelete: Restrict)
+  actorUserId String
+  actor User @relation("EvidenceActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  action ParkEvidenceAction
+  occurredAt DateTime @default(now())
+  note String
+
+  @@index([revisionId, occurredAt, id])
+  @@index([actorUserId, occurredAt])
+}
+
+model ParkEvidenceAuthority {
+  id String @id @default(cuid())
+  userId String
+  user User @relation("EvidenceAuthorityUser", fields: [userId], references: [id], onDelete: Restrict)
+  parkId String
+  park Park @relation(fields: [parkId], references: [id], onDelete: Restrict)
+  canReview Boolean @default(false)
+  effectiveFrom DateTime
+  effectiveTo DateTime
+  grantedById String
+  grantedBy User @relation("EvidenceAuthorityGrantor", fields: [grantedById], references: [id], onDelete: Restrict)
+  grantedAt DateTime @default(now())
+
+  @@index([userId, parkId, effectiveFrom, effectiveTo])
+  @@index([parkId, canReview])
 }
