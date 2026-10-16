@@ -43,7 +43,7 @@ CREATE INDEX "ParkEvidenceRevision_parkId_kind_entityKey_idx" ON "ParkEvidenceRe
 CREATE INDEX "ParkEvidenceRevision_parkId_recordedAt_idx" ON "ParkEvidenceRevision"("parkId", "recordedAt");
 CREATE INDEX "ParkEvidenceAuditEvent_revisionId_occurredAt_id_idx" ON "ParkEvidenceAuditEvent"("revisionId", "occurredAt", "id");
 CREATE INDEX "ParkEvidenceAuditEvent_actorUserId_occurredAt_idx" ON "ParkEvidenceAuditEvent"("actorUserId", "occurredAt");
-CREATE INDEX "ParkEvidenceAuthority_userId_parkId_effectiveFrom_effectiveTo_idx" ON "ParkEvidenceAuthority"("userId", "parkId", "effectiveFrom", "effectiveTo");
+CREATE INDEX "ParkEvidenceAuthority_userId_parkId_effectiveFrom_effective_idx" ON "ParkEvidenceAuthority"("userId", "parkId", "effectiveFrom", "effectiveTo");
 CREATE INDEX "ParkEvidenceAuthority_parkId_canReview_idx" ON "ParkEvidenceAuthority"("parkId", "canReview");
 
 ALTER TABLE "ParkEvidenceRevision" ADD CONSTRAINT "ParkEvidenceRevision_parkId_fkey"
