@@ -1,6 +1,8 @@
 import "server-only";
 import { alignHourlyForecast, fetchOpenMeteoHourlyBatch, type HourlyBatchPoint } from "@/lib/integrations/open-meteo/open-meteo-hourly-service";
 import { loadReviewedEvidenceSnapshot, type EvidenceRepository } from "./evidence-data-contract";
+import { createPrismaConsistentEvidenceRepository } from "./prisma-evidence-repository";
+import type { PrismaClient } from "@prisma/client";
 import { resolveEntrance } from "./trusted-evidence";
 import { scoreWeatherPoint } from "./weather-rubric";
 import { evaluateWeatherV2Candidate } from "./weather-scoring";
@@ -13,7 +15,7 @@ import type { EvaluationRoute, RouteSamplingPlan } from "./route-sampling";
 export async function evaluateWeatherWithReviewedEntranceCandidate(input: {
   route: EvaluationRoute;
   plan: RouteSamplingPlan;
-  repository: EvidenceRepository;
+  repository: EvidenceRepository & Required<Pick<EvidenceRepository, "loadConsistentSnapshot">>;
   parkId: string;
   entranceId: string;
   registryVersion: string;
@@ -96,4 +98,17 @@ export async function evaluateWeatherWithReviewedEntranceCandidate(input: {
       reason: null,
     },
   };
+}
+
+/** Real PostgreSQL candidate entry point: uses a repeatable-read revision/audit snapshot.
+ * The caller must supply the authenticated server-owned PrismaClient, not request JSON.
+ * This does not certify source authenticity or expose V2 to the application.
+ */
+export function evaluateWeatherWithPrismaEntranceCandidate(input: Omit<
+  Parameters<typeof evaluateWeatherWithReviewedEntranceCandidate>[0], "repository"
+> & { db: PrismaClient }) {
+  const { db, ...rest } = input;
+  return evaluateWeatherWithReviewedEntranceCandidate({
+    ...rest, repository: createPrismaConsistentEvidenceRepository(db),
+  });
 }
