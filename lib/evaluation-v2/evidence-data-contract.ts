@@ -21,6 +21,9 @@ export type EvidenceRepository = {
   /** Called only by an authenticated server-side operation, never by user-provided JSON. */
   loadRevisions(parkId: string): Promise<readonly EvidenceRevision[]>;
   loadAuditEvents(parkId: string): Promise<readonly EvidenceAuditEvent[]>;
+  /** Atomic snapshot for production; legacy two-call path is only for pure test fixtures. */
+  loadConsistentSnapshot?(parkId: string): Promise<{ revisions: readonly EvidenceRevision[];
+    events: readonly EvidenceAuditEvent[] }>;
 };
 export type RegistryLoadResult =
   | { status: "READY"; snapshot: TrustedEvidenceSnapshot; revisionIds: string[] }
@@ -41,10 +44,16 @@ export async function loadReviewedEvidenceSnapshot(input: {
   let revisions: readonly EvidenceRevision[];
   let events: readonly EvidenceAuditEvent[];
   try {
-    [revisions, events] = await Promise.all([
-      input.repository.loadRevisions(input.parkId),
-      input.repository.loadAuditEvents(input.parkId),
-    ]);
+    if (input.repository.loadConsistentSnapshot) {
+      const snapshot = await input.repository.loadConsistentSnapshot(input.parkId);
+      revisions = snapshot.revisions;
+      events = snapshot.events;
+    } else {
+      [revisions, events] = await Promise.all([
+        input.repository.loadRevisions(input.parkId),
+        input.repository.loadAuditEvents(input.parkId),
+      ]);
+    }
   } catch {
     return { status: "UNKNOWN", snapshot: null, reasons: ["REGISTRY_UNAVAILABLE"] };
   }
