@@ -1,3 +1,4 @@
+import { validateEvidenceAuditSequence } from "./evidence-audit-sequence";
 /** E5.1 candidate persistence boundary: no database writes or public request inputs. */
 import type { EvidenceRecord, EvidenceReview, TrustedEvidenceSnapshot } from "./trusted-evidence";
 
@@ -81,6 +82,12 @@ export async function loadReviewedEvidenceSnapshot(input: {
       }
       superseded.add(rev.supersedesRevisionId);
     }
+  }
+  for (const rev of revisions) {
+    const result = validateEvidenceAuditSequence(rev.recordedAt,
+      events.filter(event => event.revisionId === rev.revisionId));
+    if (result.status === "INVALID") return { status: "UNKNOWN", snapshot: null,
+      reasons: ["REGISTRY_INVALID_AUDIT_SEQUENCE"] };
   }
   const active: EvidenceRecord[] = [];
   const activeIds: string[] = [];
