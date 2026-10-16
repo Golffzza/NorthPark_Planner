@@ -54,6 +54,16 @@ describe("assistant recommendation decision", () => {
     expect(state.selectedPark).toBeUndefined();
   });
 
+  it("does not reinterpret a factual single-park answer as a recommendation", async () => {
+    const state = makeState();
+    state.recentMessages = [{ role: "assistant", content:
+      `สำหรับ ${khun.name} มีจุดชมวิวและทางเดินธรรมชาติครับ` }];
+    const selection = await createAssistantV2Tools(createAssistantV2TurnContext(state,
+      "เอาที่แนะนำเมื่อกี้แหละ")).selectPark.execute!({}, options);
+    expect(selection).toMatchObject({ selected: false });
+    expect(state.selectedPark).toBeUndefined();
+  });
+
   it("does not record a recommendation from a two-choice list or ambiguous answer", async () => {
     const state = makeState();
     reconcileRecommendedPark(state, request, `1. ${khun.name}\n2. ${luang.name}\nเลือกได้ทั้งสองแห่ง`);
