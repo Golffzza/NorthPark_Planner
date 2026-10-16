@@ -145,7 +145,7 @@ export function resolveContextualParkChoice(
 ): ParkReference | undefined {
   const normalized = normalize(message);
   if (!/^(?:งั้น|ถ้างั้น)?(?:(?:ขอ|จะ|อยาก|ช่วย))?(?:เลือก|เอา|ไป|เปลี่ยน(?:ไป|เป็น)?)(?:(?:ที่แนะนำ|อันที่แนะนำ|แห่งที่แนะนำ|ที่บอก|อันที่บอก)(?:เมื่อกี้|ก่อนหน้า|ไปเมื่อกี้)|(?:อันนี้|ที่นี่|แห่งนี้|ที่ว่ามา|ที่เหมาะสุด))(?:แหละ|เลย|นะ|ครับ|ค่ะ|อะ|ได้ไหม)*$/.test(normalized)) return undefined;
-  if (state.recommendedPark) return { ...state.recommendedPark };
+  if (state.recommendedPark && state.currentResults.some((park) => park.slug === state.recommendedPark?.slug)) return { ...state.recommendedPark };
   // Deictic forms have no independently verifiable referent without a stored decision.
   if (/(?:อันนี้|ที่นี่|แห่งนี้|ที่ว่ามา|ที่เหมาะสุด)/.test(normalized)) return undefined;
   const latestAssistant = [...state.recentMessages].reverse().find((item) => item.role === "assistant");
