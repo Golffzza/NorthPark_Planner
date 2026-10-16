@@ -21,6 +21,57 @@ describe("assistant V2 turn recovery", () => {
     expect(after).toEqual({ recommendation: undefined, messages: 0 });
   });
 
+  it("serializes simultaneous turns for one conversation without losing updates", async () => {
+    const store = new InMemoryAssistantV2ConversationStore();
+    const id = await store.runTurn(undefined, "owner", async (state) => state.id);
+    let beginFirst!: () => void;
+    const firstStarted = new Promise<void>((resolve) => { beginFirst = resolve; });
+    let finishFirst!: () => void;
+    const firstMayFinish = new Promise<void>((resolve) => { finishFirst = resolve; });
+    const first = store.runTurn(id, "owner", async (state) => {
+      beginFirst();
+      await firstMayFinish;
+      store.appendRecentTurn(state, "one", "first answer");
+    });
+    await firstStarted;
+    let secondStarted = false;
+    const second = store.runTurn(id, "owner", async (state) => {
+      secondStarted = true;
+      expect(state.recentMessages.map((item) => item.content)).toEqual(["one", "first answer"]);
+      store.appendRecentTurn(state, "two", "second answer");
+    });
+    expect(secondStarted).toBe(false);
+    finishFirst();
+    await Promise.all([first, second]);
+    const result = await store.runTurn(id, "owner", async (state) =>
+      state.recentMessages.map((item) => item.content));
+    expect(result).toEqual(["one", "first answer", "two", "second answer"]);
+  });
+
+  it("does not persist a failed turn before a queued request", async () => {
+    const store = new InMemoryAssistantV2ConversationStore();
+    const id = await store.runTurn(undefined, "owner", async (state) => state.id);
+    let started!: () => void;
+    const ready = new Promise<void>((resolve) => { started = resolve; });
+    let rejectFirst!: (error: Error) => void;
+    const failed = new Promise<void>((_, reject) => { rejectFirst = reject; });
+    const first = store.runTurn(id, "owner", async (state) => {
+      state.recommendedPark = { id: "temp", slug: "temporary", name: "Temporary" };
+      started();
+      await failed;
+    });
+    await ready;
+    const second = store.runTurn(id, "owner", async (state) => {
+      expect(state.recommendedPark).toBeUndefined();
+      store.appendRecentTurn(state, "retry", "success");
+    });
+    rejectFirst(new Error("provider timeout"));
+    await expect(first).rejects.toThrow("provider timeout");
+    await second;
+    const messages = await store.runTurn(id, "owner", async (state) => state.recentMessages);
+    expect(messages.map((item) => item.content)).toEqual(["retry", "success"]);
+  });
+
   it("rolls back an aborted streaming lease without blocking later messages", async () => {
     const store = new InMemoryAssistantV2ConversationStore();
     const id = await store.runTurn(undefined, "owner", async (state) => state.id);
