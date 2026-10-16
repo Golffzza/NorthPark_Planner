@@ -14,7 +14,7 @@ if ($env:DATABASE_URL) {
 }
 Write-Host "Comparing ALL migration history to current Prisma schema using disposable shadow DB."
 Write-Host "No migration will be applied to the application database."
-& npx prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --shadow-database-url $shadowUrl --exit-code
+& npx prisma migrate diff --config prisma.e5-diff.config.ts --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
 $diffExit = $LASTEXITCODE
 if ($diffExit -eq 0) {
   Write-Host "PASS: migrations and Prisma schema match (no drift detected)."
