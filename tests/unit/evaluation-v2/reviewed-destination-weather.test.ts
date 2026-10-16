@@ -36,13 +36,15 @@ function repository(options: { approved?: boolean; latitude?: number } = {}): Ev
       },
     },
   };
-  return {
-    loadRevisions: async () => [revision],
-    loadAuditEvents: async () => options.approved === false ? [] : [{
+  const events = options.approved === false ? [] : [{
       eventId: "fixture-approval", revisionId: revision.revisionId,
       actorUserId: "fixture-reviewer", action: "APPROVED" as const,
       occurredAt: new Date("2026-10-16T09:00:00Z"), note: "fixture only",
-    }],
+    }];
+  return {
+    loadRevisions: async () => [revision],
+    loadAuditEvents: async () => events,
+    loadConsistentSnapshot: async () => ({ revisions: [revision], events }),
   };
 }
 
