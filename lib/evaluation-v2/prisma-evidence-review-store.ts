@@ -23,6 +23,10 @@ export function createPrismaEvidenceReviewStore(db: PrismaClient, authenticatedU
             where: { id: command.revisionId },
           });
           if (!row) return { status: "DENIED", reason: "REVISION_NOT_FOUND" };
+          const superseding = await tx.parkEvidenceRevision.findFirst({
+            where: { supersedesId: row.id }, select: { id: true },
+          });
+          if (superseding) return { status: "DENIED", reason: "REVISION_SUPERSEDED" };
           const user = await tx.user.findUnique({
             where: { id: authenticatedUserId }, select: { id: true, role: true },
           });
