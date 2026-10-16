@@ -338,6 +338,11 @@ export class ChatV2Application {
           abortSignal: signal,
         });
 
+        // Do not persist a partial turn when the provider stopped unsuccessfully.
+        if (["error", "length", "content-filter"].includes(result.finishReason)) {
+          throw new Error("ASSISTANT_INCOMPLETE_RESPONSE");
+        }
+
         const stepToolResults = result.steps.flatMap((step) => step.toolResults)
           .map((toolResult) => ({ toolName: toolResult.toolName, output: toolResult.output }));
         const finalMessage = sanitizeAssistantV2Text(finalizeParkSelectionAnswer(finalizeTripPlanAnswer(finalizeWeatherClarificationAnswer(
@@ -379,7 +384,7 @@ export class ChatV2Application {
         reconcileDisplayedParkResults(state, finalMessage, toolNamesInOrder,
           toolCalls.map((toolCall) => toolCall.input));
         reconcileDisplayedNearbyResults(state, finalMessage, stepToolResults);
-            reconcileRecommendedPark(state, message, finalMessage);
+        reconcileRecommendedPark(state, message, finalMessage);
         traceAssistantV2Turn("after", snapshotAssistantV2Context(state), stepToolResults);
 
         assistantV2ConversationStore.appendRecentTurn(
