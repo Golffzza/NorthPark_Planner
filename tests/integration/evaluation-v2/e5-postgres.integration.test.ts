@@ -106,6 +106,28 @@ describe.skipIf(!enabled)("E5.4 isolated PostgreSQL integration (opt-in)", () =>
       await db.user.delete({ where: { id: outsider.id } });
     }
   });
+  it("denies a DB admin if park evidence authority is disabled", async () => {
+    await db.parkEvidenceAuthority.updateMany({
+      where: { parkId, userId }, data: { canReview: false },
+    });
+    try {
+      const store = createPrismaEvidenceReviewStore(db, userId);
+      const outcome = await store.transactionReview({
+        command: { actor: { userId, role: "ADMIN", canReviewParkEvidence: true },
+          revisionId, action: "APPROVED", occurredAt: new Date(),
+          note: "disabled authority fixture" },
+        validate: () => ({ status: "DENIED", reason: "untrusted" }),
+      });
+      expect(outcome).toMatchObject({ status: "DENIED", reason: "REVIEWER_UNAUTHORIZED" });
+      expect(await db.parkEvidenceAuditEvent.count({ where: {
+        revisionId, action: "APPROVED",
+      } })).toBe(0);
+    } finally {
+      await db.parkEvidenceAuthority.updateMany({
+        where: { parkId, userId }, data: { canReview: true },
+      });
+    }
+  });
   it("persists a single approval, supports revocation, and reads both under one snapshot", async () => {
     const store = createPrismaEvidenceReviewStore(db, userId);
     const actor = { userId, role: "USER" as const, canReviewParkEvidence: false };
