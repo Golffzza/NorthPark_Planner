@@ -8,7 +8,7 @@ describe("progressive nearby upstream recovery", () => {
       status: "UPSTREAM_UNAVAILABLE", places: [],
     });
     const result = await searchNearbyPlacesProgressivelyForPark(
-      "mae-moei", { categories: ["restaurant"], radiusMeters: 3000, limit: 10 },
+      "mae-moei", { categories: ["food"], radiusMeters: 3000, limit: 10 },
       undefined, search,
     );
     expect(result.status).toBe("UPSTREAM_UNAVAILABLE");
@@ -17,22 +17,28 @@ describe("progressive nearby upstream recovery", () => {
 
   it("preserves verified results when a later radius fails", async () => {
     const place = {
-      osmType: "node", osmId: 123, name: "Verified restaurant", category: "restaurant",
-      straightLineDistanceMeters: 2400,
-    } as NearbyPlace;
+      id: "osm:node:123", osmType: "node", osmId: 123,
+      osmUrl: "https://www.openstreetmap.org/node/123",
+      name: "Verified restaurant", category: "food", lat: 18, lng: 98,
+      source: "OPENSTREETMAP", straightLineDistanceMeters: 2400,
+    } satisfies NearbyPlace;
     const search = vi.fn()
       .mockResolvedValueOnce({
         status: "OK", places: [place],
-        meta: { radiusMeters: 3000, coverageNote: "Verified nearby results" },
+        meta: { center: { lat: 18, lng: 98 }, radiusMeters: 3000,
+          categories: ["food"], limit: 20, searchScope: "AROUND_PARK_COORDINATE",
+          distanceMethod: "STRAIGHT_LINE", source: "OPENSTREETMAP_OVERPASS",
+          coverageNote: "Verified nearby results", cached: false },
       })
       .mockResolvedValueOnce({
         status: "UPSTREAM_TIMEOUT", places: [],
       });
     const result = await searchNearbyPlacesProgressivelyForPark(
-      "mae-moei", { categories: ["restaurant"], radiusMeters: 3000, limit: 10 },
+      "mae-moei", { categories: ["food"], radiusMeters: 3000, limit: 10 },
       undefined, search,
     );
     expect(result.status).toBe("OK");
+    if (!("places" in result) || !("meta" in result)) throw new Error("EXPECTED_NEARBY_RESULT");
     expect(result.places).toHaveLength(1);
     expect(result.meta).toMatchObject({
       searchedRadiiMeters: [3000],
