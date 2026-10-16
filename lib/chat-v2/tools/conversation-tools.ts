@@ -173,6 +173,7 @@ function setCurrentResults(
     name: string;
   }>,
 ): void {
+  state.recommendedPark = undefined;
   state.currentResults = parks.map(toReference);
   // Tools may use this ranking within the turn. The final answer reconciles it
   // with the list actually shown before the conversation state is committed.
