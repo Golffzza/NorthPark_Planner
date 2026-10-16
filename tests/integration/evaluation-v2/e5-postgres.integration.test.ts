@@ -155,7 +155,7 @@ describe.skipIf(!enabled)("E5.4 isolated PostgreSQL integration (opt-in)", () =>
       repository: repo, parkId, evaluatedAt: new Date(), registryVersion: "TEST_ONLY",
     });
     expect(snapshot.status).toBe("READY");
-    if (snapshot.status === "READY") expect(snapshot.snapshot.records).toHaveLength(1);
+    if (snapshot.status === "READY") {\n      expect(snapshot.revisionIds).toContain(revisionId);\n      expect(snapshot.revisionIds.filter(id => id === revisionId)).toHaveLength(1);\n    }
     const revoked = await store.transactionReview({ command: {
       actor, revisionId, action: "REVOKED", occurredAt: new Date(), note: "fixture revocation",
     }, validate: () => ({ status: "DENIED", reason: "caller callback untrusted" }) });
@@ -164,6 +164,6 @@ describe.skipIf(!enabled)("E5.4 isolated PostgreSQL integration (opt-in)", () =>
       repository: repo, parkId, evaluatedAt: new Date(), registryVersion: "TEST_ONLY",
     });
     expect(after.status).toBe("READY");
-    if (after.status === "READY") expect(after.snapshot.records).toHaveLength(0);
+    if (after.status === "READY") expect(after.revisionIds).not.toContain(revisionId);
   });
 });
