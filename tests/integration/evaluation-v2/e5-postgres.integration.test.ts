@@ -84,6 +84,28 @@ describe.skipIf(!enabled)("E5.4 isolated PostgreSQL integration (opt-in)", () =>
       await db.parkEvidenceRevision.delete({ where: { id: competing.id } });
     }
   });
+  it("rejects a fake admin actor without database authority", async () => {
+    const outsider = await db.user.create({ data: {
+      displayName: "e5-outsider-" + crypto.randomUUID(), role: "USER",
+    } });
+    try {
+      const actor = { userId: outsider.id, role: "ADMIN" as const,
+        canReviewParkEvidence: true };
+      const store = createPrismaEvidenceReviewStore(db, outsider.id);
+      const result = await store.transactionReview({ command: {
+        actor, revisionId, action: "APPROVED", occurredAt: new Date(), note: "fake admin",
+      }, validate: () => ({ status: "ACCEPTED" as const, event: {
+        eventId: "forged", revisionId, actorUserId: outsider.id, action: "APPROVED" as const,
+        occurredAt: new Date(), note: "forged",
+      } }) });
+      expect(result).toMatchObject({ status: "DENIED", reason: "REVIEWER_UNAUTHORIZED" });
+      expect(await db.parkEvidenceAuditEvent.count({ where: {
+        revisionId, action: "APPROVED",
+      } })).toBe(0);
+    } finally {
+      await db.user.delete({ where: { id: outsider.id } });
+    }
+  });
   it("persists a single approval, supports revocation, and reads both under one snapshot", async () => {
     const store = createPrismaEvidenceReviewStore(db, userId);
     const actor = { userId, role: "USER" as const, canReviewParkEvidence: false };
