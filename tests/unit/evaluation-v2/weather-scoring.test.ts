@@ -41,10 +41,10 @@ describe("Evaluation V2 route and destination weather scores", () => {
     const result = scoreEvaluationWeatherV2({ route, plan, intervals, intervalWeather,
       destinationWeather: weather(arrival.passageAt, arrival.lat, arrival.lng, 61),
       destinationEvidence: verifiedDestination });
-    expect(result.status).toBe("KNOWN");
+    expect(result.status).toBe("UNKNOWN");
     expect(result.WR).toBeCloseTo((2_700 * 100 + 900 * (200 / 3) + 1_800 * (100 / 3)) / 5_400);
-    expect(result.WP).toBeCloseTo(200 / 3);
-    expect(result.W).toBeCloseTo(0.4 * (result.WR as number) + 0.6 * (result.WP as number));
+    expect(result.WP).toBeNull();
+    expect(result.W).toBeNull();
     expect(result).not.toHaveProperty("S");
     expect(result).not.toHaveProperty("D");
   });
@@ -60,7 +60,7 @@ describe("Evaluation V2 route and destination weather scores", () => {
     const result = scoreEvaluationWeatherV2({ route, plan, intervals, intervalWeather,
       destinationWeather: weather(arrival.passageAt, arrival.lat, arrival.lng, 0),
       destinationEvidence: verifiedDestination });
-    expect(result).toMatchObject({ status: "UNKNOWN", WR: null, WP: 100, W: null });
+    expect(result).toMatchObject({ status: "UNKNOWN", WR: null, WP: null, W: null });
     expect(result.hazards.map((hazard) => hazard.kind)).toContain("VERY_HEAVY_HOURLY_RAIN");
   });
 
@@ -94,7 +94,24 @@ describe("Evaluation V2 route and destination weather scores", () => {
       intervals: [], intervalWeather: [],
       destinationWeather: weather(unapproved.arrivalAt, verifiedDestination.latitude,
         verifiedDestination.longitude, 0), destinationEvidence: verifiedDestination });
-    expect(wpOnly).toMatchObject({ status: "UNKNOWN", WR: null, WP: 100, W: null });
+    expect(wpOnly).toMatchObject({ status: "UNKNOWN", WR: null, WP: null, W: null });
+  });
+
+  it("does not treat caller-provided source and timestamp as verified entrance evidence", () => {
+    const plan = buildRouteSamplingPlan(route, new Date("2026-10-17T08:00:00Z"));
+    const intervals = buildRouteWeatherScoringIntervals(route, plan);
+    const result = scoreEvaluationWeatherV2({ route, plan, intervals,
+      intervalWeather: intervals.map((item) => weather(item.representative.passageAt,
+        item.representative.lat, item.representative.lng, 0)),
+      destinationWeather: weather(plan.arrivalAt, destination.lat, destination.lng, 0),
+      destinationEvidence: { ...verifiedDestination, effectiveFrom: new Date("2026-10-01T00:00:00Z"),
+        reviewStatus: "VERIFIED" } });
+    expect(result).toMatchObject({ status: "UNKNOWN", WR: 100, WP: null, W: null,
+      destinationEvidence: null });
+    expect(result.destinationMissingReasons).toContain("DESTINATION_ENTRANCE_SOURCE_UNVERIFIED");
+    expect(result.destinationEvidenceAudit).toMatchObject({ claimReviewStatus: "VERIFIED",
+      claimEffectiveFrom: new Date("2026-10-01T00:00:00Z"), verificationStatus: "UNVERIFIED",
+      effectiveFrom: null, trustedSource: null });
   });
 
   it("splits forecast periods across UTC midnight without changing route duration", () => {

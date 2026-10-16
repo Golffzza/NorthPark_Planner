@@ -24,7 +24,7 @@ export type HourlyForecastRequest = {
   latitude: number; longitude: number; from: Date; to: Date; now?: Date; signal?: AbortSignal;
 };
 export type HourlyWeatherErrorCode = "INVALID_INPUT" | "OUTSIDE_FORECAST_WINDOW" | "UPSTREAM_TIMEOUT"
-  | "UPSTREAM_UNAVAILABLE" | "RATE_LIMITED" | "INVALID_RESPONSE";
+  | "UPSTREAM_UNAVAILABLE" | "RATE_LIMITED" | "INVALID_RESPONSE" | "LOCATION_MAPPING_AMBIGUOUS";
 
 export class HourlyWeatherError extends Error {
   constructor(readonly code: HourlyWeatherErrorCode) {
@@ -196,7 +196,7 @@ function gridDistanceMeters(a: { latitude: number; longitude: number }, b: { lat
   return 12_742_000 * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-/** One bounded HTTP request; response array position and returned grid proximity must both agree. */
+/** A bounded logical batch. Each unique coordinate gets its own HTTP request: JSON has no location ID. */
 export async function fetchOpenMeteoHourlyBatch(points: readonly HourlyBatchPoint[], options: {
   now?: Date; signal?: AbortSignal;
 } = {}): Promise<{ results: HourlyBatchResult[]; httpRequests: number; uniqueCoordinates: number }> {
@@ -217,67 +217,69 @@ export async function fetchOpenMeteoHourlyBatch(points: readonly HourlyBatchPoin
     if (entry) entry.indices.push(index);
     else unique.push({ latitude: point.latitude, longitude: point.longitude, indices: [index] });
   });
-  const earliest = Math.min(...points.map((point) => point.at.getTime()));
-  const latestHour = Math.max(...points.map((point) => endHour(point.at)));
   const base = (process.env.OPEN_METEO_BASE_URL || "https://api.open-meteo.com").replace(/\/+$/, "");
-  const url = new URL("/v1/forecast", base);
-  url.searchParams.set("latitude", unique.map((point) => point.latitude).join(","));
-  url.searchParams.set("longitude", unique.map((point) => point.longitude).join(","));
-  url.searchParams.set("hourly", "precipitation,wind_gusts_10m,weather_code");
-  url.searchParams.set("timezone", "GMT");
-  url.searchParams.set("precipitation_unit", "mm");
-  url.searchParams.set("wind_speed_unit", "kmh");
-  url.searchParams.set("start_date", new Date(earliest).toISOString().slice(0, 10));
-  url.searchParams.set("end_date", new Date(latestHour).toISOString().slice(0, 10));
-  const unavailable = (code: HourlyWeatherErrorCode, httpRequests: number) => ({
-    results: points.map((point, index): HourlyBatchResult =>
-      ({ status: "UNAVAILABLE", forecast: null, errorCode: code, point, index })),
-    httpRequests, uniqueCoordinates: unique.length,
-  });
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 6_000);
-  const onAbort = () => controller.abort();
-  options.signal?.addEventListener("abort", onAbort, { once: true });
-  let requested = false;
-  try {
-    if (options.signal?.aborted) return unavailable("UPSTREAM_TIMEOUT", 0);
-    requested = true;
-    const response = await fetch(url.toString(), { method: "GET", cache: "no-store", signal: controller.signal,
-      headers: { accept: "application/json" } });
-    if (response.status === 429) return unavailable("RATE_LIMITED", 1);
-    if (!response.ok) return unavailable("UPSTREAM_UNAVAILABLE", 1);
-    const raw = await response.json() as unknown;
-    const payloads = unique.length === 1 && !Array.isArray(raw) ? [raw] : raw;
-    if (!Array.isArray(payloads) || payloads.length !== unique.length) {
-      return unavailable("INVALID_RESPONSE", 1);
-    }
-    const results: HourlyBatchResult[] = new Array(points.length);
-    unique.forEach((entry, position) => {
-      const rawEntry = payloads[position];
+  const results: HourlyBatchResult[] = new Array(points.length);
+  let httpRequests = 0;
+  let rateLimited = false;
+  for (const entry of unique) {
+    let forecast: HourlyForecast | null = null;
+    let errorCode: HourlyWeatherErrorCode | undefined;
+    if (rateLimited) errorCode = "RATE_LIMITED";
+    else if (options.signal?.aborted) errorCode = "UPSTREAM_TIMEOUT";
+    else {
+      const firstAt = new Date(Math.min(...entry.indices.map((index) => points[index].at.getTime())));
+      const lastAt = new Date(Math.max(...entry.indices.map((index) => points[index].at.getTime())));
+      const url = new URL("/v1/forecast", base);
+      url.searchParams.set("latitude", String(entry.latitude));
+      url.searchParams.set("longitude", String(entry.longitude));
+      url.searchParams.set("hourly", "precipitation,wind_gusts_10m,weather_code");
+      url.searchParams.set("timezone", "GMT");
+      url.searchParams.set("precipitation_unit", "mm");
+      url.searchParams.set("wind_speed_unit", "kmh");
+      url.searchParams.set("start_date", firstAt.toISOString().slice(0, 10));
+      url.searchParams.set("end_date", new Date(endHour(lastAt)).toISOString().slice(0, 10));
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 6_000);
+      const onAbort = () => controller.abort();
+      options.signal?.addEventListener("abort", onAbort, { once: true });
       try {
-        const firstAt = new Date(Math.min(...entry.indices.map((index) => points[index].at.getTime())));
-        const lastAt = new Date(Math.max(...entry.indices.map((index) => points[index].at.getTime())));
-        const forecast = normalizeOpenMeteoHourlyResponse(rawEntry, new Date(), {
-          latitude: entry.latitude, longitude: entry.longitude, from: firstAt, to: lastAt,
-        });
-        // 25 km is a project review bound for a provider grid cell, not a location identity guarantee.
-        if (gridDistanceMeters(entry, { latitude: forecast.provenance.gridLatitude,
-          longitude: forecast.provenance.gridLongitude }) > 25_000
-          || forecast.rows[0].endAt.getTime() > endHour(firstAt)
-          || forecast.rows[forecast.rows.length - 1].endAt.getTime() < endHour(lastAt)) {
-          throw new HourlyWeatherError("INVALID_RESPONSE");
+        httpRequests += 1;
+        const response = await fetch(url.toString(), { method: "GET", cache: "no-store",
+          signal: controller.signal, headers: { accept: "application/json" } });
+        if (response.status === 429) { errorCode = "RATE_LIMITED"; rateLimited = true; }
+        else if (!response.ok) errorCode = "UPSTREAM_UNAVAILABLE";
+        else {
+          const raw = await response.json() as unknown;
+          // One requested location must produce one object. Arrays cannot prove identity here.
+          if (Array.isArray(raw)) throw new HourlyWeatherError("INVALID_RESPONSE");
+          forecast = normalizeOpenMeteoHourlyResponse(raw, new Date(), {
+            latitude: entry.latitude, longitude: entry.longitude, from: firstAt, to: lastAt,
+          });
+          // Plausibility check only; single-request isolation establishes attribution.
+          const grid = { latitude: forecast.provenance.gridLatitude,
+            longitude: forecast.provenance.gridLongitude };
+          const ownDistance = gridDistanceMeters(entry, grid);
+          if (unique.some((other) => other !== entry && gridDistanceMeters(other, grid) + 1 < ownDistance)) {
+            throw new HourlyWeatherError("LOCATION_MAPPING_AMBIGUOUS");
+          }
+          if (ownDistance > 25_000
+            || forecast.rows[0].endAt.getTime() > endHour(firstAt)
+            || forecast.rows[forecast.rows.length - 1].endAt.getTime() < endHour(lastAt)) {
+            throw new HourlyWeatherError("INVALID_RESPONSE");
+          }
         }
-        entry.indices.forEach((index) => { results[index] = { status: "OK", forecast, point: points[index], index }; });
-      } catch {
-        entry.indices.forEach((index) => { results[index] = { status: "UNAVAILABLE", forecast: null,
-          errorCode: "INVALID_RESPONSE", point: points[index], index }; });
+      } catch (error) {
+        forecast = null;
+        errorCode = error instanceof HourlyWeatherError ? error.code
+          : controller.signal.aborted ? "UPSTREAM_TIMEOUT" : "UPSTREAM_UNAVAILABLE";
+      } finally {
+        clearTimeout(timer);
+        options.signal?.removeEventListener("abort", onAbort);
       }
-    });
-    return { results, httpRequests: 1, uniqueCoordinates: unique.length };
-  } catch {
-    return unavailable(controller.signal.aborted ? "UPSTREAM_TIMEOUT" : "UPSTREAM_UNAVAILABLE", requested ? 1 : 0);
-  } finally {
-    clearTimeout(timer);
-    options.signal?.removeEventListener("abort", onAbort);
+    }
+    entry.indices.forEach((index) => { results[index] = forecast
+      ? { status: "OK", forecast, point: points[index], index }
+      : { status: "UNAVAILABLE", forecast: null, errorCode, point: points[index], index }; });
   }
+  return { results, httpRequests, uniqueCoordinates: unique.length };
 }

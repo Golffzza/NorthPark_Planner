@@ -17,46 +17,52 @@ function response(latitude: number, longitude: number) {
 describe("Open-Meteo bounded multi-coordinate forecast", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("sends one comma-separated request and maps array entries to requested coordinates", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify([
-      response(18, 98), response(19, 99),
-    ]), { status: 200 }));
+  it("uses one request per unique coordinate so JSON array order cannot claim identity", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      const query = new URL(url).searchParams;
+      return new Response(JSON.stringify(response(Number(query.get("latitude")),
+        Number(query.get("longitude")))), { status: 200 });
+    });
     vi.stubGlobal("fetch", fetchMock);
     const batch = await fetchOpenMeteoHourlyBatch(points, { now });
     const url = new URL(fetchMock.mock.calls[0][0]);
-    expect(url.searchParams.get("latitude")).toBe("18,19");
-    expect(url.searchParams.get("longitude")).toBe("98,99");
-    expect(batch).toMatchObject({ httpRequests: 1, uniqueCoordinates: 2 });
+    expect(url.searchParams.get("latitude")).toBe("18");
+    expect(url.searchParams.get("longitude")).toBe("98");
+    expect(batch).toMatchObject({ httpRequests: 2, uniqueCoordinates: 2 });
     expect(batch.results.map((result) => result.status)).toEqual(["OK", "OK"]);
     expect(batch.results[1].forecast?.provenance.requestedLatitude).toBe(19);
   });
 
-  it("deduplicates the same coordinate and rejects swapped or truncated provider lists", async () => {
+  it("deduplicates identical coordinates and rejects swapped nearby grids and unexpected arrays", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(response(18, 98)), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     const duplicate = await fetchOpenMeteoHourlyBatch([points[0], { ...points[0], at: points[1].at }], { now });
     expect(duplicate).toMatchObject({ httpRequests: 1, uniqueCoordinates: 1 });
     expect(duplicate.results.map((result) => result.status)).toEqual(["OK", "OK"]);
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([
-      response(19, 99), response(18, 98),
-    ]), { status: 200 })));
-    expect((await fetchOpenMeteoHourlyBatch(points, { now })).results.map((result) => result.status))
-      .toEqual(["UNAVAILABLE", "UNAVAILABLE"]);
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([response(18, 98)]),
+    const nearby = [points[0], { ...points[0], latitude: 18.01 }];
+    const swapped = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(response(18.01, 98)), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(response(18, 98)), { status: 200 }));
+    vi.stubGlobal("fetch", swapped);
+    const ambiguous = await fetchOpenMeteoHourlyBatch(nearby, { now });
+    expect(ambiguous.results.map((result) => result.status)).toEqual(["UNAVAILABLE", "UNAVAILABLE"]);
+    expect(ambiguous.results.map((result) => result.errorCode))
+      .toEqual(["LOCATION_MAPPING_AMBIGUOUS", "LOCATION_MAPPING_AMBIGUOUS"]);
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => new Response(JSON.stringify([response(18, 98)]),
       { status: 200 })));
     expect((await fetchOpenMeteoHourlyBatch(points, { now })).results.map((result) => result.errorCode))
       .toEqual(["INVALID_RESPONSE", "INVALID_RESPONSE"]);
   });
 
   it("isolates one malformed entry and distinguishes rate limit and invalid input", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([
-      response(18, 98), { ...response(19, 99), hourly: null },
-    ]), { status: 200 })));
+    const partial = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(response(18, 98)), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ...response(19, 99), hourly: null }), { status: 200 }));
+    vi.stubGlobal("fetch", partial);
     expect((await fetchOpenMeteoHourlyBatch(points, { now })).results.map((result) => result.status))
       .toEqual(["OK", "UNAVAILABLE"]);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("quota", { status: 429 })));
     expect((await fetchOpenMeteoHourlyBatch(points, { now })).results.map((result) => result.errorCode))
       .toEqual(["RATE_LIMITED", "RATE_LIMITED"]);
+    expect(fetch).toHaveBeenCalledTimes(1);
     await expect(fetchOpenMeteoHourlyBatch(Array(6).fill(points[0]), { now }))
       .rejects.toMatchObject({ code: "INVALID_INPUT" });
   });

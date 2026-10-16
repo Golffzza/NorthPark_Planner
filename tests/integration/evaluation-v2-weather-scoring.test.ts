@@ -26,24 +26,27 @@ function payload(latitude: number, longitude: number, code: number, overnight = 
 describe("Evaluation V2 candidate weather pipeline", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("scores four mapped coordinates in one request without mutating V1 or ETA", async () => {
+  it("scores route intervals with isolated requests without mutating V1 or ETA", async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       const params = new URL(url).searchParams;
-      const latitudes = params.get("latitude")!.split(",").map(Number);
-      const longitudes = params.get("longitude")!.split(",").map(Number);
-      return new Response(JSON.stringify(latitudes.map((lat, index) =>
-        payload(lat, longitudes[index], [0, 61, 63, 61][index]))), { status: 200 });
+      return new Response(JSON.stringify(payload(Number(params.get("latitude")),
+        Number(params.get("longitude")), [0, 61, 63][fetchMock.mock.calls.length - 1])), { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);
     const plan = buildRouteSamplingPlan(route, new Date("2026-10-17T08:00:00Z"));
     const result = await evaluateWeatherV2Candidate({ route, plan, destinationEvidence: verifiedDestination,
       now: new Date("2026-10-17T08:00:00Z") });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(result.requestProvenance).toEqual({ httpRequests: 1, uniqueCoordinates: 4 });
-    expect(result).toMatchObject({ status: "KNOWN", samplingStatus: "SUFFICIENT" });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(result.requestProvenance).toMatchObject({ httpRequests: 3, uniqueCoordinates: 3,
+      batches: 1, maxCoordinatesPerBatch: 5, coordinatesPerHttpRequest: 1, maxHttpRequests: 12 });
+    expect(result).toMatchObject({ status: "UNKNOWN", samplingStatus: "SUFFICIENT" });
     expect(result.WR).toBeCloseTo((2_700 * 100 + 900 * (200 / 3) + 1_800 * (100 / 3)) / 5_400);
-    expect(result.WP).toBeCloseTo(200 / 3);
-    expect(result.W).toBeCloseTo(0.4 * (result.WR as number) + 0.6 * (result.WP as number));
+    expect(result.WP).toBeNull();
+    expect(result.W).toBeNull();
+    expect(result.destinationEvidenceAudit).toMatchObject({
+      claimSourceId: "verified-park-entrance", claimMatchesSnappedEndpoint: true,
+      verificationStatus: "UNVERIFIED", effectiveFrom: null,
+      trustedSource: null, reason: "NO_TRUSTED_ENTRANCE_REGISTRY" });
     expect(route.durationSeconds).toBe(5_400);
     expect(result).not.toHaveProperty("totalScore");
     expect(result).not.toHaveProperty("D");
@@ -54,12 +57,12 @@ describe("Evaluation V2 candidate weather pipeline", () => {
   it("keeps partial provider data and 429 as UNKNOWN rather than good weather", async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       const params = new URL(url).searchParams;
-      const latitudes = params.get("latitude")!.split(",").map(Number);
-      const longitudes = params.get("longitude")!.split(",").map(Number);
-      const items = latitudes.map((lat, index) => payload(lat, longitudes[index], 0));
-      items[1].hourly.wind_gusts_10m[1] = null as never;
-      items[1].hourly.precipitation[1] = 50.1;
-      return new Response(JSON.stringify(items), { status: 200 });
+      const item = payload(Number(params.get("latitude")), Number(params.get("longitude")), 0);
+      if (fetchMock.mock.calls.length === 2) {
+        item.hourly.wind_gusts_10m[1] = null as never;
+        item.hourly.precipitation[1] = 50.1;
+      }
+      return new Response(JSON.stringify(item), { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);
     const plan = buildRouteSamplingPlan(route, new Date("2026-10-17T08:00:00Z"));
@@ -77,10 +80,8 @@ describe("Evaluation V2 candidate weather pipeline", () => {
   it("keeps a cross-midnight forecast window aligned without adding travel time", async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       const params = new URL(url).searchParams;
-      const latitudes = params.get("latitude")!.split(",").map(Number);
-      const longitudes = params.get("longitude")!.split(",").map(Number);
-      return new Response(JSON.stringify(latitudes.map((lat, index) =>
-        payload(lat, longitudes[index], 0, true))), { status: 200 });
+      return new Response(JSON.stringify(payload(Number(params.get("latitude")),
+        Number(params.get("longitude")), 0, true)), { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);
     const plan = buildRouteSamplingPlan(route, new Date("2026-10-17T23:30:00Z"));
@@ -89,7 +90,7 @@ describe("Evaluation V2 candidate weather pipeline", () => {
     const url = new URL(fetchMock.mock.calls[0][0]);
     expect(url.searchParams.get("start_date")).toBe("2026-10-17");
     expect(url.searchParams.get("end_date")).toBe("2026-10-18");
-    expect(result).toMatchObject({ status: "KNOWN", WR: 100, WP: 100, W: 100 });
+    expect(result).toMatchObject({ status: "UNKNOWN", WR: 100, WP: null, W: null });
     expect(plan.samples.at(-1)?.passageAt.toISOString()).toBe("2026-10-18T01:00:00.000Z");
   });
 
@@ -102,5 +103,37 @@ describe("Evaluation V2 candidate weather pipeline", () => {
     expect(result).toMatchObject({ status: "UNKNOWN", WR: null, WP: null, W: null });
     expect(result.routeMissingReasons).toContain("INTERVAL_0_OUTSIDE_FORECAST_WINDOW");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("uses two bounded batches for more than four intervals and keeps second-batch failure UNKNOWN", async () => {
+    const longRoute = normalizeEvaluationRoute({ code: "Ok", waypoints: [
+      { location: [98, 18], distance: 0 }, { location: [98.05, 18.05], distance: 0 },
+    ], routes: [{ distance: 11_000, duration: 10_800,
+      geometry: { type: "LineString", coordinates: [[98, 18], [98.05, 18], [98.05, 18.05]] },
+      legs: [{ annotation: { duration: [5_400, 5_400], distance: [5_500, 5_500] } }] }] },
+    { origin: { lat: 18, lng: 98 }, destination: { lat: 18.05, lng: 98.05 } });
+    const plan = buildRouteSamplingPlan(longRoute, new Date("2026-10-17T08:30:00Z"));
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (fetchMock.mock.calls.length === 6) return new Response("unavailable", { status: 503 });
+      const query = new URL(url).searchParams;
+      const item = payload(Number(query.get("latitude")), Number(query.get("longitude")), 0);
+      item.hourly.time = Array.from({ length: 7 }, (_, index) =>
+        `2026-10-17T${String(index + 8).padStart(2, "0")}:00`);
+      item.hourly.precipitation = Array(7).fill(0);
+      item.hourly.wind_gusts_10m = Array(7).fill(0);
+      item.hourly.weather_code = Array(7).fill(0);
+      if (fetchMock.mock.calls.length === 5) item.hourly.wind_gusts_10m = Array(7).fill(null) as never;
+      return new Response(JSON.stringify(item), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await evaluateWeatherV2Candidate({ route: longRoute, plan,
+      destinationEvidence: verifiedDestination, now: new Date("2026-10-17T08:00:00Z") });
+    expect(plan.status).toBe("SUFFICIENT");
+    expect(result.intervals.length).toBeGreaterThan(4);
+    expect(result.requestProvenance).toMatchObject({ batches: 2, httpRequests: 6,
+      maxCoordinatesPerBatch: 5, coordinatesPerHttpRequest: 1, maxHttpRequests: 12 });
+    expect(result).toMatchObject({ status: "UNKNOWN", WR: null, WP: null, W: null });
+    expect(result.routeMissingReasons).toContain("INTERVAL_4_UNKNOWN");
+    expect(result.routeMissingReasons).toContain("INTERVAL_5_UPSTREAM_UNAVAILABLE");
   });
 });
