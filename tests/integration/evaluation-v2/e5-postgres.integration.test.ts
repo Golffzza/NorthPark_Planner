@@ -54,6 +54,36 @@ describe.skipIf(!enabled)("E5.4 isolated PostgreSQL integration (opt-in)", () =>
       if (userId) await db.user.delete({ where: { id: userId } });
     } finally { await db.$disconnect(); }
   });
+  it("concurrent approvals never commit more than one approval event", async () => {
+    const uniqueKey = "race-" + crypto.randomUUID();
+    const competing = await db.parkEvidenceRevision.create({ data: {
+      parkId, recordedById: userId, kind: "ENTRANCE", entityKey: uniqueKey,
+      payload: { kind: "ENTRANCE", parkId, entranceId: uniqueKey,
+        latitude: 18, longitude: 99, review: {
+          evidenceId: uniqueKey, sourceId: "FIXTURE_ONLY", sourceUrl: "https://example.org",
+          reviewedBy: "untrusted", reviewedAt: "2026-01-01T00:00:00.000Z",
+          effectiveFrom: "2026-01-01T00:00:00.000Z",
+          effectiveTo: "2030-01-01T00:00:00.000Z", status: "PENDING",
+        } },
+    } });
+    try {
+      const store = createPrismaEvidenceReviewStore(db, userId);
+      const actor = { userId, role: "ADMIN" as const, canReviewParkEvidence: true };
+      const attempts = await Promise.all(Array.from({ length: 2 }, (_, index) =>
+        store.transactionReview({ command: {
+          actor, revisionId: competing.id, action: "APPROVED",
+          occurredAt: new Date(Date.now() + index), note: "race test",
+        }, validate: () => ({ status: "DENIED" as const, reason: "untrusted callback" }) })));
+      expect(attempts.filter(outcome => outcome.status === "ACCEPTED")).toHaveLength(1);
+      const approvals = await db.parkEvidenceAuditEvent.count({
+        where: { revisionId: competing.id, action: "APPROVED" },
+      });
+      expect(approvals).toBe(1);
+    } finally {
+      await db.parkEvidenceAuditEvent.deleteMany({ where: { revisionId: competing.id } });
+      await db.parkEvidenceRevision.delete({ where: { id: competing.id } });
+    }
+  });
   it("persists a single approval, supports revocation, and reads both under one snapshot", async () => {
     const store = createPrismaEvidenceReviewStore(db, userId);
     const actor = { userId, role: "USER" as const, canReviewParkEvidence: false };
