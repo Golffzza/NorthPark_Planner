@@ -19,8 +19,8 @@ function parseRecord(raw: unknown): EvidenceRecord {
   }
   const hydratedReview = { ...review, reviewedAt: new Date(review.reviewedAt as string),
     effectiveFrom: new Date(review.effectiveFrom as string),
-    effectiveTo: new Date(review.effectiveTo as string) } as EvidenceReview;
-  const result = { ...candidate, review: hydratedReview } as EvidenceRecord;
+    effectiveTo: new Date(review.effectiveTo as string) } as unknown as EvidenceReview;
+  const result = { ...candidate, review: hydratedReview } as unknown as EvidenceRecord;
   if (!["ENTRANCE", "SCHEDULE", "PERMISSION", "LAST_MILE"].includes(result.kind))
     throw Error("INVALID_EVIDENCE_KIND");
   return result;
