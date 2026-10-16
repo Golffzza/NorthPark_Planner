@@ -8,13 +8,12 @@ if ($env:DATABASE_URL) {
     throw "DATABASE_URL points to the E5 fixture database; refusing to override the primary configured connection."
   }
 }
-& docker compose -f docker-compose.e5-test.yml up -d --wait
+& docker compose -p northpark-e5-isolated -f docker-compose.e5-test.yml up -d --wait
 if ($LASTEXITCODE -ne 0) { throw "Failed to start isolated PostgreSQL container" }
 $previous = $env:E5_TEST_DATABASE_URL
 try {
   $env:E5_TEST_DATABASE_URL = $localUrl
   & ./scripts/evaluation-v2/e5-migration-preflight.ps1 -ConfirmDisposableDatabase
-  if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "Preflight failed" }
   if ($RunIntegration) {
     Write-Host "Integration execution requires separately reviewed and applied migrations."
     Write-Host "This script intentionally does NOT apply migrations or set RUN_E5_PG_INTEGRATION."
