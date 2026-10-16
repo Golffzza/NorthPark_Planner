@@ -26,7 +26,7 @@ export function calculateTimeFromScheduleFixture(input: {
   const resolved = resolveVisitSchedule(input);
   const base = { arrivalAt: input.arrivalAt, openingWindowMinutes: resolved.openingWindowMinutes ?? null,
     remainingVisitMinutes: resolved.remainingVisitMinutes ?? null, waitingUntil: null as Date | null,
-    advisory: null as TimeResult["advisory"], rubricVersion: TIME_RUBRIC_VERSION };
+    advisory: null as TimeResult["advisory"], rubricVersion: TIME_RUBRIC_VERSION } satisfies Omit<TimeResult, "status" | "T" | "missingReasons">;
   if (resolved.status === "UNKNOWN") return { ...base, status: "UNKNOWN", T: null,
     missingReasons: [resolved.reason ?? "SCHEDULE_UNKNOWN"] };
   if (resolved.status === "CLOSED_SCHEDULED") return { ...base, status: "KNOWN", T: 0,
