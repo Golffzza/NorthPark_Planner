@@ -42,18 +42,9 @@ describe.skipIf(!enabled)("E5.4 isolated PostgreSQL integration (opt-in)", () =>
     } });
     revisionId = revision.id;
   });
-  afterAll(async () => {
-    if (!db) return;
-    try {
-      if (revisionId) {
-        await db.parkEvidenceAuditEvent.deleteMany({ where: { revisionId } });
-        await db.parkEvidenceRevision.delete({ where: { id: revisionId } });
-      }
-      if (parkId) await db.parkEvidenceAuthority.deleteMany({ where: { parkId } });
-      if (parkId) await db.park.delete({ where: { id: parkId } });
-      if (userId) await db.user.delete({ where: { id: userId } });
-    } finally { await db.$disconnect(); }
-  });
+  // Append-only E5 evidence history cannot be deleted. All fixture rows remain in
+  // the disposable test database. Discard the container to remove them.
+  afterAll(async () => { if (db) await db.$disconnect(); });
   it("concurrent approvals never commit more than one approval event", async () => {
     const uniqueKey = "race-" + crypto.randomUUID();
     const competing = await db.parkEvidenceRevision.create({ data: {
@@ -80,8 +71,7 @@ describe.skipIf(!enabled)("E5.4 isolated PostgreSQL integration (opt-in)", () =>
       });
       expect(approvals).toBe(1);
     } finally {
-      await db.parkEvidenceAuditEvent.deleteMany({ where: { revisionId: competing.id } });
-      await db.parkEvidenceRevision.delete({ where: { id: competing.id } });
+      // Evidence history is append-only; leave the synthetic revision for container disposal.
     }
   });
   it("rejects a fake admin actor without database authority", async () => {
