@@ -15,9 +15,9 @@ describe("E5.4 migration draft static safety assertions", () => {
   });
   it("never updates, deletes, drops, truncates or alters pre-existing tables", () => {
     const stripped = sql.replace(/--[^\n]*/g, "");
-    expect(stripped).not.toMatch(/\b(DROP|TRUNCATE|DELETE|UPDATE|INSERT)\b/i);
+    // Match destructive SQL verbs only at the beginning of a statement.\n    // ON DELETE RESTRICT / ON UPDATE CASCADE are valid foreign-key actions.
     for (const statement of stripped.split(";").map(part => part.trim()).filter(Boolean)) {
-      expect(statement).toMatch(/^(CREATE TYPE|CREATE TABLE|CREATE (?:UNIQUE )?INDEX|ALTER TABLE "ParkEvidence(?:Revision|AuditEvent|Authority)")\b/);
+      expect(statement).toMatch(/^(?:CREATE TYPE|CREATE TABLE|CREATE (?:UNIQUE )?INDEX|ALTER TABLE "ParkEvidence(?:Revision|AuditEvent|Authority)")(?:\s|$)/);\n      expect(statement).not.toMatch(/^(?:DROP|TRUNCATE|DELETE|UPDATE|INSERT|ALTER TABLE "(?:User|Park|Trip|TripEvaluation)")\b/i);
     }
   });
 });
