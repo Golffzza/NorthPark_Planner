@@ -43,6 +43,16 @@ describe("E5.2 review policy", () => {
     expect(authorizeEvidenceReview(cmd("REVOKED"), revision, [event("APPROVED")]).status).toBe("ACCEPTED");
     expect(authorizeEvidenceReview(cmd("APPROVED"), revision, [event("REVOKED")]).status).toBe("DENIED");
   });
+  it("denies review operations on inconsistent existing audit history", () => {
+    expect(authorizeEvidenceReview(cmd("APPROVED"), revision,
+      [event("REVOKED")])).toMatchObject({
+        status: "DENIED", reason: "INVALID_AUDIT_SEQUENCE",
+      });
+    expect(authorizeEvidenceReview(cmd("APPROVED"), revision,
+      [event("APPROVED"), { ...event("APPROVED"), eventId: "ev2" }])).toMatchObject({
+        status: "DENIED", reason: "INVALID_AUDIT_SEQUENCE",
+      });
+  });
   it("passes policy validation to store transaction rather than writing directly", async () => {
     const result = await submitEvidenceReview({
       store: { transactionReview: async ({command,validate}) =>
