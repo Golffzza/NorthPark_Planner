@@ -150,6 +150,8 @@ export function resolveContextualParkChoice(
   if (/(?:อันนี้|ที่นี่|แห่งนี้|ที่ว่ามา|ที่เหมาะสุด)/.test(normalized)) return undefined;
   const latestAssistant = [...state.recentMessages].reverse().find((item) => item.role === "assistant");
   if (!latestAssistant) return undefined;
+  // A weather, fee or nearby answer may name one park without recommending it.
+  if (!/(?:ขอแนะนำ|แนะนำให้เลือก|แนะนำ\\s*อุทยาน|เหมาะที่สุดคือ|ถ้าให้เลือก|หากให้เลือก)/.test(latestAssistant.content)) return undefined;
   const mentioned = findMentionedParks(latestAssistant.content);
   if (mentioned.length === 0) return undefined;
   if (mentioned.length === 1) {
