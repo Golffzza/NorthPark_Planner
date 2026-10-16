@@ -1,6 +1,6 @@
 import { validateEvidenceAuditSequence } from "./evidence-audit-sequence";
 /** E5.1 candidate persistence boundary: no database writes or public request inputs. */
-import type { EvidenceRecord, EvidenceReview, TrustedEvidenceSnapshot } from "./trusted-evidence";
+import type { EvidenceRecord, TrustedEvidenceSnapshot } from "./trusted-evidence";
 
 export type EvidenceRevision = {
   revisionId: string;
@@ -28,7 +28,6 @@ export type RegistryLoadResult =
 
 const validTime = (date: Date) => date instanceof Date && Number.isFinite(date.getTime());
 const nonempty = (s: string) => typeof s === "string" && s.trim().length > 0;
-const approved = (e: EvidenceReview) => e.status === "APPROVED";
 
 /** Fail-closed projection of a SERVER-controlled repository with independent audit events.
  * This verifies record/event consistency, not external-world accuracy or reviewer authorization.
@@ -97,12 +96,18 @@ export async function loadReviewedEvidenceSnapshot(input: {
       .sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
     const approval = audit.filter((e) => e.action === "APPROVED");
     const terminal = audit.at(-1);
-    const match = approval.length === 1 && terminal?.action === "APPROVED"
-      && terminal.actorUserId === rev.evidence.review.reviewedBy
-      && terminal.occurredAt.getTime() === rev.evidence.review.reviewedAt.getTime()
-      && terminal.occurredAt >= rev.recordedAt && approved(rev.evidence.review);
-    if (!match) continue; // unresolved/withdrawn evidence is not silently promoted.
-    active.push(rev.evidence);
+    if (approval.length !== 1 || terminal?.action !== "APPROVED") continue;
+    // The review decision is authored from the independently stored audit trail,
+    // never from mutable or submitter-supplied payload review labels.
+    const decision = approval[0];
+    const source = rev.evidence.review;
+    if (!source || typeof source !== "object") return { status: "UNKNOWN", snapshot: null,
+      reasons: ["REGISTRY_INVALID_SOURCE_METADATA"] };
+    const reviewed: EvidenceRecord = { ...rev.evidence, review: {
+      ...source, status: "APPROVED", reviewedBy: decision.actorUserId,
+      reviewedAt: decision.occurredAt,
+    } };
+    active.push(reviewed);
     activeIds.push(rev.revisionId);
   }
   return { status: "READY", snapshot: {
