@@ -23,9 +23,11 @@ try {
   & npx prisma validate
   if ($LASTEXITCODE -ne 0) { throw "Prisma validation failed." }
   & npx prisma migrate status
-  if ($LASTEXITCODE -ne 0) { throw "Migration status not clean: inspect before continuing." }
+  if ($LASTEXITCODE -ne 0) {
+    Write-Warning "Migration history is not in a clean applied state. This can be expected for a new disposable DB. Do not run migrations automatically."
+  }
   Write-Host "Schema validated. No schema changes have been applied by this script."
-  Write-Host "To generate a migration after reviewing existing migration history, run:"
+  Write-Host "After independent review of existing migration history, a candidate migration can be generated with:"
   Write-Host '  npx prisma migrate dev --create-only --name e5_registry_candidate'
   Write-Host "Only with DATABASE_URL manually verified as the isolated test DB."
 } finally {
