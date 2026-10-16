@@ -118,6 +118,30 @@ describe.skipIf(!enabled)("E5.4 isolated PostgreSQL integration (opt-in)", () =>
       });
     }
   });
+  it("rejects modification, deletion and truncation of committed audit and revision history", async () => {
+    const evidence = await db.parkEvidenceRevision.findUniqueOrThrow({ where: { id: revisionId } });
+    const created = await db.parkEvidenceAuditEvent.create({ data: {
+      revisionId, actorUserId: userId, action: "SUBMITTED",
+      note: "immutable fixture",
+    } });
+    await expect(db.parkEvidenceAuditEvent.update({
+      where: { id: created.id }, data: { note: "tampered" },
+    })).rejects.toThrow();
+    await expect(db.parkEvidenceAuditEvent.delete({
+      where: { id: created.id },
+    })).rejects.toThrow();
+    await expect(db.parkEvidenceRevision.update({
+      where: { id: revisionId }, data: { entityKey: "tampered" },
+    })).rejects.toThrow();
+    await expect(db.parkEvidenceRevision.delete({
+      where: { id: revisionId },
+    })).rejects.toThrow();
+    await expect(db.$executeRawUnsafe('TRUNCATE "ParkEvidenceAuditEvent"')).rejects.toThrow();
+    expect(await db.parkEvidenceAuditEvent.findUnique({ where: { id: created.id } }))
+      .toMatchObject({ note: "immutable fixture" });
+    expect(await db.parkEvidenceRevision.findUnique({ where: { id: revisionId } }))
+      .toMatchObject({ entityKey: evidence.entityKey });
+  });
   it("persists a single approval, supports revocation, and reads both under one snapshot", async () => {
     const store = createPrismaEvidenceReviewStore(db, userId);
     const actor = { userId, role: "USER" as const, canReviewParkEvidence: false };
