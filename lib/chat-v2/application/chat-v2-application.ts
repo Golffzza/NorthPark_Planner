@@ -339,7 +339,7 @@ export class ChatV2Application {
         });
 
         // Do not persist a partial turn when the provider stopped unsuccessfully.
-        if (["error", "length", "content-filter"].includes(result.finishReason)) {
+        if (signal?.aborted || ["error", "length", "content-filter"].includes(result.finishReason)) {
           throw new Error("ASSISTANT_INCOMPLETE_RESPONSE");
         }
 
@@ -477,7 +477,7 @@ export class ChatV2Application {
 
         onFinish({ text, steps, finishReason }) {
           try {
-            if (["error", "length", "content-filter"].includes(finishReason)) {
+            if (signal?.aborted || ["error", "length", "content-filter"].includes(finishReason)) {
               return;
             }
             const stepToolResults = steps.flatMap((step) => step.toolResults)
