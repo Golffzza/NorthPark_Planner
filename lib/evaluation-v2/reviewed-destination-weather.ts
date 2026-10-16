@@ -50,7 +50,7 @@ export async function evaluateWeatherWithReviewedEntranceCandidate(input: {
     return unavailable("ENTRANCE_ROUTE_ENDPOINT_MISMATCH");
   }
   // Reserve a distinct provider request for the entrance. Never exceed the bounded request budget.
-  if (base.requestProvenance.httpRequests >= 12) return unavailable("FORECAST_REQUEST_BUDGET_EXHAUSTED");
+  if ((base.requestProvenance?.httpRequests ?? 12) >= 12) return unavailable("FORECAST_REQUEST_BUDGET_EXHAUSTED");
   const point: HourlyBatchPoint = {
     latitude: location.latitude, longitude: location.longitude, at: input.plan.arrivalAt,
   };
