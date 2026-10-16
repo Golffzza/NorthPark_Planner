@@ -7,6 +7,8 @@ export type HourlyWeatherRow = {
 };
 export type HourlyForecast = {
   rows: HourlyWeatherRow[];
+  coverage: { firstAccumulationStartAt: Date; lastTimestampAt: Date;
+    requestedFrom: Date | null; requestedTo: Date | null };
   provenance: {
     provider: "OPEN_METEO";
     timezone: "GMT";
@@ -14,6 +16,8 @@ export type HourlyForecast = {
     fetchedAt: Date;
     gridLatitude: number;
     gridLongitude: number;
+    requestedLatitude: number | null;
+    requestedLongitude: number | null;
   };
 };
 export type HourlyForecastRequest = {
@@ -60,7 +64,8 @@ function nullableCode(value: unknown): number | null {
   return value;
 }
 
-export function normalizeOpenMeteoHourlyResponse(raw: unknown, fetchedAt: Date): HourlyForecast {
+export function normalizeOpenMeteoHourlyResponse(raw: unknown, fetchedAt: Date,
+  request?: Pick<HourlyForecastRequest, "latitude" | "longitude" | "from" | "to">): HourlyForecast {
   const data = raw as { timezone?: unknown; utc_offset_seconds?: unknown; latitude?: unknown; longitude?: unknown;
     hourly_units?: { precipitation?: unknown; wind_gusts_10m?: unknown; weather_code?: unknown };
     hourly?: { time?: unknown; precipitation?: unknown; wind_gusts_10m?: unknown; weather_code?: unknown } } | null;
@@ -83,10 +88,17 @@ export function normalizeOpenMeteoHourlyResponse(raw: unknown, fetchedAt: Date):
   if (rows.some((row, index) => index > 0 && row.endAt.getTime() - rows[index - 1].endAt.getTime() !== 3_600_000)) {
     throw new HourlyWeatherError("INVALID_RESPONSE");
   }
-  return { rows, provenance: { provider: "OPEN_METEO", timezone: "GMT", modelRunAt: null,
-    fetchedAt: new Date(fetchedAt), gridLatitude: data.latitude as number, gridLongitude: data.longitude as number } };
+  return { rows, coverage: { firstAccumulationStartAt: new Date(rows[0].endAt.getTime() - 3_600_000),
+    lastTimestampAt: rows[rows.length - 1].endAt,
+    requestedFrom: request ? new Date(request.from) : null, requestedTo: request ? new Date(request.to) : null },
+    provenance: { provider: "OPEN_METEO", timezone: "GMT", modelRunAt: null,
+      fetchedAt: new Date(fetchedAt), gridLatitude: data.latitude as number,
+      gridLongitude: data.longitude as number, requestedLatitude: request?.latitude ?? null,
+      requestedLongitude: request?.longitude ?? null } };
 }
 
+export type HourlyMissingReason = "ACCUMULATION_HOUR_MISSING" | "PRECIPITATION_MISSING"
+  | "WIND_GUST_MISSING" | "WEATHER_CODE_HOUR_MISSING" | "WEATHER_CODE_MISSING";
 export type AlignedHourlyWeather = {
   status: "OK" | "MISSING_DATA";
   precipitationMm: number | null;
@@ -94,22 +106,32 @@ export type AlignedHourlyWeather = {
   weatherCode: number | null;
   accumulationEndAt: Date | null;
   weatherCodeAt: Date | null;
+  missingReasons: HourlyMissingReason[];
   provenance: HourlyForecast["provenance"];
 };
 
 export function alignHourlyForecast(forecast: HourlyForecast, at: Date): AlignedHourlyWeather {
   if (!Number.isFinite(at.getTime())) throw new HourlyWeatherError("INVALID_INPUT");
-  const accumulation = forecast.rows.find((row) => row.endAt.getTime() > at.getTime()
-    && row.endAt.getTime() - 3_600_000 <= at.getTime());
+  const accumulationHour = Math.floor(at.getTime() / 3_600_000) * 3_600_000 + 3_600_000;
+  const accumulation = forecast.rows.find((row) => row.endAt.getTime() === accumulationHour);
   const nearest = [...forecast.rows].sort((a, b) =>
     Math.abs(a.endAt.getTime() - at.getTime()) - Math.abs(b.endAt.getTime() - at.getTime())
     || b.endAt.getTime() - a.endAt.getTime())[0];
   const code = nearest && Math.abs(nearest.endAt.getTime() - at.getTime()) <= 30 * 60_000 ? nearest.weatherCode : null;
   const precipitationMm = accumulation?.precipitationMm ?? null;
   const windGustKmh = accumulation?.windGustKmh ?? null;
+  const missingReasons: HourlyMissingReason[] = [];
+  if (!accumulation) missingReasons.push("ACCUMULATION_HOUR_MISSING");
+  else {
+    if (precipitationMm === null) missingReasons.push("PRECIPITATION_MISSING");
+    if (windGustKmh === null) missingReasons.push("WIND_GUST_MISSING");
+  }
+  if (!nearest || Math.abs(nearest.endAt.getTime() - at.getTime()) > 30 * 60_000) {
+    missingReasons.push("WEATHER_CODE_HOUR_MISSING");
+  } else if (code === null) missingReasons.push("WEATHER_CODE_MISSING");
   return { status: precipitationMm !== null && windGustKmh !== null && code !== null ? "OK" : "MISSING_DATA",
     precipitationMm, windGustKmh, weatherCode: code, accumulationEndAt: accumulation?.endAt ?? null,
-    weatherCodeAt: code !== null ? nearest.endAt : null, provenance: forecast.provenance };
+    weatherCodeAt: code !== null ? nearest.endAt : null, missingReasons, provenance: forecast.provenance };
 }
 
 export async function fetchOpenMeteoHourlyForecast(input: HourlyForecastRequest): Promise<HourlyForecast> {
@@ -120,6 +142,7 @@ export async function fetchOpenMeteoHourlyForecast(input: HourlyForecastRequest)
   }
   const todayUtc = Date.parse(`${now.toISOString().slice(0, 10)}T00:00:00Z`);
   const lastDay = todayUtc + 15 * 86_400_000;
+  const requiredStartHour = Math.floor(input.from.getTime() / 3_600_000) * 3_600_000 + 3_600_000;
   const requiredEndHour = Math.floor(input.to.getTime() / 3_600_000) * 3_600_000 + 3_600_000;
   if (input.from < now || requiredEndHour >= lastDay + 86_400_000) {
     throw new HourlyWeatherError("OUTSIDE_FORECAST_WINDOW");
@@ -144,8 +167,9 @@ export async function fetchOpenMeteoHourlyForecast(input: HourlyForecastRequest)
       headers: { accept: "application/json" } });
     if (response.status === 429) throw new HourlyWeatherError("RATE_LIMITED");
     if (!response.ok) throw new HourlyWeatherError("UPSTREAM_UNAVAILABLE");
-    const forecast = normalizeOpenMeteoHourlyResponse(await response.json(), now);
-    if (!forecast.rows.some((row) => row.endAt.getTime() === requiredEndHour)) {
+    const forecast = normalizeOpenMeteoHourlyResponse(await response.json(), new Date(), input);
+    if (forecast.rows[0].endAt.getTime() > requiredStartHour
+      || forecast.rows[forecast.rows.length - 1].endAt.getTime() < requiredEndHour) {
       throw new HourlyWeatherError("INVALID_RESPONSE");
     }
     return forecast;

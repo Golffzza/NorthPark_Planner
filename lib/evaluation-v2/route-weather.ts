@@ -1,6 +1,7 @@
 import { alignHourlyForecast, fetchOpenMeteoHourlyForecast,
   type AlignedHourlyWeather, type HourlyForecastRequest } from "@/lib/integrations/open-meteo/open-meteo-hourly-service";
 import type { RoutePassageSample } from "./route-sampling";
+import type { RouteSamplingPlan } from "./route-sampling";
 
 type Sample = Pick<RoutePassageSample, "lat" | "lng" | "passageAt">;
 type ForecastRequester = typeof fetchOpenMeteoHourlyForecast;
@@ -10,6 +11,23 @@ export type RouteWeatherSample = Sample & {
   status: "OK" | "MISSING_DATA" | "UNAVAILABLE" | "NOT_REQUESTED";
   errorCode?: string;
 };
+
+/** The plan's spatial/temporal coverage is retained; good sampled weather never upgrades coarse coverage. */
+export async function fetchWeatherForRoutePlan(plan: RouteSamplingPlan, options: {
+  now?: Date; signal?: AbortSignal; requestForecast?: ForecastRequester;
+} = {}) {
+  if (plan.status === "TIMING_UNAVAILABLE") {
+    return { status: "INCOMPLETE" as const, coverageStatus: plan.status,
+      timingStatus: "UNAVAILABLE" as const, coverage: plan.coverage, samples: [] as RouteWeatherSample[] };
+  }
+  const samples = await fetchWeatherForRouteSamples(plan.samples, options);
+  return { status: plan.status === "SUFFICIENT" && plan.timingMethod === "OSRM_ANNOTATION"
+      && samples.every((sample) => sample.status === "OK")
+      ? "COMPLETE" as const : "INCOMPLETE" as const,
+    coverageStatus: plan.status,
+    timingStatus: plan.timingMethod === "OSRM_ANNOTATION" ? "VERIFIED_SEGMENTS" as const : "ESTIMATED_SEGMENTS" as const,
+    coverage: plan.coverage, samples };
+}
 
 /** Sequential and capped to avoid a burst of public Open-Meteo requests. No score is produced. */
 export async function fetchWeatherForRouteSamples(samples: readonly Sample[], options: {
