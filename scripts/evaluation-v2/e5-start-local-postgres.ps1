@@ -8,7 +8,7 @@ if ($env:DATABASE_URL) {
     throw "DATABASE_URL points to the E5 fixture database; refusing to override the primary configured connection."
   }
 }
-& docker compose -p northpark-e5-isolated -f docker-compose.e5-test.yml up -d --wait
+& docker compose -f docker-compose.e5-test.yml up -d --wait
 if ($LASTEXITCODE -ne 0) { throw "Failed to start isolated PostgreSQL container" }
 $previous = $env:E5_TEST_DATABASE_URL
 try {
