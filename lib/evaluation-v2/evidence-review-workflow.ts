@@ -1,3 +1,4 @@
+import { validateEvidenceAuditSequence } from "./evidence-audit-sequence";
 /** E5.2 candidate: server-side review rules. Never expose this directly as a public mutation API. */
 import type { EvidenceRecord } from "./trusted-evidence";
 import type { EvidenceAuditEvent, EvidenceRevision } from "./evidence-data-contract";
@@ -26,7 +27,9 @@ export function authorizeEvidenceReview(command: ReviewCommand, revision: Eviden
     return { status: "DENIED", reason: "INVALID_AUDIT_SCOPE" };
   if (ordered.some(e => e.occurredAt > command.occurredAt))
     return { status: "DENIED", reason: "STALE_REVIEW_ACTION" };
-  const previous = ordered.at(-1)?.action;
+  const sequence = validateEvidenceAuditSequence(revision.recordedAt, ordered);
+  if (sequence.status === "INVALID") return { status: "DENIED", reason: "INVALID_AUDIT_SEQUENCE" };
+  const previous = sequence.terminal === "NONE" ? undefined : sequence.terminal;
   if (previous === "REVOKED" || previous === "REJECTED")
     return { status: "DENIED", reason: "TERMINAL_REVISION" };
   if (command.action === "REVOKED" && previous !== "APPROVED")
