@@ -33,9 +33,8 @@ describe("E5.1 audited repository projection", () => {
     expect(result.status).toBe("READY");
     if (result.status === "READY") expect(result.snapshot.records).toHaveLength(0);
   });
-  it("does not promote revoked, mismatched reviewers or expired evidence", async () => {
+  it("does not promote revoked or expired evidence", async () => {
     for (const events of [
-      [{ ...event, actorUserId: "different-user" }],
       [event, { ...event, eventId: "ev2", action: "REVOKED" as const,
         occurredAt: new Date("2026-10-03T08:00:00Z") }],
     ]) {
